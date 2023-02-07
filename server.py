@@ -1,9 +1,8 @@
 import socket
 import pickle
 import time
+import message
 from worker import WorkerProcess
-from message import Message
-from message.types import MessageTypes
 
 
 if __name__ == '__main__':
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     sock.settimeout(0.2)
     broadcast_address = ("<broadcast>", 5000)
-    message = Message(MessageTypes.STOP, "Thank you worker")
+    message = message.Message(message.MessageTypes.STOP, "Thank you worker")
     sock.sendto(pickle.dumps(message), broadcast_address)
     sock.close()
     time.sleep(1)
