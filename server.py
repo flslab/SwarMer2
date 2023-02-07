@@ -2,7 +2,7 @@ import socket
 import pickle
 import time
 import message
-from worker import WorkerProcess
+import worker
 
 
 if __name__ == '__main__':
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     # Create a list of processes
     processes = []
     for i in range(count):
-        p = WorkerProcess(i)
+        p = worker.WorkerProcess(i)
         p.start()
         processes.append(p)
 
