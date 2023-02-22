@@ -22,21 +22,34 @@ class StateMachine:
         self.size += 1
         print(self.size)
 
+    def enter_available_state(self):
+        if self.context.fid == 1:
+            self.size = 1
+            resp = message.Message(
+                message.MessageTypes.SIZE_QUERY,
+                self.context.fid, self.context.swarm_id, "*", "*")
+            self.sock.broadcast(resp)
+
+    def enter_busy_localizing_state(self):
+        pass
+
+    def enter_busy_anchor_state(self):
+        pass
+
+    def enter_waiting_state(self):
+        pass
+
     def enter(self, state):
         self.state = state
 
         if self.state == StateTypes.AVAILABLE:
-            if self.context.fid == 1:
-                resp = message.Message(
-                    message.MessageTypes.SIZE_QUERY,
-                    self.context.fid, self.context.swarm_id, "*", "*")
-                self.sock.broadcast(resp)
+            self.enter_available_state()
         elif self.state == StateTypes.BUSY_LOCALIZING:
-            pass
+            self.enter_busy_localizing_state()
         elif self.state == StateTypes.BUSY_ANCHOR:
-            pass
+            self.enter_busy_anchor_state()
         elif self.state == StateTypes.WAITING:
-            pass
+            self.enter_waiting_state()
 
     def drive(self, msg):
         event = msg.type

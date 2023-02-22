@@ -2,7 +2,6 @@ import threading
 import numpy as np
 
 import message
-from .socket import WorkerSocket
 
 
 class NetworkThread(threading.Thread):

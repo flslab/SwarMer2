@@ -2,7 +2,6 @@ import socket
 import pickle
 import select
 
-
 BROADCAST_ADDRESS = ("<broadcast>", 5000)
 PORT = 5000
 

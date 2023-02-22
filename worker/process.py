@@ -1,9 +1,6 @@
 import multiprocessing
 import queue
-import numpy as np
 
-import message
-import utils
 import state
 from .network import NetworkThread
 from .handler import HandlerThread
