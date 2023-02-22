@@ -1,40 +1,31 @@
-import message
-import time
 import multiprocessing
-from .socket import WorkerSocket
-from utils.log import log
+import queue
+import numpy as np
 
+import message
+import utils
+import state
+from .network import NetworkThread
+from .handler import HandlerThread
+from .socket import WorkerSocket
+from .context import WorkerContext
 
 broadcast_address = ("<broadcast>", 5000)
 
 
 class WorkerProcess(multiprocessing.Process):
-    def __init__(self, process_id):
+    def __init__(self, process_id, gtl, el):
         super(WorkerProcess, self).__init__()
-        self.id = process_id
+        self.context = WorkerContext(process_id, gtl, el)
         self.sock = WorkerSocket()
 
     def run(self):
-        self.sock.init()
+        event_queue = queue.Queue()
+        state_machine = state.StateMachine(self.context, self.sock)
+        network_thread = NetworkThread(event_queue, self.context, self.sock)
+        handler_thread = HandlerThread(event_queue, state_machine)
+        network_thread.start()
+        handler_thread.start()
 
-        while True:
-            # Check if message is available
-            if self.sock.is_ready():
-                msg = self.receive_message()
-                if msg.type == message.MessageTypes.STOP:
-                    break
-
-            # Broadcast message
-            msg = message.Message(message.MessageTypes.DUMMY, f"Hello from worker {self.id}")
-            self.broadcast_message(msg)
-            time.sleep(1)
-
-        self.sock.close()
-
-    def receive_message(self):
-        msg = self.sock.receive()
-        log(f"Process {self.id}: Received message - {msg}")
-        return msg
-
-    def broadcast_message(self, msg):
-        self.sock.broadcast(msg)
+        network_thread.join()
+        handler_thread.join()
