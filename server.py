@@ -8,12 +8,12 @@ import numpy as np
 
 
 if __name__ == '__main__':
-    count = 10
+    count = 2
     random_point_cloud = np.random.randint(10, size=(10, 3))
     # Create a list of processes
     processes = []
     for i in range(count):
-        p = worker.WorkerProcess(i, random_point_cloud[i], random_point_cloud[i])
+        p = worker.WorkerProcess(i+1, random_point_cloud[i], random_point_cloud[i])
         p.start()
         processes.append(p)
 
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     sock.settimeout(0.2)
     broadcast_address = ("<broadcast>", 5000)
-    message = message.Message(message.MessageTypes.STOP, -1, -1)
+    message = message.Message(message.MessageTypes.STOP).from_server().to_all()
     sock.sendto(pickle.dumps(message), broadcast_address)
     sock.close()
     time.sleep(1)

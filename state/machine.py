@@ -13,9 +13,7 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_size_query(self, msg):
-        resp = message.Message(
-            message.MessageTypes.SIZE_REPLY,
-            self.context.fid, self.context.swarm_id, msg.fid, msg.swarm_id)
+        resp = message.Message(message.MessageTypes.SIZE_REPLY).from_fls(self.context).to_fls(msg)
         self.sock.broadcast(resp)
 
     def handle_size_reply(self, msg):
@@ -25,9 +23,7 @@ class StateMachine:
     def enter_available_state(self):
         if self.context.fid == 1:
             self.size = 1
-            resp = message.Message(
-                message.MessageTypes.SIZE_QUERY,
-                self.context.fid, self.context.swarm_id, "*", "*")
+            resp = message.Message(message.MessageTypes.SIZE_QUERY).from_fls(self.context).to_all()
             self.sock.broadcast(resp)
 
     def enter_busy_localizing_state(self):
