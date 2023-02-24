@@ -1,17 +1,19 @@
 class Message:
-    def __init__(self, message_type, fid=0, swarm_id=0, dest_fid="*", dest_swarm_id="*", location=None, params=None):
+    def __init__(self, message_type, fid=0, swarm_id=0, dest_fid="*", dest_swarm_id="*", el=None, gtl=None, args=None):
         self.type = message_type
         self.fid = fid
         self.swarm_id = swarm_id
         self.dest_fid = dest_fid
         self.dest_swarm_id = dest_swarm_id
-        self.location = location
-        self.params = params
+        self.el = el
+        self.gtl = gtl
+        self.args = args
 
     def from_fls(self, ctx):
         self.fid = ctx.fid
         self.swarm_id = ctx.swarm_id
-        self.location = ctx.el
+        self.el = ctx.el
+        self.gtl = ctx.gtl
         return self
 
     def from_server(self):
@@ -32,6 +34,11 @@ class Message:
     def to_fls(self, ctx):
         self.dest_fid = ctx.fid
         self.dest_swarm_id = ctx.swarm_id
+        return self
+
+    def to_server(self):
+        self.dest_fid = 0
+        self.dest_swarm_id = 0
         return self
 
     def __repr__(self):

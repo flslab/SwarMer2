@@ -27,8 +27,8 @@ class NetworkThread(threading.Thread):
             return False
         if msg.dest_swarm_id != self.context.swarm_id and msg.dest_swarm_id != '*':
             return False
-        if msg.location is not None:
-            dist = np.linalg.norm(msg.location - self.context.el)
+        if msg.el is not None:
+            dist = np.linalg.norm(msg.el - self.context.el)
             if dist > self.context.radio_range:
                 return False
         return True

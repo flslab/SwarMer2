@@ -3,6 +3,7 @@ import pickle
 import select
 
 BROADCAST_ADDRESS = ("<broadcast>", 5000)
+SERVER_ADDRESS = ("", 6000)
 PORT = 5000
 
 
@@ -29,6 +30,9 @@ class WorkerSocket:
         except OSError:
             if retry:
                 self.broadcast(msg, retry-1)
+
+    def send_to_server(self, msg):
+        self.sock.sendto(pickle.dumps(msg), SERVER_ADDRESS)
 
     def is_ready(self):
         ready = select.select([self.sock], [], [], 1)
