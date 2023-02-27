@@ -59,7 +59,6 @@ class StateMachine:
 
     def enter_available_state(self):
         if self.context.fid % 10 == 1:
-            # print("size_query", self.context.fid)
             self.context.size = 1
             self.context.query_id = uuid.uuid4()
             size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
@@ -75,7 +74,6 @@ class StateMachine:
         d_gtl = self.context.gtl - self.context.anchor.gtl
         d_el = self.context.el - self.context.anchor.el
         v = d_gtl - d_el
-        # v = self.context.gtl - self.context.el
 
         follow_merge_message = Message(MessageTypes.MERGE, args=(v,)).to_swarm(self.context)
         self.broadcast(follow_merge_message)
@@ -90,8 +88,6 @@ class StateMachine:
     def enter_busy_anchor_state(self):
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
-
-        # self.context.el = self.context.gtl
 
     def enter_waiting_state(self):
         pass
