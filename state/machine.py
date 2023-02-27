@@ -1,5 +1,7 @@
-import time
-import message
+import random
+import uuid
+
+from message import Message, MessageTypes
 from .types import StateTypes
 
 
@@ -8,34 +10,32 @@ class StateMachine:
         self.state = StateTypes.AVAILABLE
         self.context = context
         self.sock = sock
-        self.size = 1
-        self.anchor = None
 
     def start(self):
         self.enter(StateTypes.AVAILABLE)
 
     def handle_size_query(self, msg):
-        resp = message.Message(message.MessageTypes.SIZE_REPLY).from_fls(self.context).to_fls(msg)
-        self.sock.broadcast(resp)
+        resp = Message(MessageTypes.SIZE_REPLY, args=msg.args).to_fls(msg)
+        self.broadcast(resp)
 
     def handle_size_reply(self, msg):
-        if msg.swarm_id == self.context.swarm_id:
-            self.size += 1
-        if self.size == self.context.count:
-            stop_msg = message.Message(message.MessageTypes.STOP).from_server().to_all()
-            self.sock.broadcast(stop_msg)
+        if msg.args[0] == self.context.query_id:
+            self.context.size += 1
+            print("size_reply", self.context.fid, msg.fid, self.context.size)
+        if self.context.size == self.context.count:
+            print("done", self.context.fid, self.context.size)
+            fin_message = Message(MessageTypes.FIN)
+            self.send_to_server(fin_message)
 
     def handle_challenge_init(self, msg):
         if msg.swarm_id > self.context.swarm_id:
-            challenge_accept_message = message.Message(message.MessageTypes.CHALLENGE_ACCEPT) \
-                .from_fls(self.context).to_fls(msg)
-            self.sock.broadcast(challenge_accept_message)
+            challenge_accept_message = Message(MessageTypes.CHALLENGE_ACCEPT).to_fls(msg)
+            self.broadcast(challenge_accept_message)
 
     def handle_challenge_accept(self, msg):
-        challenge_ack_message = message.Message(message.MessageTypes.CHALLENGE_ACK) \
-            .from_fls(self.context).to_fls(msg)
-        self.sock.broadcast(challenge_ack_message)
-        self.anchor = msg
+        challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK).to_fls(msg)
+        self.broadcast(challenge_ack_message)
+        self.context.anchor = msg
         self.enter(StateTypes.BUSY_LOCALIZING)
 
     def handle_challenge_ack(self, msg):
@@ -46,48 +46,52 @@ class StateMachine:
 
     def handle_merge(self, msg):
         self.context.swarm_id = msg.swarm_id
+        self.enter(StateTypes.AVAILABLE)
 
     def handle_follow(self, msg):
         self.context.el += msg.args(0,)
+        self.enter(StateTypes.AVAILABLE)
 
     def handle_follow_merge(self, msg):
         self.context.swarm_id = msg.swarm_id
         self.context.el += msg.args(0, )
+        self.enter(StateTypes.AVAILABLE)
 
     def enter_available_state(self):
-        # if self.context.fid == 1:
-        self.size = 1
-        size_query = message.Message(message.MessageTypes.SIZE_QUERY).from_fls(self.context).to_swarm(self.context)
-        self.sock.broadcast(size_query)
+        if self.context.fid % 10 == 1:
+            # print("size_query", self.context.fid)
+            self.context.size = 1
+            self.context.query_id = uuid.uuid4()
+            size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
+            self.broadcast(size_query)
 
-        challenge_msg = message.Message(message.MessageTypes.CHALLENGE_INIT).from_fls(self.context).to_all()
-        self.sock.broadcast(challenge_msg)
+        challenge_msg = Message(MessageTypes.CHALLENGE_INIT).to_all()
+        self.broadcast(challenge_msg)
 
     def enter_busy_localizing_state(self):
-        waiting_message = message.Message(message.MessageTypes.SET_WAITING)\
-            .from_fls(self.context).to_swarm(self.context)
-        self.sock.broadcast(waiting_message)
+        waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
+        self.broadcast(waiting_message)
 
-        d_gtl = self.context.gtl - self.anchor.gtl
-        d_el = self.context.el - self.anchor.el
+        d_gtl = self.context.gtl - self.context.anchor.gtl
+        d_el = self.context.el - self.context.anchor.el
         v = d_gtl - d_el
+        # v = self.context.gtl - self.context.el
 
-        follow_merge_message = message.Message(message.MessageTypes.MERGE, args=(v,))\
-            .from_fls(self.context).to_swarm(self.context)
-        self.sock.broadcast(follow_merge_message)
+        follow_merge_message = Message(MessageTypes.MERGE, args=(v,)).to_swarm(self.context)
+        self.broadcast(follow_merge_message)
         self.context.el += v
-        self.context.swarm_id = self.anchor.swarm_id
+        self.context.swarm_id = self.context.anchor.swarm_id
 
-        challenge_fin_message = message.Message(message.MessageTypes.CHALLENGE_FIN)\
-            .from_fls(self.context).to_fls(self.anchor)
-        self.sock.broadcast(challenge_fin_message)
+        challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
+        self.broadcast(challenge_fin_message)
 
         self.enter(StateTypes.AVAILABLE)
 
     def enter_busy_anchor_state(self):
-        waiting_message = message.Message(message.MessageTypes.SET_WAITING) \
-            .from_fls(self.context).to_swarm(self.context)
-        self.sock.broadcast(waiting_message)
+        waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
+        self.broadcast(waiting_message)
+
+        # self.context.el = self.context.gtl
 
     def enter_waiting_state(self):
         pass
@@ -108,49 +112,57 @@ class StateMachine:
     def drive(self, msg):
         event = msg.type
         if self.state == StateTypes.AVAILABLE:
-            if event == message.MessageTypes.CHALLENGE_INIT:
+            if event == MessageTypes.CHALLENGE_INIT:
                 self.handle_challenge_init(msg)
-            elif event == message.MessageTypes.CHALLENGE_ACCEPT:
+            elif event == MessageTypes.CHALLENGE_ACCEPT:
                 self.handle_challenge_accept(msg)
-            elif event == message.MessageTypes.CHALLENGE_ACK:
+            elif event == MessageTypes.CHALLENGE_ACK:
                 self.handle_challenge_ack(msg)
-            elif event == message.MessageTypes.SIZE_QUERY:
+            elif event == MessageTypes.SIZE_QUERY:
                 self.handle_size_query(msg)
-            elif event == message.MessageTypes.SIZE_REPLY:
+            elif event == MessageTypes.SIZE_REPLY:
                 self.handle_size_reply(msg)
-            elif event == message.MessageTypes.SET_WAITING:
+            elif event == MessageTypes.SET_WAITING:
                 self.enter(StateTypes.WAITING)
 
         elif self.state == StateTypes.BUSY_LOCALIZING:
-            if event == message.MessageTypes.LEASE_GRANT:
+            if event == MessageTypes.LEASE_GRANT:
                 pass
 
         elif self.state == StateTypes.BUSY_ANCHOR:
-            if event == message.MessageTypes.LEASE_RENEW:
+            if event == MessageTypes.LEASE_RENEW:
                 pass
-            elif event == message.MessageTypes.MERGE:
+            elif event == MessageTypes.MERGE:
                 self.handle_merge(msg)
-            elif event == message.MessageTypes.CHALLENGE_FIN:
+            elif event == MessageTypes.CHALLENGE_FIN:
                 self.handle_challenge_fin(msg)
 
         elif self.state == StateTypes.WAITING:
-            if event == message.MessageTypes.FOLLOW:
+            if event == MessageTypes.FOLLOW:
                 self.handle_follow(msg)
-            elif event == message.MessageTypes.MERGE:
+            elif event == MessageTypes.MERGE:
                 self.handle_merge(msg)
-            elif event == message.MessageTypes.FOLLOW_MERGE:
+            elif event == MessageTypes.FOLLOW_MERGE:
                 self.handle_follow_merge(msg)
-            elif event == message.MessageTypes.SET_AVAILABLE:
+            elif event == MessageTypes.SET_AVAILABLE:
                 self.enter(StateTypes.AVAILABLE)
-            elif event == message.MessageTypes.CHALLENGE_INIT:
+            elif event == MessageTypes.CHALLENGE_INIT:
                 self.handle_challenge_init(msg)
-            elif event == message.MessageTypes.CHALLENGE_ACK:
+            elif event == MessageTypes.CHALLENGE_ACK:
                 self.handle_challenge_ack(msg)
-            elif event == message.MessageTypes.SIZE_QUERY:
+            elif event == MessageTypes.SIZE_QUERY:
                 self.handle_size_query(msg)
-            elif event == message.MessageTypes.SIZE_REPLY:
+            elif event == MessageTypes.SIZE_REPLY:
                 self.handle_size_reply(msg)
 
-        if event == message.MessageTypes.STOP:
-            server_message = message.Message(message.MessageTypes.FIN).from_fls(self.context).to_server()
-            self.sock.send_to_server(server_message)
+        if event == MessageTypes.STOP:
+            fin_message = Message(MessageTypes.FIN)
+            self.send_to_server(fin_message)
+
+    def broadcast(self, msg):
+        msg.from_fls(self.context)
+        self.sock.broadcast(msg)
+
+    def send_to_server(self, msg):
+        msg.from_fls(self.context).to_server()
+        self.sock.send_to_server(msg)
