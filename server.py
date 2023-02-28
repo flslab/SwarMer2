@@ -8,15 +8,16 @@ import numpy as np
 
 
 if __name__ == '__main__':
-    count = 20
+    count = 15
     np.random.default_rng(1)
     gtl_point_cloud = np.random.randint(10, size=(count, 3))
     el_point_cloud = gtl_point_cloud + np.random.randint(2, size=(count, 3))
+    neighbors = utils.knn(gtl_point_cloud, 5)
     print(gtl_point_cloud)
 
     processes = []
     for i in range(count):
-        p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], el_point_cloud[i])
+        p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], el_point_cloud[i], neighbors[i])
         p.start()
         processes.append(p)
 

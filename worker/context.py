@@ -2,13 +2,13 @@ import time
 
 
 class WorkerContext:
-    def __init__(self, count, fid, gtl, el):
+    def __init__(self, count, fid, gtl, el, neighbors):
         self.count = count
         self.fid = fid
         self.gtl = gtl
         self.el = el
         self.swarm_id = self.fid
-        self.neighbors_id = []
+        self.neighbors = dict(zip(neighbors, neighbors))
         self.radio_range = 100
         self.size = 1
         self.anchor = None
@@ -32,3 +32,7 @@ class WorkerContext:
 
     def move(self, vector):
         self.set_el(self.el + vector)
+
+    def update_neighbor(self, ctx):
+        if ctx.fid in self.neighbors:
+            self.neighbors[ctx.fid] = ctx.swarm_id
