@@ -2,8 +2,12 @@ import numpy as np
 
 
 def hausdorff_distance(a, b):
-    t = b[0] - a[0]
-    return compute_distance(a + t, b)
+    dist = np.zeros_like(a)
+    t = a - b
+    for i in range(a.shape[0]):
+        dist[i] = compute_distance(a + t[i], b)
+
+    return np.min(dist)
 
 
 def compute_distance(a, b):
