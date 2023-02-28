@@ -1,3 +1,6 @@
+import time
+
+
 class WorkerContext:
     def __init__(self, count, fid, gtl, el):
         self.count = count
@@ -10,12 +13,16 @@ class WorkerContext:
         self.size = 1
         self.anchor = None
         self.query_id = None
+        self.history_el = {time.time(): self.el}
+        self.history_swarm_id = {time.time(): self.swarm_id}
 
     def set_swarm_id(self, swarm_id):
         self.swarm_id = swarm_id
+        self.history_swarm_id[time.time()] = self.swarm_id
 
     def set_el(self, el):
         self.el = el
+        self.history_el[time.time()] = self.el
 
     def set_query_id(self, query_id):
         self.query_id = query_id

@@ -153,6 +153,8 @@ class StateMachine:
         if event == MessageTypes.STOP:
             fin_message = Message(MessageTypes.FIN)
             self.send_to_server(fin_message)
+            print(self.context.history_el)
+            print(self.context.history_swarm_id)
 
     def broadcast(self, msg):
         msg.from_fls(self.context)
