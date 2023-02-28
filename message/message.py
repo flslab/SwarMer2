@@ -36,6 +36,11 @@ class Message:
         self.dest_swarm_id = ctx.swarm_id
         return self
 
+    def to_fls_id(self, fid, swarm_id):
+        self.dest_fid = fid
+        self.dest_swarm_id = swarm_id
+        return self
+
     def to_server(self):
         self.dest_fid = 0
         self.dest_swarm_id = 0
