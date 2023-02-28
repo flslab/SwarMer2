@@ -23,7 +23,6 @@ class StateMachine:
             self.context.size += 1
             print("size_reply", self.context.fid, msg.fid, self.context.size)
         if self.context.size == self.context.count:
-            print("done", self.context.fid, self.context.size)
             fin_message = Message(MessageTypes.FIN)
             self.send_to_server(fin_message)
 
@@ -35,7 +34,7 @@ class StateMachine:
     def handle_challenge_accept(self, msg):
         challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK).to_fls(msg)
         self.broadcast(challenge_ack_message)
-        self.context.anchor = msg
+        self.context.set_anchor(msg)
         self.enter(StateTypes.BUSY_LOCALIZING)
 
     def handle_challenge_ack(self, msg):
@@ -45,16 +44,16 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_merge(self, msg):
-        self.context.swarm_id = msg.swarm_id
+        self.context.set_swarm_id(msg.swarm_id)
         self.enter(StateTypes.AVAILABLE)
 
     def handle_follow(self, msg):
-        self.context.el += msg.args(0,)
+        self.context.move(msg.args(0,))
         self.enter(StateTypes.AVAILABLE)
 
     def handle_follow_merge(self, msg):
-        self.context.swarm_id = msg.swarm_id
-        self.context.el += msg.args(0, )
+        self.context.set_swarm_id(msg.swarm_id)
+        self.context.move(msg.args(0, ))
         self.enter(StateTypes.AVAILABLE)
 
     def enter_available_state(self):
@@ -77,8 +76,8 @@ class StateMachine:
 
         follow_merge_message = Message(MessageTypes.MERGE, args=(v,)).to_swarm(self.context)
         self.broadcast(follow_merge_message)
-        self.context.el += v
-        self.context.swarm_id = self.context.anchor.swarm_id
+        self.context.move(v)
+        self.context.set_swarm_id(self.context.anchor.swarm_id)
 
         challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
         self.broadcast(challenge_fin_message)
