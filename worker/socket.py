@@ -1,10 +1,7 @@
 import socket
 import pickle
 import select
-
-BROADCAST_ADDRESS = ("<broadcast>", 5000)
-SERVER_ADDRESS = ("", 6000)
-PORT = 5000
+from constants import Constants
 
 
 class WorkerSocket:
@@ -13,7 +10,7 @@ class WorkerSocket:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sock.bind(("", PORT))
+        sock.bind(Constants.WORKER_ADDRESS)
         self.sock = sock
 
     def close(self):
@@ -26,13 +23,13 @@ class WorkerSocket:
 
     def broadcast(self, msg, retry=2):
         try:
-            self.sock.sendto(pickle.dumps(msg), BROADCAST_ADDRESS)
+            self.sock.sendto(pickle.dumps(msg), Constants.BROADCAST_ADDRESS)
         except OSError:
             if retry:
-                self.broadcast(msg, retry-1)
+                self.broadcast(msg, retry - 1)
 
     def send_to_server(self, msg):
-        self.sock.sendto(pickle.dumps(msg), SERVER_ADDRESS)
+        self.sock.sendto(pickle.dumps(msg), Constants.SERVER_ADDRESS)
 
     def is_ready(self):
         ready = select.select([self.sock], [], [], 1)
