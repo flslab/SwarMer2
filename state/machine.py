@@ -1,7 +1,9 @@
 import random
+import threading
 import uuid
 
 from message import Message, MessageTypes
+from utils import logger
 from .types import StateTypes
 
 
@@ -10,6 +12,7 @@ class StateMachine:
         self.state = StateTypes.AVAILABLE
         self.context = context
         self.sock = sock
+        self.timerAvailable = None
 
     def start(self):
         self.enter(StateTypes.AVAILABLE)
@@ -21,52 +24,76 @@ class StateMachine:
     def handle_size_reply(self, msg):
         if msg.args[0] == self.context.query_id:
             self.context.size += 1
-            print("size_reply", self.context.fid, msg.fid, self.context.size)
+            logger.warning(f"swarm {self.context.swarm_id} size {self.context.size}")
         if self.context.size == self.context.count:
-            fin_message = Message(MessageTypes.FIN)
-            self.send_to_server(fin_message)
+            # fin_message = Message(MessageTypes.FIN)
+            # self.send_to_server(fin_message)
+            thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
+            self.broadcast(thaw_message)
+            print(f"thaw {self.context.fid}")
+            self.handle_thaw_swarm(None)
 
     def handle_challenge_init(self, msg):
+        logger.info(f"{self.context.fid} received challenge message from {msg.fid}")
         if msg.swarm_id > self.context.swarm_id:
-            challenge_accept_message = Message(MessageTypes.CHALLENGE_ACCEPT).to_fls(msg)
+            challenge_accept_message = Message(MessageTypes.CHALLENGE_ACCEPT, args=msg.args).to_fls(msg)
             self.broadcast(challenge_accept_message)
+            logger.info(f"{self.context.fid} sent challenge accept to {msg.fid}")
 
     def handle_challenge_accept(self, msg):
-        challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK).to_fls(msg)
-        self.broadcast(challenge_ack_message)
-        self.context.set_anchor(msg)
-        self.enter(StateTypes.BUSY_LOCALIZING)
+        logger.info(f"{self.context.fid} received challenge accept from {msg.fid}")
+        if msg.args[0] == self.context.challenge_id:
+            logger.info(f"{self.context.fid} challenge id matches")
+            self.context.set_challenge_id(None)
+            challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK).to_fls(msg)
+            self.broadcast(challenge_ack_message)
+            self.context.set_anchor(msg)
+            self.enter(StateTypes.BUSY_LOCALIZING)
+        else:
+            logger.info(f"{self.context.fid} challenge id does not match")
 
     def handle_challenge_ack(self, msg):
         self.enter(StateTypes.BUSY_ANCHOR)
 
     def handle_challenge_fin(self, msg):
         self.enter(StateTypes.AVAILABLE)
+        available_message = Message(MessageTypes.SET_AVAILABLE).to_swarm(self.context)
+        self.broadcast(available_message)
 
     def handle_merge(self, msg):
         self.context.set_swarm_id(msg.swarm_id)
         self.enter(StateTypes.AVAILABLE)
 
     def handle_follow(self, msg):
-        self.context.move(msg.args(0,))
+        self.context.move(msg.args[0])
         self.enter(StateTypes.AVAILABLE)
 
     def handle_follow_merge(self, msg):
         self.context.set_swarm_id(msg.swarm_id)
-        self.context.move(msg.args(0, ))
+        self.context.move(msg.args[0])
         self.enter(StateTypes.AVAILABLE)
 
+    def handle_thaw_swarm(self, msg):
+        self.context.set_swarm_id(self.context.fid)
+        self.enter(StateTypes.AVAILABLE)
+        logger.critical(f"{self.context.fid} thawed")
+
     def enter_available_state(self):
-        if self.context.fid % 10 == 1:
+        print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
+
+        if self.context.fid == 1:
             self.context.size = 1
-            self.context.query_id = uuid.uuid4()
+            self.context.set_query_id(str(uuid.uuid4())[:8])
             size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
             self.broadcast(size_query)
 
-        challenge_msg = Message(MessageTypes.CHALLENGE_INIT).to_all()
+        self.context.set_challenge_id(str(uuid.uuid4())[:8])
+        challenge_msg = Message(MessageTypes.CHALLENGE_INIT, args=(self.context.challenge_id,)).to_all()
         self.broadcast(challenge_msg)
+        logger.info(f"{self.context.fid} sent challenge request")
 
     def enter_busy_localizing_state(self):
+        logger.info(f"{self.context.fid} localizing relative to {self.context.anchor.fid}")
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
 
@@ -74,7 +101,7 @@ class StateMachine:
         d_el = self.context.el - self.context.anchor.el
         v = d_gtl - d_el
 
-        follow_merge_message = Message(MessageTypes.MERGE, args=(v,)).to_swarm(self.context)
+        follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v,)).to_swarm(self.context)
         self.broadcast(follow_merge_message)
         self.context.move(v)
         self.context.set_swarm_id(self.context.anchor.swarm_id)
@@ -92,8 +119,21 @@ class StateMachine:
         pass
 
     def enter(self, state):
+        # print(self.context.fid, state)
+        # cancel timer before leaving
+        # if self.state == StateTypes.AVAILABLE:
+        #     if self.timerAvailable is not None:
+        #         self.timerAvailable.cancel()
+        #         self.timerAvailable = None
+
         self.state = state
-        print(self.context.fid, state)
+
+        if self.timerAvailable is not None:
+            self.timerAvailable.cancel()
+            self.timerAvailable = None
+
+        self.timerAvailable = threading.Timer(5, self.reenter, (StateTypes.AVAILABLE,))
+        self.timerAvailable.start()
 
         if self.state == StateTypes.AVAILABLE:
             self.enter_available_state()
@@ -104,8 +144,13 @@ class StateMachine:
         elif self.state == StateTypes.WAITING:
             self.enter_waiting_state()
 
+    def reenter(self, state):
+        self.enter(state)
+
     def drive(self, msg):
         event = msg.type
+        self.context.update_neighbor(msg)
+
         if self.state == StateTypes.AVAILABLE:
             if event == MessageTypes.CHALLENGE_INIT:
                 self.handle_challenge_init(msg)
@@ -113,10 +158,6 @@ class StateMachine:
                 self.handle_challenge_accept(msg)
             elif event == MessageTypes.CHALLENGE_ACK:
                 self.handle_challenge_ack(msg)
-            elif event == MessageTypes.SIZE_QUERY:
-                self.handle_size_query(msg)
-            elif event == MessageTypes.SIZE_REPLY:
-                self.handle_size_reply(msg)
             elif event == MessageTypes.SET_WAITING:
                 self.enter(StateTypes.WAITING)
 
@@ -145,16 +186,23 @@ class StateMachine:
                 self.handle_challenge_init(msg)
             elif event == MessageTypes.CHALLENGE_ACK:
                 self.handle_challenge_ack(msg)
-            elif event == MessageTypes.SIZE_QUERY:
-                self.handle_size_query(msg)
-            elif event == MessageTypes.SIZE_REPLY:
-                self.handle_size_reply(msg)
 
         if event == MessageTypes.STOP:
             fin_message = Message(MessageTypes.FIN)
+            if self.timerAvailable is not None:
+                self.timerAvailable.cancel()
+                self.timerAvailable = None
             self.send_to_server(fin_message)
             print(self.context.history_el)
             print(self.context.history_swarm_id)
+        elif event == MessageTypes.SIZE_QUERY:
+            self.handle_size_query(msg)
+        elif event == MessageTypes.SIZE_REPLY:
+            self.handle_size_reply(msg)
+        elif event == MessageTypes.THAW_SWARM:
+            self.handle_thaw_swarm(msg)
+
+        # time.sleep(.1)
 
     def broadcast(self, msg):
         msg.from_fls(self.context)

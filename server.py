@@ -8,11 +8,11 @@ import numpy as np
 
 
 if __name__ == '__main__':
-    count = 15
+    count = 100
     np.random.default_rng(1)
     gtl_point_cloud = np.random.randint(10, size=(count, 3))
     el_point_cloud = gtl_point_cloud + np.random.randint(2, size=(count, 3))
-    neighbors = utils.knn(gtl_point_cloud, 5)
+    neighbors = utils.knn(gtl_point_cloud, count - 1)
     print(gtl_point_cloud)
 
     processes = []

@@ -13,5 +13,13 @@ class HandlerThread(threading.Thread):
         while True:
             event = self.event_queue.get()
             self.state_machine.drive(event)
+
             if event.type == message.MessageTypes.STOP:
+                self.flush_queue()
                 break
+            elif event.type == message.MessageTypes.THAW_SWARM:
+                self.flush_queue()
+
+    def flush_queue(self):
+        while not self.event_queue.empty():
+            self.event_queue.get()

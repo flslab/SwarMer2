@@ -9,10 +9,11 @@ class WorkerContext:
         self.el = el
         self.swarm_id = self.fid
         self.neighbors = dict(zip(neighbors, neighbors))
-        self.radio_range = 100
+        self.radio_range = 5000
         self.size = 1
         self.anchor = None
         self.query_id = None
+        self.challenge_id = None
         self.history_el = {time.time(): self.el}
         self.history_swarm_id = {time.time(): self.swarm_id}
 
@@ -26,6 +27,9 @@ class WorkerContext:
 
     def set_query_id(self, query_id):
         self.query_id = query_id
+
+    def set_challenge_id(self, challenge_id):
+        self.challenge_id = challenge_id
 
     def set_anchor(self, anchor):
         self.anchor = anchor
