@@ -29,6 +29,6 @@ class NetworkThread(threading.Thread):
             return False
         if msg.el is not None:
             dist = np.linalg.norm(msg.el - self.context.el)
-            if dist > self.context.radio_range:
+            if dist > msg.range:
                 return False
         return True
