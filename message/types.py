@@ -17,5 +17,6 @@ class MessageTypes(Enum):
     LEASE_RENEW = 11
     SIZE_QUERY = 12
     SIZE_REPLY = 13
-    FIN = 14
+    THAW_SWARM = 14
+    FIN = 15
 

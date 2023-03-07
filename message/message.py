@@ -1,10 +1,12 @@
 class Message:
-    def __init__(self, message_type, fid=0, swarm_id=0, dest_fid="*", dest_swarm_id="*", el=None, gtl=None, args=None):
+    def __init__(self, message_type, fid=0, swarm_id=0, dest_fid="*", dest_swarm_id="*",
+                 radio_range=None, el=None, gtl=None, args=None):
         self.type = message_type
         self.fid = fid
         self.swarm_id = swarm_id
         self.dest_fid = dest_fid
         self.dest_swarm_id = dest_swarm_id
+        self.range = radio_range
         self.el = el
         self.gtl = gtl
         self.args = args
@@ -14,6 +16,7 @@ class Message:
         self.swarm_id = ctx.swarm_id
         self.el = ctx.el
         self.gtl = ctx.gtl
+        self.range = ctx.radio_range
         return self
 
     def from_server(self):
