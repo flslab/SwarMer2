@@ -27,6 +27,8 @@ class NetworkThread(threading.Thread):
             return False
         if msg.dest_swarm_id != self.context.swarm_id and msg.dest_swarm_id != '*':
             return False
+        if msg.type == message.MessageTypes.SIZE_QUERY or msg.type == message.MessageTypes.SIZE_REPLY:
+            return True
         if msg.el is not None:
             dist = np.linalg.norm(msg.el - self.context.el)
             if dist > msg.range:

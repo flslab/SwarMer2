@@ -3,6 +3,7 @@ import threading
 import uuid
 
 from message import Message, MessageTypes
+from config import Config
 from utils import logger
 from .types import StateTypes
 
@@ -12,7 +13,8 @@ class StateMachine:
         self.state = StateTypes.AVAILABLE
         self.context = context
         self.sock = sock
-        self.timerAvailable = None
+        self.timer_available = None
+        self.challenge_ack = False
 
     def start(self):
         self.enter(StateTypes.AVAILABLE)
@@ -26,12 +28,14 @@ class StateMachine:
             self.context.size += 1
             logger.warning(f"swarm {self.context.swarm_id} size {self.context.size}")
         if self.context.size == self.context.count:
-            # fin_message = Message(MessageTypes.FIN)
-            # self.send_to_server(fin_message)
-            thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
-            self.broadcast(thaw_message)
-            print(f"thaw {self.context.fid}")
-            self.handle_thaw_swarm(None)
+            if Config.THAW_SWARMS:
+                thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
+                self.broadcast(thaw_message)
+                print(f"thaw {self.context.fid}")
+                self.handle_thaw_swarm(None)
+            else:
+                fin_message = Message(MessageTypes.FIN)
+                self.send_to_server(fin_message)
 
     def handle_challenge_init(self, msg):
         logger.info(f"{self.context.fid} received challenge message from {msg.fid}")
@@ -44,6 +48,7 @@ class StateMachine:
         logger.info(f"{self.context.fid} received challenge accept from {msg.fid}")
         if msg.args[0] == self.context.challenge_id:
             logger.info(f"{self.context.fid} challenge id matches")
+            self.challenge_ack = True
             self.context.set_challenge_id(None)
             challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK).to_fls(msg)
             self.broadcast(challenge_ack_message)
@@ -74,19 +79,23 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
-        self.context.set_swarm_id(self.context.fid)
+        self.context.thaw_swarm()
         self.enter(StateTypes.AVAILABLE)
         logger.critical(f"{self.context.fid} thawed")
 
     def enter_available_state(self):
         print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
 
-        if self.context.fid == 1:
+        if self.context.fid % 2:
             self.context.size = 1
             self.context.set_query_id(str(uuid.uuid4())[:8])
             size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
             self.broadcast(size_query)
 
+        if not self.challenge_ack:
+            self.context.increment_range()
+
+        self.challenge_ack = False
         self.context.set_challenge_id(str(uuid.uuid4())[:8])
         challenge_msg = Message(MessageTypes.CHALLENGE_INIT, args=(self.context.challenge_id,)).to_all()
         self.broadcast(challenge_msg)
@@ -128,12 +137,12 @@ class StateMachine:
 
         self.state = state
 
-        if self.timerAvailable is not None:
-            self.timerAvailable.cancel()
-            self.timerAvailable = None
+        if self.timer_available is not None:
+            self.timer_available.cancel()
+            self.timer_available = None
 
-        self.timerAvailable = threading.Timer(5, self.reenter, (StateTypes.AVAILABLE,))
-        self.timerAvailable.start()
+        self.timer_available = threading.Timer(5, self.reenter, (StateTypes.AVAILABLE,))
+        self.timer_available.start()
 
         if self.state == StateTypes.AVAILABLE:
             self.enter_available_state()
@@ -189,9 +198,9 @@ class StateMachine:
 
         if event == MessageTypes.STOP:
             fin_message = Message(MessageTypes.FIN)
-            if self.timerAvailable is not None:
-                self.timerAvailable.cancel()
-                self.timerAvailable = None
+            if self.timer_available is not None:
+                self.timer_available.cancel()
+                self.timer_available = None
             self.send_to_server(fin_message)
             print(self.context.history_el)
             print(self.context.history_swarm_id)

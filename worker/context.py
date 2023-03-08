@@ -1,15 +1,17 @@
 import time
+from config import Config
+from utils import logger
 
 
 class WorkerContext:
-    def __init__(self, count, fid, gtl, el, neighbors):
+    def __init__(self, count, fid, gtl, el):
         self.count = count
         self.fid = fid
         self.gtl = gtl
         self.el = el
         self.swarm_id = self.fid
-        self.neighbors = dict(zip(neighbors, neighbors))
-        self.radio_range = 5000
+        self.neighbors = dict()
+        self.radio_range = Config.INITIAL_RANGE
         self.size = 1
         self.anchor = None
         self.query_id = None
@@ -38,5 +40,23 @@ class WorkerContext:
         self.set_el(self.el + vector)
 
     def update_neighbor(self, ctx):
-        if ctx.fid in self.neighbors:
-            self.neighbors[ctx.fid] = ctx.swarm_id
+        self.neighbors[ctx.fid] = ctx.swarm_id
+
+    def increment_range(self):
+        if self.radio_range < Config.MAX_RANGE:
+            self.radio_range += 1
+            logger.critical(f"{self.fid} range incremented to {self.radio_range}")
+
+    def reset_range(self):
+        self.radio_range = Config.INITIAL_RANGE
+
+    def reset_swarm(self):
+        self.swarm_id = self.fid
+
+    def thaw_swarm(self):
+        self.reset_swarm()
+        self.reset_range()
+        self.size = 1
+        self.anchor = None
+        self.query_id = None
+        self.challenge_id = None

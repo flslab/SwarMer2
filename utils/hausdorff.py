@@ -3,7 +3,7 @@ import numpy as np
 
 def hausdorff_distance(a, b):
     dist = np.zeros_like(a)
-    t = a - b
+    t = b - a
     for i in range(a.shape[0]):
         dist[i] = compute_distance(a + t[i], b)
 
