@@ -10,6 +10,7 @@ class Message:
         self.el = el
         self.gtl = gtl
         self.args = args
+        self.id = None
 
     def from_fls(self, ctx):
         self.fid = ctx.fid
@@ -17,11 +18,13 @@ class Message:
         self.el = ctx.el
         self.gtl = ctx.gtl
         self.range = ctx.radio_range
+        self.id = ctx.message_id
         return self
 
     def from_server(self):
         self.fid = 0
         self.swarm_id = 0
+        self.id = 0
         return self
 
     def to_all(self):
