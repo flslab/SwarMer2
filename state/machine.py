@@ -74,8 +74,9 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_follow_merge(self, msg):
-        self.context.set_swarm_id(msg.swarm_id)
+        print(f"{self.context.fid}({self.context.swarm_id}) merged into {msg.args[1]}")
         self.context.move(msg.args[0])
+        self.context.set_swarm_id(msg.args[1])
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
@@ -110,7 +111,8 @@ class StateMachine:
         d_el = self.context.el - self.context.anchor.el
         v = d_gtl - d_el
 
-        follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v,)).to_swarm(self.context)
+        follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
+            .to_swarm(self.context)
         self.broadcast(follow_merge_message)
         self.context.move(v)
         self.context.set_swarm_id(self.context.anchor.swarm_id)
@@ -141,7 +143,7 @@ class StateMachine:
             self.timer_available.cancel()
             self.timer_available = None
 
-        self.timer_available = threading.Timer(5, self.reenter, (StateTypes.AVAILABLE,))
+        self.timer_available = threading.Timer(5 + self.context.fid % 5, self.reenter, (StateTypes.AVAILABLE,))
         self.timer_available.start()
 
         if self.state == StateTypes.AVAILABLE:
@@ -209,8 +211,6 @@ class StateMachine:
             self.handle_size_reply(msg)
         elif event == MessageTypes.THAW_SWARM:
             self.handle_thaw_swarm(msg)
-
-        # time.sleep(.1)
 
     def broadcast(self, msg):
         msg.from_fls(self.context)
