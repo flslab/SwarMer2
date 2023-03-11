@@ -202,8 +202,7 @@ class StateMachine:
                 self.timer_available.cancel()
                 self.timer_available = None
             self.send_to_server(fin_message)
-            print(self.context.history_el)
-            print(self.context.history_swarm_id)
+            print(self.context.history.merge_lists())
         elif event == MessageTypes.SIZE_QUERY:
             self.handle_size_query(msg)
         elif event == MessageTypes.SIZE_REPLY:
@@ -215,6 +214,7 @@ class StateMachine:
 
     def broadcast(self, msg):
         msg.from_fls(self.context)
+        self.context.log_sent_message(msg)
         self.sock.broadcast(msg)
 
     def send_to_server(self, msg):

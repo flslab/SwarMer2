@@ -1,10 +1,17 @@
 import time
+import numpy as np
 from config import Config
 from utils import logger
+from .history import History
 
 
 class WorkerContext:
-    def __init__(self, count, fid, gtl, el):
+    RECEIVED_MASSAGES = 0
+    SENT_MESSAGES = 1
+    LOCATION = 2
+    SWARM_ID = 3
+
+    def __init__(self, count, fid, gtl, el, shared_el):
         self.count = count
         self.fid = fid
         self.gtl = gtl
@@ -16,16 +23,21 @@ class WorkerContext:
         self.anchor = None
         self.query_id = None
         self.challenge_id = None
-        self.history_el = {time.time(): self.el}
-        self.history_swarm_id = {time.time(): self.swarm_id}
+        self.history = History(4)
+        self.history.log(WorkerContext.LOCATION, self.el)
+        self.history.log(WorkerContext.SWARM_ID, self.swarm_id)
+        self.shared_el = shared_el
+        self.message_id = 0
+        self.speed = .5
 
     def set_swarm_id(self, swarm_id):
         self.swarm_id = swarm_id
-        self.history_swarm_id[time.time()] = self.swarm_id
+        self.history.log(WorkerContext.SWARM_ID, self.swarm_id)
 
     def set_el(self, el):
         self.el = el
-        self.history_el[time.time()] = self.el
+        self.shared_el[self.fid - 1] = el
+        self.history.log(WorkerContext.LOCATION, self.el)
 
     def set_query_id(self, query_id):
         self.query_id = query_id
@@ -36,7 +48,11 @@ class WorkerContext:
     def set_anchor(self, anchor):
         self.anchor = anchor
 
+    def set_radio_range(self, radio_range):
+        self.radio_range = radio_range
+
     def move(self, vector):
+        time.sleep(np.linalg.norm(vector) / self.speed)
         self.set_el(self.el + vector)
 
     def update_neighbor(self, ctx):
@@ -44,14 +60,14 @@ class WorkerContext:
 
     def increment_range(self):
         if self.radio_range < Config.MAX_RANGE:
-            self.radio_range += 1
+            self.set_radio_range(self.radio_range + 1)
             logger.critical(f"{self.fid} range incremented to {self.radio_range}")
 
     def reset_range(self):
-        self.radio_range = Config.INITIAL_RANGE
+        self.set_radio_range(Config.INITIAL_RANGE)
 
     def reset_swarm(self):
-        self.swarm_id = self.fid
+        self.set_swarm_id(self.fid)
 
     def thaw_swarm(self):
         self.reset_swarm()
@@ -60,3 +76,10 @@ class WorkerContext:
         self.anchor = None
         self.query_id = None
         self.challenge_id = None
+
+    def log_received_message(self, msg):
+        self.history.log(WorkerContext.RECEIVED_MASSAGES, msg)
+
+    def log_sent_message(self, msg):
+        self.history.log(WorkerContext.SENT_MESSAGES, msg)
+        self.message_id += 1
