@@ -2,6 +2,7 @@ import socket
 import pickle
 import worker
 import utils
+import threading
 from config import Config
 from constants import Constants
 from message import Message, MessageTypes
@@ -12,11 +13,13 @@ if __name__ == '__main__':
     count = Config.NUMBER_POINTS
     np.random.default_rng(1)
     gtl_point_cloud = np.random.randint(10, size=(count, 3))
+    # gtl_point_cloud = np.array([[0, 0, 1], [0, 0, 2], [5, 5, 1], [5, 5, 2]])
     el_point_cloud = gtl_point_cloud + np.random.randint(2, size=(count, 3))
+    shared_el = np.copy(el_point_cloud)
 
     processes = []
     for i in range(count):
-        p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], el_point_cloud[i])
+        p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], el_point_cloud[i], shared_el)
         p.start()
         processes.append(p)
 
@@ -25,6 +28,8 @@ if __name__ == '__main__':
     fin_message_sent = False
     final_point_cloud = np.zeros([count, 3])
     fin_processes = np.zeros(count)
+
+    # utils.plot_point_cloud(el_point_cloud, shared_el)
 
     while True:
         data, _ = server_sock.recvfrom(1024)
@@ -48,9 +53,8 @@ if __name__ == '__main__':
 
     server_sock.close()
 
-    print(final_point_cloud)
+    # print(final_point_cloud)
     print(utils.hausdorff_distance(final_point_cloud, gtl_point_cloud))
-    # utils.plot_point_cloud(final_point_cloud)
 
     for p in processes:
         p.join()
