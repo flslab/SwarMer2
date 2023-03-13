@@ -14,10 +14,12 @@ class StateMachine:
         self.context = context
         self.sock = sock
         self.timer_available = None
+        self.timer_size = None
         self.challenge_ack = False
 
     def start(self):
         self.enter(StateTypes.AVAILABLE)
+        self.query_size()
 
     def handle_size_query(self, msg):
         resp = Message(MessageTypes.SIZE_REPLY, args=msg.args).to_fls(msg)
@@ -26,7 +28,7 @@ class StateMachine:
     def handle_size_reply(self, msg):
         if msg.args[0] == self.context.query_id:
             self.context.size += 1
-            logger.warning(f"swarm {self.context.swarm_id} size {self.context.size}")
+            logger.critical(f"swarm {self.context.swarm_id} size {self.context.size}")
         if self.context.size == self.context.count:
             if Config.THAW_SWARMS:
                 thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
@@ -87,12 +89,7 @@ class StateMachine:
     def enter_available_state(self):
         print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
 
-        if self.context.fid % 2:
-            self.context.size = 1
-            self.context.set_query_id(str(uuid.uuid4())[:8])
-            size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
-            self.broadcast(size_query)
-
+        # if random.random() > .5:
         if not self.challenge_ack:
             self.context.increment_range()
 
@@ -129,21 +126,28 @@ class StateMachine:
     def enter_waiting_state(self):
         pass
 
-    def enter(self, state):
-        # print(self.context.fid, state)
-        # cancel timer before leaving
-        # if self.state == StateTypes.AVAILABLE:
-        #     if self.timerAvailable is not None:
-        #         self.timerAvailable.cancel()
-        #         self.timerAvailable = None
+    def query_size(self):
+        if self.timer_size is not None:
+            self.timer_size.cancel()
+            self.timer_size = None
 
+        self.timer_size = threading.Timer(10, self.query_size)
+        self.timer_size.start()
+
+        if self.context.fid % 2:
+            self.context.size = 1
+            self.context.set_query_id(str(uuid.uuid4())[:8])
+            size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
+            self.broadcast(size_query)
+
+    def enter(self, state):
         self.state = state
 
         if self.timer_available is not None:
             self.timer_available.cancel()
             self.timer_available = None
 
-        self.timer_available = threading.Timer(5 + self.context.fid % 5, self.reenter, (StateTypes.AVAILABLE,))
+        self.timer_available = threading.Timer(5, self.reenter, (StateTypes.AVAILABLE,))
         self.timer_available.start()
 
         if self.state == StateTypes.AVAILABLE:
@@ -202,9 +206,10 @@ class StateMachine:
             fin_message = Message(MessageTypes.FIN)
             if self.timer_available is not None:
                 self.timer_available.cancel()
+                self.timer_size.cancel()
                 self.timer_available = None
             self.send_to_server(fin_message)
-            print(self.context.history.merge_lists())
+            # print(self.context.history.merge_lists())
         elif event == MessageTypes.SIZE_QUERY:
             self.handle_size_query(msg)
         elif event == MessageTypes.SIZE_REPLY:
