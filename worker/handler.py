@@ -11,15 +11,22 @@ class HandlerThread(threading.Thread):
     def run(self):
         self.state_machine.start()
         while True:
-            event = self.event_queue.get()
+            item = self.event_queue.get()
+            if item.stale:
+                continue
+
+            event = item.event
             self.state_machine.drive(event)
+            self.flush_queue()
 
             if event.type == message.MessageTypes.STOP:
-                self.flush_queue()
                 break
-            elif event.type == message.MessageTypes.THAW_SWARM:
-                self.flush_queue()
 
     def flush_queue(self):
-        while not self.event_queue.empty():
-            self.event_queue.get()
+        with self.event_queue.mutex:
+            for item in self.event_queue.queue:
+                if item.event.type == message.MessageTypes.SIZE_REPLY or\
+                        item.event.type == message.MessageTypes.SIZE_REPLY:
+                    item.stale = False
+                else:
+                    item.stale = True

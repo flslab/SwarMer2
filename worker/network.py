@@ -1,3 +1,5 @@
+from dataclasses import dataclass, field
+from typing import Any
 import threading
 import numpy as np
 
@@ -19,7 +21,7 @@ class NetworkThread(threading.Thread):
             if self.is_message_valid(msg):
                 self.latest_message_id[msg.fid] = msg.id
                 self.context.log_received_message(msg)
-                self.event_queue.put(msg)
+                self.event_queue.put(NetworkThread.prioritize_message(msg))
                 if msg.type == message.MessageTypes.STOP:
                     break
 
@@ -37,3 +39,20 @@ class NetworkThread(threading.Thread):
             if dist > msg.range:
                 return False
         return True
+
+    @staticmethod
+    def prioritize_message(msg):
+        if msg.type == message.MessageTypes.STOP or msg.type == message.MessageTypes.THAW_SWARM:
+            return PrioritizedItem(0, msg, False)
+        if msg.type == message.MessageTypes.SIZE_QUERY or msg.type == message.MessageTypes.SIZE_REPLY:
+            return PrioritizedItem(2, msg, False)
+        if msg.type == message.MessageTypes.SET_WAITING or msg.type == message.MessageTypes.FOLLOW_MERGE:
+            return PrioritizedItem(1, msg, False)
+        return PrioritizedItem(3, msg, False)
+
+
+@dataclass(order=True)
+class PrioritizedItem:
+    priority: int
+    event: Any = field(compare=False)
+    stale: bool = field(compare=False)
