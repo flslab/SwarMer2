@@ -54,7 +54,7 @@ if __name__ == '__main__':
     server_sock.close()
 
     # print(final_point_cloud)
-    print(utils.hausdorff_distance(final_point_cloud, gtl_point_cloud))
+    print(f"hd: {utils.hausdorff_distance(final_point_cloud, gtl_point_cloud)}")
 
     for p in processes:
         p.join()

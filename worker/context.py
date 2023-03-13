@@ -28,7 +28,7 @@ class WorkerContext:
         self.history.log(WorkerContext.SWARM_ID, self.swarm_id)
         self.shared_el = shared_el
         self.message_id = 0
-        self.speed = .5
+        self.speed = 1
 
     def set_swarm_id(self, swarm_id):
         self.swarm_id = swarm_id
