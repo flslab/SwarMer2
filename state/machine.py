@@ -16,6 +16,7 @@ class StateMachine:
         self.timer_available = None
         self.timer_size = None
         self.challenge_ack = False
+        self.challenge_probability = 1
 
     def start(self):
         self.enter(StateTypes.AVAILABLE)
@@ -41,7 +42,7 @@ class StateMachine:
 
     def handle_challenge_init(self, msg):
         logger.info(f"{self.context.fid} received challenge message from {msg.fid}")
-        if msg.swarm_id > self.context.swarm_id:
+        if msg.swarm_id != self.context.swarm_id:
             challenge_accept_message = Message(MessageTypes.CHALLENGE_ACCEPT, args=msg.args).to_fls(msg)
             self.broadcast(challenge_accept_message)
             logger.info(f"{self.context.fid} sent challenge accept to {msg.fid}")
@@ -54,13 +55,21 @@ class StateMachine:
             self.context.set_challenge_id(None)
             challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK).to_fls(msg)
             self.broadcast(challenge_ack_message)
-            self.context.set_anchor(msg)
-            self.enter(StateTypes.BUSY_LOCALIZING)
+            if msg.swarm_id < self.context.swarm_id:
+                self.context.set_anchor(msg)
+                self.enter(StateTypes.BUSY_LOCALIZING)
+            else:
+                self.enter(StateTypes.BUSY_ANCHOR)
+
         else:
             logger.info(f"{self.context.fid} challenge id does not match")
 
     def handle_challenge_ack(self, msg):
-        self.enter(StateTypes.BUSY_ANCHOR)
+        if msg.swarm_id < self.context.swarm_id:
+            self.context.set_anchor(msg)
+            self.enter(StateTypes.BUSY_LOCALIZING)
+        else:
+            self.enter(StateTypes.BUSY_ANCHOR)
 
     def handle_challenge_fin(self, msg):
         self.enter(StateTypes.AVAILABLE)
@@ -79,6 +88,7 @@ class StateMachine:
         print(f"{self.context.fid}({self.context.swarm_id}) merged into {msg.args[1]}")
         self.context.move(msg.args[0])
         self.context.set_swarm_id(msg.args[1])
+        self.challenge_probability /= 1.61
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
@@ -89,15 +99,15 @@ class StateMachine:
     def enter_available_state(self):
         print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
 
-        # if random.random() > .5:
-        if not self.challenge_ack:
-            self.context.increment_range()
+        if random.random() < self.challenge_probability:
+            if not self.challenge_ack:
+                self.context.increment_range()
 
-        self.challenge_ack = False
-        self.context.set_challenge_id(str(uuid.uuid4())[:8])
-        challenge_msg = Message(MessageTypes.CHALLENGE_INIT, args=(self.context.challenge_id,)).to_all()
-        self.broadcast(challenge_msg)
-        logger.info(f"{self.context.fid} sent challenge request")
+            self.challenge_ack = False
+            self.context.set_challenge_id(str(uuid.uuid4())[:8])
+            challenge_msg = Message(MessageTypes.CHALLENGE_INIT, args=(self.context.challenge_id,)).to_all()
+            self.broadcast(challenge_msg)
+            logger.info(f"{self.context.fid} sent challenge request")
 
     def enter_busy_localizing_state(self):
         logger.info(f"{self.context.fid} localizing relative to {self.context.anchor.fid}")
@@ -116,12 +126,14 @@ class StateMachine:
 
         challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
         self.broadcast(challenge_fin_message)
+        self.challenge_probability /= 1.61
 
         self.enter(StateTypes.AVAILABLE)
 
     def enter_busy_anchor_state(self):
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
+        # self.challenge_probability /= 1.61
 
     def enter_waiting_state(self):
         pass
