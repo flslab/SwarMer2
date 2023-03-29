@@ -19,14 +19,16 @@ class WorkerSocket:
     def receive(self):
         data, _ = self.sock.recvfrom(1024)
         msg = pickle.loads(data)
-        return msg
+        return msg, len(data)
 
     def broadcast(self, msg, retry=2):
+        data = pickle.dumps(msg)
         try:
-            self.sock.sendto(pickle.dumps(msg), Constants.BROADCAST_ADDRESS)
+            self.sock.sendto(data, Constants.BROADCAST_ADDRESS)
         except OSError:
             if retry:
                 self.broadcast(msg, retry - 1)
+        return len(data)
 
     def send_to_server(self, msg):
         self.sock.sendto(pickle.dumps(msg), Constants.SERVER_ADDRESS)
