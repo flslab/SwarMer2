@@ -1,5 +1,6 @@
 import time
 import numpy as np
+from multiprocessing import shared_memory
 from config import Config
 from utils import logger
 from .history import History
@@ -11,7 +12,7 @@ class WorkerContext:
     LOCATION = 2
     SWARM_ID = 3
 
-    def __init__(self, count, fid, gtl, el, shared_el):
+    def __init__(self, count, fid, gtl, el, shm_name):
         self.count = count
         self.fid = fid
         self.gtl = gtl
@@ -26,9 +27,10 @@ class WorkerContext:
         self.history = History(4)
         self.history.log(WorkerContext.LOCATION, self.el)
         self.history.log(WorkerContext.SWARM_ID, self.swarm_id)
-        self.shared_el = shared_el
+        self.shm_name = shm_name
         self.message_id = 0
         self.speed = 1
+        self.alpha = 5 / 180 * np.pi
 
     def set_swarm_id(self, swarm_id):
         self.swarm_id = swarm_id
@@ -36,7 +38,9 @@ class WorkerContext:
 
     def set_el(self, el):
         self.el = el
-        self.shared_el[self.fid - 1] = el
+        shared_mem = shared_memory.SharedMemory(name=self.shm_name)
+        shared_array = np.ndarray((self.count, 3), dtype=np.float64, buffer=shared_mem.buf)
+        shared_array[self.fid - 1] = el
         self.history.log(WorkerContext.LOCATION, self.el)
 
     def set_query_id(self, query_id):
@@ -51,9 +55,35 @@ class WorkerContext:
     def set_radio_range(self, radio_range):
         self.radio_range = radio_range
 
+    def deploy(self):
+        self.move(self.gtl - self.el)
+
     def move(self, vector):
-        time.sleep(np.linalg.norm(vector) / self.speed)
-        self.set_el(self.el + vector)
+        erred_v = self.add_dead_reckoning_error(vector)
+        self.history.log(WorkerContext.LOCATION, self.el)
+        time.sleep(np.linalg.norm(erred_v) / self.speed)
+        self.set_el(self.el + erred_v)
+
+    def add_dead_reckoning_error(self, vector):
+        if vector[0] or vector[1]:
+            i = np.array([vector[1], -vector[0], 0])
+        elif vector[2]:
+            i = np.array([vector[2], 0, -vector[0]])
+        else:
+            return vector
+
+        j = np.cross(vector, i)
+        norm_i = np.linalg.norm(i)
+        norm_j = np.linalg.norm(j)
+        norm_v = np.linalg.norm(vector)
+        i = i / norm_i
+        j = j / norm_j
+        phi = np.random.uniform(0, 2 * np.pi)
+        error = np.sin(phi) * i + np.cos(phi) * j
+        r = np.linalg.norm(vector) * np.tan(self.alpha)
+
+        erred_v = vector + np.random.uniform(0, r) * error
+        return norm_v * erred_v / np.linalg.norm(erred_v)
 
     def update_neighbor(self, ctx):
         self.neighbors[ctx.fid] = ctx.swarm_id
@@ -77,9 +107,14 @@ class WorkerContext:
         self.query_id = None
         self.challenge_id = None
 
-    def log_received_message(self, msg):
+    def log_received_message(self, msg, length):
+        # self.shared_mem["received_bytes"][self.fid - 1] = length
         self.history.log(WorkerContext.RECEIVED_MASSAGES, msg)
 
-    def log_sent_message(self, msg):
+    def log_sent_message(self, msg, length):
+        # self.shared_mem["sent_bytes"][self.fid - 1] = length
         self.history.log(WorkerContext.SENT_MESSAGES, msg)
         self.message_id += 1
+
+    def get_location_history(self):
+        return self.history[WorkerContext.LOCATION]
