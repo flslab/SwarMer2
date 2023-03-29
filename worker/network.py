@@ -17,10 +17,10 @@ class NetworkThread(threading.Thread):
     def run(self):
         while True:
             # if self.sock.is_ready():
-            msg = self.sock.receive()
+            msg, length = self.sock.receive()
             if self.is_message_valid(msg):
                 self.latest_message_id[msg.fid] = msg.id
-                self.context.log_received_message(msg)
+                self.context.log_received_message(msg, length)
                 self.event_queue.put(NetworkThread.prioritize_message(msg))
                 if msg.type == message.MessageTypes.STOP:
                     break
