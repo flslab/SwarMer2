@@ -19,6 +19,7 @@ class StateMachine:
         self.challenge_probability = 1
 
     def start(self):
+        self.context.deploy()
         self.enter(StateTypes.AVAILABLE)
         self.query_size()
 
@@ -95,6 +96,17 @@ class StateMachine:
         self.context.thaw_swarm()
         self.enter(StateTypes.AVAILABLE)
         logger.critical(f"{self.context.fid} thawed")
+
+    def handle_stop(self, msg):
+        fin_message = Message(MessageTypes.FIN, args=(self.context.get_location_history(),))
+        if self.timer_available is not None:
+            self.timer_available.cancel()
+            self.timer_available = None
+        if self.timer_size is not None:
+            self.timer_size.cancel()
+            self.timer_size = None
+        self.send_to_server(fin_message)
+        # self.context.terminate()
 
     def enter_available_state(self):
         print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
@@ -215,13 +227,7 @@ class StateMachine:
                 self.handle_challenge_ack(msg)
 
         if event == MessageTypes.STOP:
-            fin_message = Message(MessageTypes.FIN)
-            if self.timer_available is not None:
-                self.timer_available.cancel()
-                self.timer_size.cancel()
-                self.timer_available = None
-            self.send_to_server(fin_message)
-            # print(self.context.history.merge_lists())
+            self.handle_stop(msg)
         elif event == MessageTypes.SIZE_QUERY:
             self.handle_size_query(msg)
         elif event == MessageTypes.SIZE_REPLY:
@@ -229,10 +235,14 @@ class StateMachine:
         elif event == MessageTypes.THAW_SWARM:
             self.handle_thaw_swarm(msg)
 
+    def generate_final_report(self):
+        report = dict()
+        return report
+
     def broadcast(self, msg):
         msg.from_fls(self.context)
-        self.context.log_sent_message(msg)
-        self.sock.broadcast(msg)
+        length = self.sock.broadcast(msg)
+        self.context.log_sent_message(msg, length)
 
     def send_to_server(self, msg):
         msg.from_fls(self.context).to_server()
