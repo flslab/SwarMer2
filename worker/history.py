@@ -9,6 +9,9 @@ class History:
         for i in range(size):
             self.lists[i] = []
 
+    def __getitem__(self, item):
+        return self.lists[item]
+
     def log(self, category, value):
         entry = HistoryEntry(category, value)
         self.lists[category].append(entry)
