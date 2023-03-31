@@ -1,7 +1,9 @@
 import socket
 import pickle
 import select
+import numpy as np
 from constants import Constants
+from config import Config
 
 
 class WorkerSocket:
@@ -19,9 +21,18 @@ class WorkerSocket:
     def receive(self):
         data, _ = self.sock.recvfrom(1024)
         msg = pickle.loads(data)
+
+        if Config.DROP_PROB_RECEIVER:
+            if np.random.random() <= Config.DROP_PROB_SENDER:
+                return None, 0
+
         return msg, len(data)
 
     def broadcast(self, msg, retry=2):
+        if Config.DROP_PROB_SENDER:
+            if np.random.random() <= Config.DROP_PROB_SENDER:
+                return 0
+
         data = pickle.dumps(msg)
         try:
             self.sock.sendto(data, Constants.BROADCAST_ADDRESS)

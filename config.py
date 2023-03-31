@@ -3,3 +3,5 @@ class Config:
     NUMBER_POINTS = 114
     INITIAL_RANGE = 2
     MAX_RANGE = 30
+    DROP_PROB_SENDER = 0
+    DROP_PROB_RECEIVER = 0

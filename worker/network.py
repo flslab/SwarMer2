@@ -26,6 +26,8 @@ class NetworkThread(threading.Thread):
                     break
 
     def is_message_valid(self, msg):
+        if msg is None:
+            return False
         if msg.fid == self.context.fid:
             return False
         if msg.dest_fid != self.context.fid and msg.dest_fid != '*':
