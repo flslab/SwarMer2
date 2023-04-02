@@ -29,8 +29,8 @@ class WorkerContext:
         self.history.log(WorkerContext.SWARM_ID, self.swarm_id)
         self.shm_name = shm_name
         self.message_id = 0
-        self.speed = 1
-        self.alpha = 5 / 180 * np.pi
+        self.speed = Config.FLS_SPEED
+        self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
 
     def set_swarm_id(self, swarm_id):
         self.swarm_id = swarm_id
@@ -70,6 +70,9 @@ class WorkerContext:
         elif vector[2]:
             i = np.array([vector[2], 0, -vector[0]])
         else:
+            return vector
+
+        if self.alpha == 0:
             return vector
 
         j = np.cross(vector, i)

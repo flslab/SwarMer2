@@ -9,10 +9,11 @@ from .types import StateTypes
 
 
 class StateMachine:
-    def __init__(self, context, sock):
+    def __init__(self, context, sock, barrier):
         self.state = StateTypes.AVAILABLE
         self.context = context
         self.sock = sock
+        self.barrier = barrier
         self.timer_available = None
         self.timer_size = None
         self.challenge_ack = False
@@ -121,6 +122,10 @@ class StateMachine:
             self.broadcast(challenge_msg)
             logger.info(f"{self.context.fid} sent challenge request")
 
+        # print(self.context.history.merge_lists())
+        # n_waiting = self.barrier.wait()
+        # print(n_waiting)
+
     def enter_busy_localizing_state(self):
         logger.info(f"{self.context.fid} localizing relative to {self.context.anchor.fid}")
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
@@ -171,7 +176,7 @@ class StateMachine:
             self.timer_available.cancel()
             self.timer_available = None
 
-        self.timer_available = threading.Timer(5, self.reenter, (StateTypes.AVAILABLE,))
+        self.timer_available = threading.Timer(Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
         self.timer_available.start()
 
         if self.state == StateTypes.AVAILABLE:

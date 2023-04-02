@@ -1,3 +1,4 @@
+import multiprocessing
 import socket
 import pickle
 import numpy as np
@@ -9,14 +10,19 @@ from constants import Constants
 from message import Message, MessageTypes
 import worker
 import utils
-import bag
+
+
+def press_enter_to_proceed():
+    input("press enter to proceed")
 
 
 if __name__ == '__main__':
     count = Config.NUMBER_POINTS
     np.random.default_rng(1)
-    mat = scipy.io.loadmat('cat.mat')
+    mat = scipy.io.loadmat('butterfly.mat')
     gtl_point_cloud = mat['p']
+    np.random.shuffle(gtl_point_cloud)
+    print(gtl_point_cloud)
     # gtl_point_cloud = np.random.uniform(0, 30, size=(count, 3))
     # gtl_point_cloud = np.array([[0, 0, 1], [0, 0, 2], [5, 5, 1], [5, 5, 2]])
     # el_point_cloud = gtl_point_cloud + np.random.randint(2, size=(count, 3))
@@ -24,9 +30,11 @@ if __name__ == '__main__':
     shm = shared_memory.SharedMemory(create=True, size=gtl_point_cloud.nbytes)
     shared_array = np.ndarray(gtl_point_cloud.shape, dtype=gtl_point_cloud.dtype, buffer=shm.buf)
 
+    barrier = multiprocessing.Barrier(count+1, action=press_enter_to_proceed)
+
     processes = []
     for i in range(count):
-        p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name)
+        p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name, barrier)
         p.start()
         processes.append(p)
 
@@ -37,7 +45,10 @@ if __name__ == '__main__':
     fin_processes = np.zeros(count)
     flight_path = {}
 
-    # utils.plot_point_cloud(el_point_cloud, shared_el)
+    # utils.plot_point_cloud(shared_array, shm.name)
+
+    # press_enter_to_proceed()
+    # barrier.wait()
 
     while True:
         data, _ = server_sock.recvfrom(2048)
@@ -64,6 +75,7 @@ if __name__ == '__main__':
     server_sock.close()
 
     # print(shared_array)
+    # utils.plot_point_cloud(shared_array, None)
 
     for p in processes:
         p.join()
@@ -72,6 +84,8 @@ if __name__ == '__main__':
     # print(flight_path)
     # print(flight_path.values())
     print("writing bag file...")
+    import bag
+
     msgs = [bag.generate_msg_flight_path(path) for path in flight_path.values()]
     bag.write_msgs_bag(msgs, 'test.bag')
 
