@@ -18,25 +18,26 @@ def press_enter_to_proceed():
 
 if __name__ == '__main__':
     # count = Config.NUMBER_POINTS
-    count = 100
+    count = 94
     np.random.default_rng(1)
-    # mat = scipy.io.loadmat('butterfly.mat')
-    # gtl_point_cloud = mat['p']
+    mat = scipy.io.loadmat('butterfly.mat')
+    gtl_point_cloud = mat['p']
     # np.random.shuffle(gtl_point_cloud)
     # print(gtl_point_cloud)
-    gtl_point_cloud = np.random.uniform(0, 30, size=(count, 3))
+    # gtl_point_cloud = np.random.uniform(0, 30, size=(count, 3))
     # gtl_point_cloud = np.array([[0, 0, 1], [0, 0, 2], [5, 5, 1], [5, 5, 2]])
     # el_point_cloud = gtl_point_cloud + np.random.randint(2, size=(count, 3))
 
     # shm = shared_memory.SharedMemory(create=True, size=gtl_point_cloud.nbytes)
     # shared_array = np.ndarray(gtl_point_cloud.shape, dtype=gtl_point_cloud.dtype, buffer=shm.buf)
 
+    # utils.plot_point_cloud(gtl_point_cloud, None)
     barrier = multiprocessing.Barrier(count+1, action=press_enter_to_proceed)
 
     processes = []
     for i in range(count):
-        gtl_point_cloud[i] = np.array([i, i, i])
-        p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), None, barrier)
+        point = np.array([gtl_point_cloud[i][0], gtl_point_cloud[i][1], gtl_point_cloud[i][2]])
+        p = worker.WorkerProcess(count, i + 1, point, np.array([0, 0, 0]), None, barrier)
         p.start()
         processes.append(p)
 
