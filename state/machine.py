@@ -114,7 +114,8 @@ class StateMachine:
 
         if random.random() < self.challenge_probability:
             if not self.challenge_ack:
-                self.context.increment_range()
+                if not self.context.increment_range():
+                    return
 
             self.challenge_ack = False
             self.context.set_challenge_id(str(uuid.uuid4())[:8])

@@ -96,6 +96,9 @@ class WorkerContext:
         if self.radio_range < Config.MAX_RANGE:
             self.set_radio_range(self.radio_range + 1)
             logger.critical(f"{self.fid} range incremented to {self.radio_range}")
+            return True
+        else:
+            return False
 
     def reset_range(self):
         self.set_radio_range(Config.INITIAL_RANGE)
