@@ -25,8 +25,7 @@ class HandlerThread(threading.Thread):
     def flush_queue(self):
         with self.event_queue.mutex:
             for item in self.event_queue.queue:
-                if item.event.type == message.MessageTypes.SIZE_REPLY or\
-                        item.event.type == message.MessageTypes.SIZE_REPLY:
+                if item.event.type == message.MessageTypes.SIZE_REPLY:
                     item.stale = False
                 else:
                     item.stale = True

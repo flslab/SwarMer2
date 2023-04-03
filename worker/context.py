@@ -38,9 +38,10 @@ class WorkerContext:
 
     def set_el(self, el):
         self.el = el
-        shared_mem = shared_memory.SharedMemory(name=self.shm_name)
-        shared_array = np.ndarray((self.count, 3), dtype=np.float64, buffer=shared_mem.buf)
-        shared_array[self.fid - 1] = el
+        if self.shm_name:
+            shared_mem = shared_memory.SharedMemory(name=self.shm_name)
+            shared_array = np.ndarray((self.count, 3), dtype=np.float64, buffer=shared_mem.buf)
+            shared_array[self.fid - 1] = el
         self.history.log(WorkerContext.LOCATION, self.el)
 
     def set_query_id(self, query_id):
