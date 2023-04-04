@@ -2,10 +2,10 @@ import multiprocessing
 import socket
 import pickle
 import numpy as np
-from multiprocessing import shared_memory
-import scipy.io
+# from multiprocessing import shared_memory
+# import scipy.io
 
-from config import Config
+# from config import Config
 from constants import Constants
 from message import Message, MessageTypes
 import worker
@@ -18,13 +18,13 @@ def press_enter_to_proceed():
 
 if __name__ == '__main__':
     # count = Config.NUMBER_POINTS
-    count = 94
-    np.random.default_rng(1)
-    mat = scipy.io.loadmat('butterfly.mat')
-    gtl_point_cloud = mat['p']
+    count = 100
+    # np.random.default_rng(1)
+    # mat = scipy.io.loadmat('butterfly.mat')
+    # gtl_point_cloud = mat['p']
     # np.random.shuffle(gtl_point_cloud)
     # print(gtl_point_cloud)
-    # gtl_point_cloud = np.random.uniform(0, 30, size=(count, 3))
+    gtl_point_cloud = np.random.uniform(0, 30, size=(count, 3))
     # gtl_point_cloud = np.array([[0, 0, 1], [0, 0, 2], [5, 5, 1], [5, 5, 2]])
     # el_point_cloud = gtl_point_cloud + np.random.randint(2, size=(count, 3))
 
@@ -36,8 +36,11 @@ if __name__ == '__main__':
 
     processes = []
     for i in range(count):
-        point = np.array([gtl_point_cloud[i][0], gtl_point_cloud[i][1], gtl_point_cloud[i][2]])
-        p = worker.WorkerProcess(count, i + 1, point, np.array([0, 0, 0]), None, barrier)
+        o = np.array([0, 0, 10.0])
+        rx = np.array([16.0, 0, 0])
+        ry = np.array([0, 16.0, 0])
+        gtl_point_cloud[i] = o + rx * np.sin(i*2*np.pi/count) + ry * np.cos(i*2*np.pi/count)
+        p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), None, barrier)
         p.start()
         processes.append(p)
 
@@ -48,7 +51,7 @@ if __name__ == '__main__':
     fin_processes = np.zeros(count)
     flight_path = {}
 
-    # utils.plot_point_cloud(shared_array, shm.name)
+    # utils.plot_point_cloud(gtl_point_cloud, None)
 
     # press_enter_to_proceed()
     # barrier.wait()
@@ -58,6 +61,7 @@ if __name__ == '__main__':
         msg = pickle.loads(data)
 
         if msg.type == MessageTypes.FIN and not fin_message_sent:
+            print("______________________________")
             stop_message = Message(MessageTypes.STOP).from_server().to_all()
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -85,6 +89,9 @@ if __name__ == '__main__':
 
     print(f"hd: {utils.hausdorff_distance(final_point_cloud, gtl_point_cloud)}")
     print(final_point_cloud)
+
+    # utils.plot_point_cloud(final_point_cloud, None)
+
     # print(flight_path)
     # print(flight_path.values())
     # print("writing bag file...")
