@@ -1,4 +1,3 @@
-import multiprocessing
 import threading
 import socket
 import pickle
@@ -35,11 +34,11 @@ def compute_hd(sh_arrays, gtl):
 
 if __name__ == '__main__':
     # count = Config.NUMBER_POINTS
-    count = 94
+    # count = 94
     # np.random.default_rng(1)
-    mat = scipy.io.loadmat('butterfly.mat')
+    mat = scipy.io.loadmat(f'{Config.SHAPE}.mat')
     butterfly = mat['p']
-    # count = butterfly.shape[0]
+    count = butterfly.shape[0]
     # print(count)
     # np.random.shuffle(gtl_point_cloud)
     # print(gtl_point_cloud)
@@ -141,7 +140,7 @@ if __name__ == '__main__':
     for p in processes:
         p.join()
 
-    with open(f'packets{num_round}.txt', 'w') as f:
+    with open(f'packets_{Config.SHAPE}_{Config.NUMBER_ROUND}.txt', 'w') as f:
         for key, value in flight_path.items():
             f.write(f"{key} {value['bytes_sent']} {value['bytes_received']}")
             f.write("\n")
