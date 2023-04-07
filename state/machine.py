@@ -90,11 +90,11 @@ class StateMachine:
         print(f"{self.context.fid}({self.context.swarm_id}) merged into {msg.args[1]}")
         self.context.move(msg.args[0])
         self.context.set_swarm_id(msg.args[1])
-        self.challenge_probability /= 1.61
+        self.challenge_probability /= Config.CHALLENGE_REQUEST_DECAY
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
-        self.handle_report(None)
+        # self.handle_report(None)
         self.context.thaw_swarm()
         self.enter(StateTypes.AVAILABLE)
         logger.critical(f"{self.context.fid} thawed")
@@ -144,14 +144,14 @@ class StateMachine:
 
         challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
         self.broadcast(challenge_fin_message)
-        self.challenge_probability /= 1.61
+        self.challenge_probability /= Config.CHALLENGE_REQUEST_DECAY
 
         self.enter(StateTypes.AVAILABLE)
 
     def enter_busy_anchor_state(self):
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
-        # self.challenge_probability /= 1.61
+        # self.challenge_probability /= Config.CHALLENGE_REQUEST_DECAY
 
     def enter_waiting_state(self):
         pass
@@ -161,7 +161,7 @@ class StateMachine:
             self.timer_size.cancel()
             self.timer_size = None
 
-        self.timer_size = threading.Timer(10, self.query_size)
+        self.timer_size = threading.Timer(Config.SIZE_QUERY_TIMEOUT, self.query_size)
         self.timer_size.start()
 
         if self.context.fid % 2:

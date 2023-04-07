@@ -5,8 +5,9 @@ import pickle
 import numpy as np
 from multiprocessing import shared_memory
 import scipy.io
+import time
 
-# from config import Config
+from config import Config
 from constants import Constants
 from message import Message, MessageTypes
 import worker
@@ -29,7 +30,7 @@ def compute_hd(sh_arrays, gtl):
     # sh_mem = shared_memory.SharedMemory(name=shm_name)
     # sh_array = np.ndarray((count, 3), dtype=np.float64, buffer=sh_mem.buf)
     # print(sh_array)
-    hds.append(utils.hausdorff_distance(np.stack(sh_arrays), gtl))
+    hds.append((time.time(), utils.hausdorff_distance(np.stack(sh_arrays), gtl)))
 
 
 if __name__ == '__main__':
@@ -96,18 +97,22 @@ if __name__ == '__main__':
 
     compute_hd(shared_arrays, gtl_point_cloud)
 
-    num_round = 1
-    max_rounds = 1
+    num_round = 0
+    max_rounds = Config.NUMBER_ROUND
+    round_time = [(time.time(), num_round)]
 
     while True:
         data, _ = server_sock.recvfrom(2048)
         msg = pickle.loads(data)
 
         if msg.type == MessageTypes.FIN and not fin_message_sent:
+            num_round += 1
+            round_time.append((time.time(), num_round))
             if num_round < max_rounds:
                 msg_type = MessageTypes.THAW_SWARM
             else:
                 msg_type = MessageTypes.STOP
+                fin_message_sent = True
 
             server_message = Message(msg_type).from_server().to_all()
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -116,7 +121,6 @@ if __name__ == '__main__':
             sock.settimeout(0.2)
             sock.sendto(pickle.dumps(server_message), Constants.BROADCAST_ADDRESS)
             sock.close()
-            fin_message_sent = True
             continue
 
         final_point_cloud[msg.fid - 1] = msg.el
@@ -124,19 +128,10 @@ if __name__ == '__main__':
         fin_processes[msg.fid - 1] = 1
 
         if np.sum(fin_processes) == count:
-            fin_message_sent = False
             print(f"hd: {utils.hausdorff_distance(final_point_cloud, gtl_point_cloud)}")
 
-            if num_round == max_rounds:
-                hd_timer.cancel()
-                break
-
-            num_round += 1
-
-            with open(f'packets{num_round}', 'w') as f:
-                for key, value in flight_path.items():
-                    f.write(f"{key} {value['bytes_sent']} {value['bytes_received']}")
-                    f.write("\n")
+            hd_timer.cancel()
+            break
 
     server_sock.close()
 
@@ -146,6 +141,11 @@ if __name__ == '__main__':
     for p in processes:
         p.join()
 
+    with open(f'packets{num_round}.txt', 'w') as f:
+        for key, value in flight_path.items():
+            f.write(f"{key} {value['bytes_sent']} {value['bytes_received']}")
+            f.write("\n")
+
     # print(final_point_cloud)
     # for a in shared_arrays:
     #     print(a)
@@ -154,12 +154,13 @@ if __name__ == '__main__':
         s.close()
         s.unlink()
 
-    print('\n'.join([str(a) for a in hds]))
+    print('\n'.join([f'{a[0]} {a[1]}' for a in hds]))
+    print('\n'.join([f'{b[0]} {b[1]}' for b in round_time]))
     # print(f"hd: {utils.hausdorff_distance(final_point_cloud, gtl_point_cloud)}")
     # print(final_point_cloud)
     # print(flight_path)
 
-    utils.plot_point_cloud(final_point_cloud, None)
+    # utils.plot_point_cloud(final_point_cloud, None)
 
     # print(flight_path)
     # print(flight_path.values())
