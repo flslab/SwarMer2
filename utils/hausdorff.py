@@ -5,7 +5,7 @@ def hausdorff_distance(a, b):
     dist = np.zeros_like(a)
     t = b - a
     for i in range(a.shape[0]):
-        dist[i] = compute_distance(a + t[i], b)
+        dist[i] = max(compute_distance(a + t[i], b), compute_distance(b, a + t[i]))
 
     return np.min(dist)
 
