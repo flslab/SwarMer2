@@ -40,8 +40,14 @@ class WorkerContext:
         self.el = el
         if self.shm_name:
             shared_mem = shared_memory.SharedMemory(name=self.shm_name)
-            shared_array = np.ndarray((self.count, 3), dtype=np.float64, buffer=shared_mem.buf)
-            shared_array[self.fid - 1] = el
+            shared_array = np.ndarray((3,), dtype=np.float64, buffer=shared_mem.buf)
+            shared_array[:] = self.el[:]
+            shared_mem.close()
+        # print(self.shared_array)
+        # if self.shared_array:
+        #     self.shared_array[:] = self.el[:]
+        #     print(self.shared_array)
+            # np.put(self.shared_array, [0, 1, 2], self.el)
         self.history.log(WorkerContext.LOCATION, self.el)
 
     def set_query_id(self, query_id):
@@ -114,14 +120,22 @@ class WorkerContext:
         self.query_id = None
         self.challenge_id = None
 
-    def log_received_message(self, msg, length):
+    def log_received_message(self, msg_type, length):
         # self.shared_mem["received_bytes"][self.fid - 1] = length
-        self.history.log(WorkerContext.RECEIVED_MASSAGES, msg)
+        meta = {"length": length}
+        self.history.log(WorkerContext.RECEIVED_MASSAGES, msg_type, meta)
 
-    def log_sent_message(self, msg, length):
+    def log_sent_message(self, msg_type, length):
         # self.shared_mem["sent_bytes"][self.fid - 1] = length
-        self.history.log(WorkerContext.SENT_MESSAGES, msg)
+        meta = {"length": length}
+        self.history.log(WorkerContext.SENT_MESSAGES, msg_type, meta)
         self.message_id += 1
 
     def get_location_history(self):
         return self.history[WorkerContext.LOCATION]
+
+    def get_received_messages(self):
+        return self.history[WorkerContext.RECEIVED_MASSAGES]
+
+    def get_sent_messages(self):
+        return self.history[WorkerContext.SENT_MESSAGES]

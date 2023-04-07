@@ -42,7 +42,9 @@ class WorkerSocket:
         return len(data)
 
     def send_to_server(self, msg):
-        self.sock.sendto(pickle.dumps(msg), Constants.SERVER_ADDRESS)
+        data = pickle.dumps(msg)
+        self.sock.sendto(data, Constants.SERVER_ADDRESS)
+        return len(data)
 
     def is_ready(self):
         ready = select.select([self.sock], [], [], 1)
