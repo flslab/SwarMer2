@@ -94,27 +94,28 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
+        self.handle_report(None)
         self.context.thaw_swarm()
         self.enter(StateTypes.AVAILABLE)
         logger.critical(f"{self.context.fid} thawed")
 
     def handle_stop(self, msg):
-        fin_message = Message(MessageTypes.FIN, args=(self.context.get_location_history(),))
-        if self.timer_available is not None:
-            self.timer_available.cancel()
-            self.timer_available = None
-        if self.timer_size is not None:
-            self.timer_size.cancel()
-            self.timer_size = None
+        fin_message = Message(MessageTypes.FIN, args=(self.get_final_report(),))
+        self.cancel_timers()
         self.send_to_server(fin_message)
-        # self.context.terminate()
+
+    def handle_report(self, msg):
+        report_message = Message(MessageTypes.REPORT, args=(self.get_final_report(),))
+        self.cancel_timers()
+        self.send_to_server(report_message)
 
     def enter_available_state(self):
         print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
 
         if random.random() < self.challenge_probability:
             if not self.challenge_ack:
-                self.context.increment_range()
+                if not self.context.increment_range():
+                    return
 
             self.challenge_ack = False
             self.context.set_challenge_id(str(uuid.uuid4())[:8])
@@ -239,16 +240,29 @@ class StateMachine:
             self.handle_size_reply(msg)
         elif event == MessageTypes.THAW_SWARM:
             self.handle_thaw_swarm(msg)
+        elif event == MessageTypes.REPORT:
+            self.handle_report(msg)
 
-    def generate_final_report(self):
-        report = dict()
+    def get_final_report(self):
+        report = {
+            "bytes_sent": sum([s.meta["length"] for s in self.context.get_sent_messages()]),
+            "bytes_received": sum([r.meta["length"] for r in self.context.get_received_messages()])
+        }
         return report
 
     def broadcast(self, msg):
         msg.from_fls(self.context)
         length = self.sock.broadcast(msg)
-        self.context.log_sent_message(msg, length)
+        self.context.log_sent_message(msg.type, length)
 
     def send_to_server(self, msg):
         msg.from_fls(self.context).to_server()
         self.sock.send_to_server(msg)
+
+    def cancel_timers(self):
+        if self.timer_available is not None:
+            self.timer_available.cancel()
+            self.timer_available = None
+        if self.timer_size is not None:
+            self.timer_size.cancel()
+            self.timer_size = None

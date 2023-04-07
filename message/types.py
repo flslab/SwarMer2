@@ -18,4 +18,5 @@ class MessageTypes(Enum):
     SIZE_QUERY = 12
     SIZE_REPLY = 13
     THAW_SWARM = 14
+    REPORT = 15
     FIN = 15

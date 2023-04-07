@@ -12,9 +12,10 @@ class History:
     def __getitem__(self, item):
         return self.lists[item]
 
-    def log(self, category, value):
-        entry = HistoryEntry(category, value)
+    def log(self, category, value, meta={}):
+        entry = HistoryEntry(value, meta)
         self.lists[category].append(entry)
+        return entry
 
     def merge_lists(self):
         lists = list(self.lists.values())
@@ -36,9 +37,9 @@ class History:
 
 @total_ordering
 class HistoryEntry:
-    def __init__(self, category, value):
+    def __init__(self, value, meta):
         self.t = time.time()
-        self.category = category
+        self.meta = meta
         self.value = value
 
     def __eq__(self, other):
@@ -48,4 +49,4 @@ class HistoryEntry:
         return self.t < other.t
 
     def __repr__(self):
-        return f"{self.t} {self.category} {self.value}"
+        return f"{self.t} {self.value}"
