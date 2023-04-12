@@ -119,6 +119,7 @@ if __name__ == '__main__':
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             sock.settimeout(0.2)
             sock.sendto(pickle.dumps(server_message), Constants.BROADCAST_ADDRESS)
+            sock.sendto(pickle.dumps(server_message), Constants.BROADCAST_ADDRESS)
             sock.close()
             continue
 
@@ -140,11 +141,19 @@ if __name__ == '__main__':
     for p in processes:
         p.join()
 
-    with open(f'packets_{Config.SHAPE}_{Config.NUMBER_ROUND}.txt', 'w') as f:
+    timestamp = int(time.time())
+    with open(f'packets_{Config.SHAPE}_{timestamp}.txt', 'w') as f:
         for key, value in flight_path.items():
             f.write(f"{key} {value['bytes_sent']} {value['bytes_received']}")
             f.write("\n")
 
+    with open(f'hd_{Config.SHAPE}_{timestamp}.txt', 'w') as f:
+        for hd in hds:
+            f.write(f"{hd[0]} {hd[1]}")
+            f.write("\n")
+        for rt in round_time:
+            f.write(f"{rt[0]} {rt[1]}")
+            f.write("\n")
     # print(final_point_cloud)
     # for a in shared_arrays:
     #     print(a)
@@ -153,8 +162,8 @@ if __name__ == '__main__':
         s.close()
         s.unlink()
 
-    print('\n'.join([f'{a[0]} {a[1]}' for a in hds]))
-    print('\n'.join([f'{b[0]} {b[1]}' for b in round_time]))
+    # print('\n'.join([f'{a[0]} {a[1]}' for a in hds]))
+    # print('\n'.join([f'{b[0]} {b[1]}' for b in round_time]))
     # print(f"hd: {utils.hausdorff_distance(final_point_cloud, gtl_point_cloud)}")
     # print(final_point_cloud)
     # print(flight_path)

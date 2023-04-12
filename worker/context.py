@@ -31,8 +31,10 @@ class WorkerContext:
         self.message_id = 0
         self.speed = Config.FLS_SPEED
         self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
+        self.lease = dict()
 
     def set_swarm_id(self, swarm_id):
+        print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
         self.swarm_id = swarm_id
         self.history.log(WorkerContext.SWARM_ID, self.swarm_id)
 
@@ -64,6 +66,9 @@ class WorkerContext:
 
     def deploy(self):
         self.move(self.gtl - self.el)
+
+    def fail(self):
+        self.set_el(np.array([.0, .0, .0]))
 
     def move(self, vector):
         erred_v = self.add_dead_reckoning_error(vector)
@@ -139,3 +144,24 @@ class WorkerContext:
 
     def get_sent_messages(self):
         return self.history[WorkerContext.SENT_MESSAGES]
+
+    def refresh_lease_table(self):
+        expired_leases = []
+        for fid, expiration_time in self.lease.items():
+            if time.time() > expiration_time:
+                expired_leases.append(fid)
+
+        for expired_lease in expired_leases:
+            self.lease.pop(expired_lease)
+            # print(f"anchor {self.fid} removed the lease for {expired_lease}")
+
+    def grant_lease(self, fid):
+        self.lease[fid] = time.time() + Config.CHALLENGE_LEASE_DURATION
+        # print(f"anchor {self.fid} granted lease for {fid}")
+
+    def is_lease_empty(self):
+        # print(f"len lease for {self.fid} is {len(self.lease)}")
+        return len(self.lease) == 0
+
+    def clear_lease_table(self):
+        self.lease.clear()
