@@ -34,6 +34,11 @@ class History:
                 heapq.heappush(heap, (next_elem, lst_idx, elem_idx + 1))
         return merged
 
+    def slice(self, start, end):
+        filtered_lists = dict()
+        for i in range(len(self.lists)):
+            filtered_lists[i] = filter(lambda x: start <= x.t <= end, self.lists[i])
+
 
 @total_ordering
 class HistoryEntry:

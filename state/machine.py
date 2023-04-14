@@ -2,8 +2,6 @@ import random
 import threading
 import uuid
 
-import numpy as np
-
 from message import Message, MessageTypes
 from config import Config
 from utils import logger
@@ -11,11 +9,11 @@ from .types import StateTypes
 
 
 class StateMachine:
-    def __init__(self, context, sock, barrier):
+    def __init__(self, context, sock, metrics):
         self.state = StateTypes.AVAILABLE
         self.context = context
+        self.metrics = metrics
         self.sock = sock
-        self.barrier = barrier
         self.timer_available = None
         self.timer_size = None
         self.timer_lease = None
@@ -107,14 +105,10 @@ class StateMachine:
         logger.critical(f"{self.context.fid} thawed")
 
     def handle_stop(self, msg):
-        fin_message = Message(MessageTypes.FIN, args=(self.get_final_report(),))
+        self.metrics.set_round_times(msg.args[0])
+        fin_message = Message(MessageTypes.FIN, args=(self.metrics.get_final_report(),))
         self.cancel_timers()
         self.send_to_server(fin_message)
-
-    def handle_report(self, msg):
-        report_message = Message(MessageTypes.REPORT, args=(self.get_final_report(),))
-        self.cancel_timers()
-        self.send_to_server(report_message)
 
     def handle_lease_renew(self, msg):
         self.context.grant_lease(msg.fid)
@@ -138,6 +132,7 @@ class StateMachine:
         # print(n_waiting)
 
     def enter_busy_localizing_state(self):
+        self.context.log_localize()
         logger.info(f"{self.context.fid} localizing relative to {self.context.anchor.fid}")
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
@@ -159,6 +154,7 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def enter_busy_anchor_state(self):
+        self.context.log_anchor()
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
         # self.challenge_probability /= Config.CHALLENGE_REQUEST_DECAY
@@ -208,9 +204,11 @@ class StateMachine:
         self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
         self.timer_failure.start()
         if random.random() < Config.FAILURE_PROB:
+            self.enter(StateTypes.DEPLOYING)
             self.context.fail()
             print(f"{self.context.fid} failed")
             self.context.deploy()
+            self.enter(StateTypes.AVAILABLE)
 
     def enter(self, state):
         self.leave(self.state)
@@ -222,7 +220,9 @@ class StateMachine:
             self.timer_available = None
 
         self.timer_available = threading.Timer(Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
-        if self.state != StateTypes.BUSY_ANCHOR and self.state != StateTypes.BUSY_LOCALIZING:
+        if self.state != StateTypes.BUSY_ANCHOR\
+                and self.state != StateTypes.BUSY_LOCALIZING\
+                and self.state != StateTypes.DEPLOYING:
             self.timer_available.start()
 
         if self.state == StateTypes.AVAILABLE:
@@ -296,15 +296,6 @@ class StateMachine:
             self.handle_size_reply(msg)
         elif event == MessageTypes.THAW_SWARM:
             self.handle_thaw_swarm(msg)
-        elif event == MessageTypes.REPORT:
-            self.handle_report(msg)
-
-    def get_final_report(self):
-        report = {
-            "bytes_sent": sum([s.meta["length"] for s in self.context.get_sent_messages()]),
-            "bytes_received": sum([r.meta["length"] for r in self.context.get_received_messages()])
-        }
-        return report
 
     def broadcast(self, msg):
         msg.from_fls(self.context)

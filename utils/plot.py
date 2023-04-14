@@ -5,7 +5,7 @@ from multiprocessing import shared_memory
 import numpy as np
 
 
-# mpl.use('macosx')
+mpl.use('macosx')
 
 
 def plot_point_cloud(ptcld, shm_name):

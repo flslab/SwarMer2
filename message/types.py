@@ -19,4 +19,4 @@ class MessageTypes(Enum):
     SIZE_REPLY = 13
     THAW_SWARM = 14
     REPORT = 15
-    FIN = 15
+    FIN = 16

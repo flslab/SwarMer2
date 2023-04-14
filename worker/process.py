@@ -6,22 +6,26 @@ from .network import NetworkThread
 from .handler import HandlerThread
 from .socket import WorkerSocket
 from .context import WorkerContext
+from .history import History
+from .metrics import Metrics
 
 broadcast_address = ("<broadcast>", 5000)
 
 
 class WorkerProcess(multiprocessing.Process):
-    def __init__(self, count, process_id, gtl, el, shared_el, barrier):
+    def __init__(self, count, process_id, gtl, el, shared_el):
         super(WorkerProcess, self).__init__()
-        self.context = WorkerContext(count, process_id, gtl, el, shared_el)
+        self.history = History(8)
+        self.metrics = Metrics(self.history)
+        self.context = WorkerContext(count, process_id, gtl, el, shared_el, self.history)
         self.sock = WorkerSocket()
-        self.barrier = barrier
+        self.state_machine = state.StateMachine(self.context, self.sock, self.metrics)
 
     def run(self):
         event_queue = queue.PriorityQueue()
-        state_machine = state.StateMachine(self.context, self.sock, self.barrier)
+
         network_thread = NetworkThread(event_queue, self.context, self.sock)
-        handler_thread = HandlerThread(event_queue, state_machine)
+        handler_thread = HandlerThread(event_queue, self.state_machine)
         network_thread.start()
         handler_thread.start()
 
