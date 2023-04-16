@@ -1,7 +1,7 @@
 #!/bin/bash
 sudo apt update
 sudo apt install python3-pip
-if ! command -v <pip3> &> /dev/null
+if ! command -v pip3 &> /dev/null
 then
     echo "pip3 could not be found"
     echo "installing pip3 ..."
