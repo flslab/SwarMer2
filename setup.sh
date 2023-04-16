@@ -1,7 +1,7 @@
 #!/bin/bash
 #git clone https://github.com/flslab/SwarMer.git
 #cd SwarMer
-#git branch feature_lease
+#git checkout feature_lease
 
 sudo apt update
 sudo apt install python3-pip
