@@ -17,4 +17,4 @@ class Config:
     DECELERATION = 3
     MAX_SPEED = 3
     DISPLAY_CELL_SIZE = 0.05
-    SHAPE = 'butterfly'
+    SHAPE = 'dragon'

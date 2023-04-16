@@ -82,6 +82,9 @@ if __name__ == '__main__':
         print(e)
         for p in processes:
             p.terminate()
+        for s in shared_mems:
+            s.close()
+            s.unlink()
         exit()
 
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
