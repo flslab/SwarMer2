@@ -66,16 +66,23 @@ if __name__ == '__main__':
     processes = []
     shared_arrays = []
     shared_mems = []
-    for i in range(count):
-        shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
-        shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
-        shared_array[:] = sample[:]
 
-        shared_arrays.append(shared_array)
-        shared_mems.append(shm)
-        p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name)
-        p.start()
-        processes.append(p)
+    try:
+        for i in range(count):
+            shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
+            shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
+            shared_array[:] = sample[:]
+
+            shared_arrays.append(shared_array)
+            shared_mems.append(shm)
+            p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name)
+            p.start()
+            processes.append(p)
+    except OSError as e:
+        print(e)
+        for p in processes:
+            p.terminate()
+        exit()
 
     server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     server_sock.bind(Constants.SERVER_ADDRESS)
