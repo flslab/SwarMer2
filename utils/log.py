@@ -24,10 +24,10 @@ class CustomFormatter(logging.Formatter):
 
 
 logger = logging.getLogger('fls')
-logger.setLevel(logging.CRITICAL)
-
+logger.setLevel(logging.WARN)
+logger.disabled = True
 ch = logging.StreamHandler()
-ch.setLevel(logging.CRITICAL)
+ch.setLevel(logging.WARN)
 
 ch.setFormatter(CustomFormatter())
 

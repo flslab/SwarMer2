@@ -49,7 +49,9 @@ class NetworkThread(threading.Thread):
             return PrioritizedItem(0, msg, False)
         if msg.type == message.MessageTypes.SIZE_QUERY or msg.type == message.MessageTypes.SIZE_REPLY:
             return PrioritizedItem(2, msg, False)
-        if msg.type == message.MessageTypes.SET_WAITING or msg.type == message.MessageTypes.FOLLOW_MERGE:
+        if msg.type == message.MessageTypes.SET_WAITING or msg.type == message.MessageTypes.FOLLOW_MERGE\
+                or msg.type == message.MessageTypes.FOLLOW or msg.type == message.MessageTypes.MERGE\
+                or msg.type == message.MessageTypes.CHALLENGE_FIN:
             return PrioritizedItem(1, msg, False)
         return PrioritizedItem(3, msg, False)
 

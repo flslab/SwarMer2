@@ -9,20 +9,23 @@ from .types import StateTypes
 
 
 class StateMachine:
-    def __init__(self, context, sock, barrier):
+    def __init__(self, context, sock, metrics):
         self.state = StateTypes.AVAILABLE
         self.context = context
+        self.metrics = metrics
         self.sock = sock
-        self.barrier = barrier
         self.timer_available = None
         self.timer_size = None
+        self.timer_lease = None
+        self.timer_failure = None
         self.challenge_ack = False
-        self.challenge_probability = 1
+        self.challenge_probability = Config.INITIAL_CHALLENGE_PROB
 
     def start(self):
         self.context.deploy()
         self.enter(StateTypes.AVAILABLE)
         self.query_size()
+        self.fail()
 
     def handle_size_query(self, msg):
         resp = Message(MessageTypes.SIZE_REPLY, args=msg.args).to_fls(msg)
@@ -62,6 +65,7 @@ class StateMachine:
                 self.enter(StateTypes.BUSY_LOCALIZING)
             else:
                 self.enter(StateTypes.BUSY_ANCHOR)
+                self.context.grant_lease(msg.fid)
 
         else:
             logger.info(f"{self.context.fid} challenge id does not match")
@@ -72,6 +76,7 @@ class StateMachine:
             self.enter(StateTypes.BUSY_LOCALIZING)
         else:
             self.enter(StateTypes.BUSY_ANCHOR)
+            self.context.grant_lease(msg.fid)
 
     def handle_challenge_fin(self, msg):
         self.enter(StateTypes.AVAILABLE)
@@ -87,30 +92,29 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_follow_merge(self, msg):
-        print(f"{self.context.fid}({self.context.swarm_id}) merged into {msg.args[1]}")
         self.context.move(msg.args[0])
         self.context.set_swarm_id(msg.args[1])
-        self.challenge_probability /= Config.CHALLENGE_REQUEST_DECAY
+        self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
         # self.handle_report(None)
         self.context.thaw_swarm()
+        self.challenge_probability = 1
         self.enter(StateTypes.AVAILABLE)
         logger.critical(f"{self.context.fid} thawed")
 
     def handle_stop(self, msg):
-        fin_message = Message(MessageTypes.FIN, args=(self.get_final_report(),))
+        self.metrics.set_round_times(msg.args[0])
+        fin_message = Message(MessageTypes.FIN, args=(self.metrics.get_final_report(),))
         self.cancel_timers()
         self.send_to_server(fin_message)
 
-    def handle_report(self, msg):
-        report_message = Message(MessageTypes.REPORT, args=(self.get_final_report(),))
-        self.cancel_timers()
-        self.send_to_server(report_message)
+    def handle_lease_renew(self, msg):
+        self.context.grant_lease(msg.fid)
 
     def enter_available_state(self):
-        print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
+        # print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
 
         if random.random() < self.challenge_probability:
             if not self.challenge_ack:
@@ -128,6 +132,7 @@ class StateMachine:
         # print(n_waiting)
 
     def enter_busy_localizing_state(self):
+        self.context.log_localize()
         logger.info(f"{self.context.fid} localizing relative to {self.context.anchor.fid}")
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
@@ -144,17 +149,26 @@ class StateMachine:
 
         challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
         self.broadcast(challenge_fin_message)
-        self.challenge_probability /= Config.CHALLENGE_REQUEST_DECAY
+        self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
 
         self.enter(StateTypes.AVAILABLE)
 
     def enter_busy_anchor_state(self):
+        self.context.log_anchor()
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
         # self.challenge_probability /= Config.CHALLENGE_REQUEST_DECAY
 
     def enter_waiting_state(self):
         pass
+
+    def leave_busy_anchor_state(self):
+        self.context.clear_lease_table()
+
+    def leave_busy_localizing(self):
+        if self.timer_lease is not None:
+            self.timer_lease.cancel()
+            self.timer_lease = None
 
     def query_size(self):
         if self.timer_size is not None:
@@ -170,7 +184,35 @@ class StateMachine:
             size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
             self.broadcast(size_query)
 
+    def renew_lease(self):
+        if self.timer_lease is not None:
+            self.timer_lease.cancel()
+            self.timer_lease = None
+
+        self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
+        self.timer_lease.start()
+
+        if self.state == StateTypes.BUSY_LOCALIZING:
+            renew_message = Message(MessageTypes.LEASE_RENEW, args=(self.context.query_id,)).to_fls(self.context.anchor)
+            self.broadcast(renew_message)
+
+    def fail(self):
+        if self.timer_failure is not None:
+            self.timer_failure.cancel()
+            self.timer_failure = None
+
+        self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
+        self.timer_failure.start()
+        if random.random() < Config.FAILURE_PROB:
+            self.enter(StateTypes.DEPLOYING)
+            self.context.fail()
+            print(f"{self.context.fid} failed")
+            self.context.deploy()
+            self.enter(StateTypes.AVAILABLE)
+
     def enter(self, state):
+        self.leave(self.state)
+
         self.state = state
 
         if self.timer_available is not None:
@@ -178,7 +220,10 @@ class StateMachine:
             self.timer_available = None
 
         self.timer_available = threading.Timer(Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
-        self.timer_available.start()
+        if self.state != StateTypes.BUSY_ANCHOR\
+                and self.state != StateTypes.BUSY_LOCALIZING\
+                and self.state != StateTypes.DEPLOYING:
+            self.timer_available.start()
 
         if self.state == StateTypes.AVAILABLE:
             self.enter_available_state()
@@ -191,6 +236,12 @@ class StateMachine:
 
     def reenter(self, state):
         self.enter(state)
+
+    def leave(self, state):
+        if state == StateTypes.BUSY_ANCHOR:
+            self.leave_busy_anchor_state()
+        elif state == StateTypes.BUSY_LOCALIZING:
+            self.leave_busy_localizing()
 
     def drive(self, msg):
         event = msg.type
@@ -212,11 +263,16 @@ class StateMachine:
 
         elif self.state == StateTypes.BUSY_ANCHOR:
             if event == MessageTypes.LEASE_RENEW:
-                pass
+                self.handle_lease_renew(msg)
             elif event == MessageTypes.MERGE:
                 self.handle_merge(msg)
             elif event == MessageTypes.CHALLENGE_FIN:
                 self.handle_challenge_fin(msg)
+
+            self.context.refresh_lease_table()
+            print(f"{self.context.fid} - {self.state}")
+            if self.context.is_lease_empty():
+                self.enter(StateTypes.AVAILABLE)
 
         elif self.state == StateTypes.WAITING:
             if event == MessageTypes.FOLLOW:
@@ -240,15 +296,6 @@ class StateMachine:
             self.handle_size_reply(msg)
         elif event == MessageTypes.THAW_SWARM:
             self.handle_thaw_swarm(msg)
-        elif event == MessageTypes.REPORT:
-            self.handle_report(msg)
-
-    def get_final_report(self):
-        report = {
-            "bytes_sent": sum([s.meta["length"] for s in self.context.get_sent_messages()]),
-            "bytes_received": sum([r.meta["length"] for r in self.context.get_received_messages()])
-        }
-        return report
 
     def broadcast(self, msg):
         msg.from_fls(self.context)
@@ -266,3 +313,9 @@ class StateMachine:
         if self.timer_size is not None:
             self.timer_size.cancel()
             self.timer_size = None
+        if self.timer_lease is not None:
+            self.timer_lease.cancel()
+            self.timer_lease = None
+        if self.timer_failure is not None:
+            self.timer_failure.cancel()
+            self.timer_failure = None
