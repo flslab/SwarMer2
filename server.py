@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # count = Config.NUMBER_POINTS
     # count = 4
     # np.random.default_rng(1)
-    mat = scipy.io.loadmat(f'{Config.SHAPE}.mat')
+    mat = scipy.io.loadmat(f'assets/{Config.SHAPE}.mat')
     point_cloud = mat['p']
     count = point_cloud.shape[0]
     # print(count)
