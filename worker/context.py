@@ -103,7 +103,7 @@ class WorkerContext:
 
     def increment_range(self):
         if self.radio_range < Config.MAX_RANGE:
-            self.set_radio_range(self.radio_range + 1)
+            self.set_radio_range(self.radio_range + 5)
             logger.critical(f"{self.fid} range incremented to {self.radio_range}")
             return True
         else:

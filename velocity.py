@@ -43,7 +43,9 @@ class VelocityModel:
 
         self.total_time = self.a_time + self.v_time + self.d_time
 
-        v_norm_vec = (self.x1 - self.x0) / self.dist
+        v_norm_vec = self.x1 - self.x0
+        if self.dist > 0.0:
+            v_norm_vec /= self.dist
         self.a_vec = self.a * v_norm_vec
         self.d_vec = -self.d * v_norm_vec
         self.v_vec = self.v_mid * v_norm_vec
@@ -68,7 +70,7 @@ class VelocityModel:
 
 if __name__ == '__main__':
     t = time.time()
-    vm = VelocityModel(np.array([.0, .0, .0]), np.array([6.928, 6.928, 6.928]))
+    vm = VelocityModel(np.array([.0, .0, .0]), np.array([.0, .0, .0]))
     vm.solve()
     print(vm.get_location(t))
     print(vm.get_location(t+1))

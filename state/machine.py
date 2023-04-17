@@ -36,6 +36,7 @@ class StateMachine:
             self.context.size += 1
             logger.critical(f"swarm {self.context.swarm_id} size {self.context.size}")
         if self.context.size == self.context.count:
+            print("__swarm__ all merged into one swarm")
             if Config.THAW_SWARMS:
                 thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
                 self.broadcast(thaw_message)
@@ -178,7 +179,7 @@ class StateMachine:
         self.timer_size = threading.Timer(Config.SIZE_QUERY_TIMEOUT, self.query_size)
         self.timer_size.start()
 
-        if self.context.fid % 2:
+        if self.context.fid % int(100 / Config.SIZE_QUERY_PARTICIPATION_PERCENT) == 1:
             self.context.size = 1
             self.context.set_query_id(str(uuid.uuid4())[:8])
             size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
@@ -270,7 +271,7 @@ class StateMachine:
                 self.handle_challenge_fin(msg)
 
             self.context.refresh_lease_table()
-            print(f"{self.context.fid} - {self.state}")
+            # print(f"{self.context.fid} - {self.state}")
             if self.context.is_lease_empty():
                 self.enter(StateTypes.AVAILABLE)
 

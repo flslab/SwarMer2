@@ -23,13 +23,15 @@ def compute_hd(sh_arrays, gtl):
         hd_timer.cancel()
         hd_timer = None
 
-    hd_timer = threading.Timer(1, compute_hd, args=(sh_arrays, gtl))
+    hd_timer = threading.Timer(Config.HD_TIMOUT, compute_hd, args=(sh_arrays, gtl))
     hd_timer.start()
 
     # sh_mem = shared_memory.SharedMemory(name=shm_name)
     # sh_array = np.ndarray((count, 3), dtype=np.float64, buffer=sh_mem.buf)
     # print(sh_array)
-    hds.append((time.time(), utils.hausdorff_distance(np.stack(sh_arrays), gtl)))
+    hd_t = utils.hausdorff_distance(np.stack(sh_arrays), gtl)
+    print(f"__hd__ {hd_t}")
+    hds.append((time.time(), hd_t))
 
 
 if __name__ == '__main__':
@@ -59,7 +61,7 @@ if __name__ == '__main__':
         # ry = np.array([0, 16.0, 0])
         # gtl_point_cloud[i] = o + rx * np.sin(i*2*np.pi/count) + ry * np.cos(i*2*np.pi/count)
         # gtl_point_cloud[i] = np.array([i, i, i])
-        gtl_point_cloud[i] = np.array([point_cloud[i][0], point_cloud[i][1], 10.0])
+        gtl_point_cloud[i] = np.array([point_cloud[i][0], point_cloud[i][1], point_cloud[i][2]])
 
     # np.random.shuffle(gtl_point_cloud)
 
