@@ -16,6 +16,7 @@ Add the following line:
 
 ``fs.file-max = 2097152``
 
-Then run this command:
+reload terminal and then run these command:
 
 ``sudo sysctl -p``
+``ulimit -n 4096``
