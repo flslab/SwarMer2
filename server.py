@@ -136,6 +136,8 @@ if __name__ == '__main__':
         shared_mems[msg.fid - 1].close()
         shared_mems[msg.fid - 1].unlink()
 
+        print(f"process {msg.fid} finished")
+
         if np.sum(fin_processes) == count:
             if hd_timer is not None:
                 hd_timer.cancel()
