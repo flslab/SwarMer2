@@ -96,12 +96,13 @@ if __name__ == '__main__':
     fin_processes = np.zeros(count)
     metrics = {}
 
-    compute_hd(shared_arrays, gtl_point_cloud)
+    # compute_hd(shared_arrays, gtl_point_cloud)
 
     num_round = 0
     max_rounds = Config.NUMBER_ROUND
     round_time = [time.time()]
 
+    print('waiting for processes ...')
     while True:
         data, _ = server_sock.recvfrom(2048)
         msg = pickle.loads(data)
@@ -111,11 +112,11 @@ if __name__ == '__main__':
             round_time.append(time.time())
             if num_round < max_rounds:
                 msg_type = MessageTypes.THAW_SWARM
-                msg_args = None
+                msg_args = (round_time,)
             else:
                 msg_type = MessageTypes.STOP
                 fin_message_sent = True
-                msg_args = (round_time,)
+                msg_args = None
 
             server_message = Message(msg_type, args=msg_args).from_server().to_all()
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -128,13 +129,16 @@ if __name__ == '__main__':
             continue
 
         final_point_cloud[msg.fid - 1] = msg.el
-        metrics[msg.fid] = msg.args[0]
+        if msg.args is not None:
+            metrics[msg.fid] = msg.args[0]
         fin_processes[msg.fid - 1] = 1
 
-        if np.sum(fin_processes) == count:
-            print(f"hd: {utils.hausdorff_distance(final_point_cloud, gtl_point_cloud)}")
+        shared_mems[msg.fid - 1].close()
+        shared_mems[msg.fid - 1].unlink()
 
+        if np.sum(fin_processes) == count:
             hd_timer.cancel()
+            print(f"hd: {utils.hausdorff_distance(final_point_cloud, gtl_point_cloud)}")
             break
 
     server_sock.close()
@@ -146,18 +150,21 @@ if __name__ == '__main__':
         p.join()
 
     timestamp = int(time.time())
-    with open(f'packets_{Config.SHAPE}_{timestamp}.txt', 'w') as f:
-        headers = " ".join(metrics[1].keys())
-        f.write(f"fid {headers}\n")
-        for key, value in metrics.items():
-            values = " ".join([str(v) for v in value.values()])
-            f.write(f"{key} {values}\n")
 
-    with open(f'hd_{Config.SHAPE}_{timestamp}.txt', 'w') as f:
-        for hd in hds:
-            f.write(f"{hd[0]} {hd[1]}\n")
-        for rt in round_time:
-            f.write(f"{rt}\n")
+    if len(metrics):
+        with open(f'metrics_{Config.SHAPE}_{timestamp}.txt', 'w') as f:
+            headers = " ".join(metrics[1].keys())
+            f.write(f"fid {headers}\n")
+            for key, value in metrics.items():
+                values = " ".join([str(v) for v in value.values()])
+                f.write(f"{key} {values}\n")
+
+    if len(hds):
+        with open(f'hd_{Config.SHAPE}_{timestamp}.txt', 'w') as f:
+            for hd in hds:
+                f.write(f"{hd[0]} {hd[1]}\n")
+            for rt in round_time:
+                f.write(f"{rt}\n")
 
     # utils.plot_point_cloud(np.stack(shared_arrays), None)
 

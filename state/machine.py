@@ -99,6 +99,7 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
+        self.metrics.set_round_times(msg.args[0])
         # self.handle_report(None)
         self.context.thaw_swarm()
         self.challenge_probability = 1
@@ -106,8 +107,9 @@ class StateMachine:
         logger.critical(f"{self.context.fid} thawed")
 
     def handle_stop(self, msg):
-        self.metrics.set_round_times(msg.args[0])
-        fin_message = Message(MessageTypes.FIN, args=(self.metrics.get_final_report(),))
+        # self.metrics.set_round_times(msg.args[0])
+        # fin_message = Message(MessageTypes.FIN, args=(self.metrics.get_final_report(),))
+        fin_message = Message(MessageTypes.FIN)
         self.cancel_timers()
         self.send_to_server(fin_message)
 

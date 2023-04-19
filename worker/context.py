@@ -30,7 +30,7 @@ class WorkerContext:
         self.lease = dict()
 
     def set_swarm_id(self, swarm_id):
-        print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
+        # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
         self.swarm_id = swarm_id
         self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
 
