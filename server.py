@@ -137,8 +137,12 @@ if __name__ == '__main__':
         shared_mems[msg.fid - 1].unlink()
 
         if np.sum(fin_processes) == count:
-            hd_timer.cancel()
-            print(f"hd: {utils.hausdorff_distance(final_point_cloud, gtl_point_cloud)}")
+            if hd_timer is not None:
+                hd_timer.cancel()
+            start_time = time.time()
+            final_hd = utils.hausdorff_distance(final_point_cloud, gtl_point_cloud)
+            end_time = time.time()
+            print(f"final hd: {final_hd} computed in {end_time-start_time} (s)")
             break
 
     server_sock.close()
@@ -168,9 +172,9 @@ if __name__ == '__main__':
 
     # utils.plot_point_cloud(np.stack(shared_arrays), None)
 
-    for s in shared_mems:
-        s.close()
-        s.unlink()
+    # for s in shared_mems:
+    #     s.close()
+    #     s.unlink()
 
     # print("writing bag file...")
     # import bag
