@@ -2,9 +2,10 @@ import random
 import threading
 import uuid
 
+
 from message import Message, MessageTypes
 from config import Config
-from utils import logger
+from utils import logger, write_json
 from .types import StateTypes
 
 
@@ -20,11 +21,13 @@ class StateMachine:
         self.timer_failure = None
         self.challenge_ack = False
         self.challenge_probability = Config.INITIAL_CHALLENGE_PROB
+        self.stop_handled = False
 
     def start(self):
         self.context.deploy()
         self.enter(StateTypes.AVAILABLE)
-        self.query_size()
+        if Config.DECENTRALIZED_SWARM_SIZE:
+            self.query_size()
         self.fail()
 
     def handle_size_query(self, msg):
@@ -107,11 +110,18 @@ class StateMachine:
         logger.critical(f"{self.context.fid} thawed")
 
     def handle_stop(self, msg):
+        if self.stop_handled:
+            return
+        self.stop_handled = True
         # self.metrics.set_round_times(msg.args[0])
         # fin_message = Message(MessageTypes.FIN, args=(self.metrics.get_final_report(),))
-        fin_message = Message(MessageTypes.FIN)
+        # fin_message = Message(MessageTypes.FIN)
         self.cancel_timers()
-        self.send_to_server(fin_message)
+        final_report = self.metrics.get_final_report()
+        file_name = self.context.fid
+
+        write_json(file_name, final_report)
+        # self.send_to_server(fin_message)
 
     def handle_lease_renew(self, msg):
         self.context.grant_lease(msg.fid)
@@ -119,6 +129,8 @@ class StateMachine:
     def enter_available_state(self):
         # print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
 
+        # if self.context.swarm_id == 1:
+        #     return
         if random.random() < self.challenge_probability:
             if not self.challenge_ack:
                 if not self.context.increment_range():
@@ -250,6 +262,12 @@ class StateMachine:
         event = msg.type
         self.context.update_neighbor(msg)
 
+        # if event == MessageTypes.FOLLOW or event == MessageTypes.MERGE or event == MessageTypes.FOLLOW_MERGE:
+        #     print("follow")
+        #
+        # if event == MessageTypes.SET_WAITING:
+        #     print("set waiting")
+
         if self.state == StateTypes.AVAILABLE:
             if event == MessageTypes.CHALLENGE_INIT:
                 self.handle_challenge_init(msg)
@@ -259,6 +277,7 @@ class StateMachine:
                 self.handle_challenge_ack(msg)
             elif event == MessageTypes.SET_WAITING:
                 self.enter(StateTypes.WAITING)
+                # print("set waiting__")
 
         elif self.state == StateTypes.BUSY_LOCALIZING:
             if event == MessageTypes.LEASE_GRANT:
@@ -280,10 +299,13 @@ class StateMachine:
         elif self.state == StateTypes.WAITING:
             if event == MessageTypes.FOLLOW:
                 self.handle_follow(msg)
+                # print("follow__")
             elif event == MessageTypes.MERGE:
                 self.handle_merge(msg)
+                # print("follow__")
             elif event == MessageTypes.FOLLOW_MERGE:
                 self.handle_follow_merge(msg)
+                # print("follow__")
             elif event == MessageTypes.SET_AVAILABLE:
                 self.enter(StateTypes.AVAILABLE)
             elif event == MessageTypes.CHALLENGE_INIT:

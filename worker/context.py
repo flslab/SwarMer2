@@ -23,8 +23,9 @@ class WorkerContext:
         self.challenge_id = None
         self.history = history
         self.history.log(MetricTypes.LOCATION, self.el)
-        self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
+        # self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
         self.shm_name = shm_name
+        self.set_swarm_id(self.fid)
         self.message_id = 0
         self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
         self.lease = dict()
@@ -32,14 +33,19 @@ class WorkerContext:
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
         self.swarm_id = swarm_id
+        if self.shm_name:
+            shared_mem = shared_memory.SharedMemory(name=self.shm_name)
+            shared_array = np.ndarray((4,), dtype=np.float64, buffer=shared_mem.buf)
+            shared_array[3] = self.swarm_id
+            shared_mem.close()
         self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
 
     def set_el(self, el):
         self.el = el
         if self.shm_name:
             shared_mem = shared_memory.SharedMemory(name=self.shm_name)
-            shared_array = np.ndarray((3,), dtype=np.float64, buffer=shared_mem.buf)
-            shared_array[:] = self.el[:]
+            shared_array = np.ndarray((4,), dtype=np.float64, buffer=shared_mem.buf)
+            shared_array[:3] = self.el[:]
             shared_mem.close()
 
         self.history.log(MetricTypes.LOCATION, self.el)
