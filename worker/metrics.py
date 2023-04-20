@@ -14,7 +14,8 @@ class MetricTypes:
 
 
 class Metrics:
-    def __init__(self, history):
+    def __init__(self, history, results_directory):
+        self.results_directory = results_directory
         self.rounds_timestamp = []
         self.history = history
 

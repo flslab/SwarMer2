@@ -5,10 +5,12 @@ import numpy as np
 from multiprocessing import shared_memory
 import scipy.io
 import time
+import os
 
 from config import Config
 from constants import Constants
 from message import Message, MessageTypes
+from state import StateMachine
 import worker
 import utils
 
@@ -60,6 +62,9 @@ if __name__ == '__main__':
     # count = Config.NUMBER_POINTS
     # count = 30
     # np.random.default_rng(1)
+    results_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE, str(int(time.time())))
+    if not os.path.exists(results_directory):
+        os.makedirs(results_directory, exist_ok=True)
     mat = scipy.io.loadmat(f'assets/{Config.SHAPE}.mat')
     point_cloud = mat['p']
     count = point_cloud.shape[0]
@@ -99,7 +104,7 @@ if __name__ == '__main__':
 
             shared_arrays.append(shared_array)
             shared_mems.append(shm)
-            p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name)
+            p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name, results_directory)
             p.start()
             processes.append(p)
     except OSError as e:
@@ -195,22 +200,9 @@ if __name__ == '__main__':
 
     timestamp = int(time.time())
 
-    if len(metrics):
-        with open(f'metrics_{Config.SHAPE}_{timestamp}.txt', 'w') as f:
-            headers = " ".join(metrics[1].keys())
-            f.write(f"fid {headers}\n")
-            for key, value in metrics.items():
-                values = " ".join([str(v) for v in value.values()])
-                f.write(f"{key} {values}\n")
-
-    if len(hds):
-        with open(f'hd_{Config.SHAPE}_{timestamp}.txt', 'w') as f:
-            for hd in hds:
-                f.write(f"{hd[0]} {hd[1]}\n")
-            for rt in round_time:
-                f.write(f"{rt}\n")
-
-    utils.create_csv_from_json()
+    utils.write_hds(hds, round_time, results_directory)
+    utils.create_csv_from_json(results_directory)
+    utils.combine_csvs(results_directory)
     # utils.plot_point_cloud(np.stack(shared_arrays), None)
 
     # compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)

@@ -13,10 +13,10 @@ broadcast_address = ("<broadcast>", 5000)
 
 
 class WorkerProcess(multiprocessing.Process):
-    def __init__(self, count, process_id, gtl, el, shared_el):
+    def __init__(self, count, process_id, gtl, el, shared_el, results_directory):
         super(WorkerProcess, self).__init__()
         self.history = History(8)
-        self.metrics = Metrics(self.history)
+        self.metrics = Metrics(self.history, results_directory)
         self.context = WorkerContext(count, process_id, gtl, el, shared_el, self.history)
         self.sock = WorkerSocket()
         self.state_machine = state.StateMachine(self.context, self.sock, self.metrics)

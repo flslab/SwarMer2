@@ -120,7 +120,7 @@ class StateMachine:
         final_report = self.metrics.get_final_report()
         file_name = self.context.fid
 
-        write_json(file_name, final_report)
+        write_json(file_name, final_report, self.metrics.results_directory)
         # self.send_to_server(fin_message)
 
     def handle_lease_renew(self, msg):
