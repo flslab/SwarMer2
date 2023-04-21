@@ -53,9 +53,8 @@ def send_message_to_all(message):
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     # sock.settimeout(0.2)
     sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
-    if message.type == MessageTypes.STOP:
-        time.sleep(1)
-        sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
+    time.sleep(0.1)
+    sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
     sock.close()
 
 
