@@ -234,7 +234,8 @@ class StateMachine:
             self.timer_available.cancel()
             self.timer_available = None
 
-        self.timer_available = threading.Timer(Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
+        self.timer_available = \
+            threading.Timer(0.1 + random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
         if self.state != StateTypes.BUSY_ANCHOR\
                 and self.state != StateTypes.BUSY_LOCALIZING\
                 and self.state != StateTypes.DEPLOYING:
