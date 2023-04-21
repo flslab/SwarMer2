@@ -52,9 +52,13 @@ def write_hds(hds, rounds, directory):
 
 
 def combine_csvs(directory):
+    from datetime import datetime
+    current_datetime = datetime.now()
+    current_date_time = current_datetime.strftime("%H:%M_%m:%d:%Y")
+
     csv_files = glob.glob(f"{directory}/*.csv")
 
-    with pd.ExcelWriter(os.path.join(directory, f'{Config.SHAPE}.xlsx')) as writer:
+    with pd.ExcelWriter(os.path.join(directory, f'{Config.SHAPE}_{current_date_time}.xlsx')) as writer:
         for csv_file in csv_files:
             df = pd.read_csv(csv_file)
             sheet_name = csv_file.split('/')[-1][:-4]
@@ -64,4 +68,3 @@ def combine_csvs(directory):
         for a, b in vars(Config).items():
             if not a.startswith('__'):
                 f.write(f"{a}: {b}\n")
-
