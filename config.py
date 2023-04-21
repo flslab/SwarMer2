@@ -4,7 +4,7 @@ class Config:
     MAX_RANGE = 200
     DROP_PROB_SENDER = 0
     DROP_PROB_RECEIVER = 0
-    STATE_TIMEOUT = 5
+    STATE_TIMEOUT = 1
     SIZE_QUERY_TIMEOUT = 10
     DEAD_RECKONING_ANGLE = 5
     CHALLENGE_PROB_DECAY = 5
@@ -12,7 +12,7 @@ class Config:
     CHALLENGE_LEASE_DURATION = 1
     FAILURE_PROB = 0.0
     FAILURE_TIMEOUT = 100
-    NUMBER_ROUND = 2
+    NUMBER_ROUND = 5
     ACCELERATION = 3
     DECELERATION = 3
     MAX_SPEED = 3
@@ -21,5 +21,6 @@ class Config:
     SIZE_QUERY_PARTICIPATION_PERCENT = 1
     DECENTRALIZED_SWARM_SIZE = False
     CENTRALIZED_SWARM_SIZE = True
-    SHAPE = 'butterfly'
-    RESULTS_PATH = 'results'
+    SAMPLE_SIZE = 32
+    SHAPE = 'dragon'
+    RESULTS_PATH = '/proj/nova-PG0/hamed/results'

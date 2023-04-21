@@ -67,8 +67,13 @@ if __name__ == '__main__':
         os.makedirs(results_directory, exist_ok=True)
     mat = scipy.io.loadmat(f'assets/{Config.SHAPE}.mat')
     point_cloud = mat['p']
+
+    if Config.SAMPLE_SIZE != 0:
+        np.random.shuffle(point_cloud)
+        point_cloud = point_cloud[:Config.SAMPLE_SIZE]
+
     count = point_cloud.shape[0]
-    # print(count)
+    print(count)
     # np.random.shuffle(gtl_point_cloud)
     # print(gtl_point_cloud)
     gtl_point_cloud = np.random.uniform(0, 5, size=(count, 3))
