@@ -25,7 +25,7 @@ class WorkerProcess(multiprocessing.Process):
         event_queue = queue.PriorityQueue()
 
         network_thread = NetworkThread(event_queue, self.context, self.sock)
-        handler_thread = HandlerThread(event_queue, self.state_machine)
+        handler_thread = HandlerThread(event_queue, self.state_machine, self.context)
         network_thread.start()
         handler_thread.start()
 

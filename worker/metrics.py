@@ -85,9 +85,9 @@ class Metrics:
         report = {
             "total_distance": self.get_total_distance(),
             "num_moved": len(waits),
-            "min_wait": min(waits),
-            "avg_wait": sum(waits),
-            "max_wait": max(waits),
+            "min_wait(s)": min(waits),
+            "avg_wait(s)": sum(waits),
+            "max_wait(s)": max(waits),
             "total_bytes_sent": sum([s.meta["length"] for s in self.get_sent_messages()]),
             "total_bytes_received": sum([r.meta["length"] for r in self.get_received_messages()]),
             "num_expired_leases": len(self.get_expired_leases()),

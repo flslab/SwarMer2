@@ -39,7 +39,7 @@ def write_hds(hds, rounds, directory):
     if not os.path.exists(directory):
         return
 
-    headers = ['round', 'time', 'hd']
+    headers = ['round', 'time(s)', 'hd']
     rows = [headers]
 
     for i in range(len(hds)):
@@ -65,6 +65,3 @@ def combine_csvs(directory):
             if not a.startswith('__'):
                 f.write(f"{a}: {b}\n")
 
-
-if __name__ == '__main__':
-    combine_csvs()

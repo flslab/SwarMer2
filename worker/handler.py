@@ -1,12 +1,13 @@
 import threading
-import message
+from message import MessageTypes
 
 
 class HandlerThread(threading.Thread):
-    def __init__(self, event_queue, state_machine):
+    def __init__(self, event_queue, state_machine, context):
         super(HandlerThread, self).__init__()
         self.event_queue = event_queue
         self.state_machine = state_machine
+        self.context = context
 
     def run(self):
         self.state_machine.start()
@@ -19,13 +20,18 @@ class HandlerThread(threading.Thread):
             self.state_machine.drive(event)
             self.flush_queue()
 
-            if event.type == message.MessageTypes.STOP:
+            if event.type == MessageTypes.STOP:
                 break
 
     def flush_queue(self):
         with self.event_queue.mutex:
             for item in self.event_queue.queue:
-                if item.event.type == message.MessageTypes.SIZE_REPLY:
+                t = item.event.type
+                if t == MessageTypes.SIZE_REPLY:
                     item.stale = False
+                elif t == MessageTypes.CHALLENGE_FIN or t == MessageTypes.CHALLENGE_INIT\
+                        or t == MessageTypes.CHALLENGE_ACK or t == MessageTypes.CHALLENGE_ACCEPT:
+                    if item.event.swarm_id != self.context.swarm_id:
+                        item.stale = False
                 else:
                     item.stale = True
