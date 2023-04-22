@@ -20,8 +20,11 @@ class WorkerSocket:
 
     def receive(self):
         data, _ = self.sock.recvfrom(1024)
-        msg = pickle.loads(data)
-        return msg, len(data)
+        try:
+            msg = pickle.loads(data)
+            return msg, len(data)
+        except pickle.UnpicklingError:
+            return None, 0
 
     def broadcast(self, msg, retry=2):
         if Config.DROP_PROB_SENDER:
