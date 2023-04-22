@@ -17,6 +17,8 @@ class HandlerThread(threading.Thread):
                 continue
 
             event = item.event
+            if event.type == MessageTypes.STOP:
+                self.event_queue.clear()
             self.state_machine.drive(event)
             self.flush_queue()
 

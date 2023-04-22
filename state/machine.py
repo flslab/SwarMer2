@@ -107,11 +107,11 @@ class StateMachine:
 
     def handle_thaw_swarm(self, msg):
         self.metrics.set_round_times(msg.args[0])
-        # self.handle_report(None)
+        self.challenge_ack = False
+        self.cancel_timers()
         self.context.thaw_swarm()
         self.challenge_probability = 1
         self.enter(StateTypes.AVAILABLE)
-        logger.critical(f"{self.context.fid} thawed")
 
     def handle_stop(self, msg):
         if self.stop_handled:
