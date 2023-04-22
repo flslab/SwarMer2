@@ -23,18 +23,18 @@ class NetworkThread(threading.Thread):
                 self.context.log_received_message(msg.type, length)
                 self.latest_message_id[msg.fid] = msg.id
                 self.event_queue.put(NetworkThread.prioritize_message(msg))
-                if msg.type == message.MessageTypes.STOP:
+                if msg is not None and msg.type == message.MessageTypes.STOP:
                     break
 
     def is_message_valid(self, msg):
+        if msg is None:
+            return False
         if msg.type == message.MessageTypes.STOP:
             return True
         if Config.DROP_PROB_RECEIVER:
             if np.random.random() <= Config.DROP_PROB_RECEIVER:
                 self.context.log_dropped_messages(msg.type)
                 return False
-        if msg is None:
-            return False
         if msg.fid == self.context.fid:
             return False
         if msg.dest_fid != self.context.fid and msg.dest_fid != '*':
