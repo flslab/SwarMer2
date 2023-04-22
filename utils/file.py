@@ -92,11 +92,11 @@ def combine_csvs(directory):
     current_date_time = current_datetime.strftime("%H:%M:%S_%m:%d:%Y")
 
     csv_files = glob.glob(f"{directory}/*.csv")
+    xslx_dir = os.path.join(*directory.split('/')[:-1])
 
-    with pd.ExcelWriter(os.path.join(directory, f'{Config.SHAPE}_{current_date_time}.xlsx')) as writer:
+    with pd.ExcelWriter(os.path.join(xslx_dir, f'{Config.SHAPE}_{current_date_time}.xlsx')) as writer:
         for csv_file in csv_files:
             df = pd.read_csv(csv_file)
             sheet_name = csv_file.split('/')[-1][:-4]
             df.to_excel(writer, sheet_name=sheet_name, index=False)
-            os.remove(csv_file)
-    shutil.rmtree(os.path.join(directory, 'json'))
+    shutil.rmtree(os.path.join(directory))

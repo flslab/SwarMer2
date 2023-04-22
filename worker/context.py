@@ -68,6 +68,7 @@ class WorkerContext:
     def fail(self):
         self.reset_swarm()
         self.set_el(np.array([.0, .0, .0]))
+        self.history.log(MetricTypes.FAILURES, 1)
 
     def move(self, vector):
         erred_v = self.add_dead_reckoning_error(vector)
@@ -137,6 +138,9 @@ class WorkerContext:
         meta = {"length": length}
         self.history.log(MetricTypes.RECEIVED_MASSAGES, msg_type, meta)
 
+    def log_dropped_messages(self, msg_type):
+        self.history.log(MetricTypes.DROPPED_MESSAGES, msg_type)
+
     def log_sent_message(self, msg_type, length):
         meta = {"length": length}
         self.history.log(MetricTypes.SENT_MESSAGES, msg_type, meta)
@@ -156,8 +160,9 @@ class WorkerContext:
 
     def refresh_lease_table(self):
         expired_leases = []
+        t = time.time()
         for fid, expiration_time in self.lease.items():
-            if time.time() > expiration_time:
+            if t > expiration_time:
                 expired_leases.append(fid)
 
         for expired_lease in expired_leases:
@@ -166,11 +171,13 @@ class WorkerContext:
             # print(f"anchor {self.fid} removed the lease for {expired_lease}")
 
     def grant_lease(self, fid):
-        self.lease[fid] = time.time() + Config.CHALLENGE_LEASE_DURATION
-        # print(f"anchor {self.fid} granted lease for {fid}")
+        self.lease[fid] = time.time() + Config.CHALLENGE_LEASE_DURATION + 0.1
+
+    def remove_lease(self, fid):
+        if fid in self.lease:
+            self.lease.pop(fid)
 
     def is_lease_empty(self):
-        # print(f"len lease for {self.fid} is {len(self.lease)}")
         return len(self.lease) == 0
 
     def clear_lease_table(self):

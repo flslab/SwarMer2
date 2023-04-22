@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any
 import threading
 import numpy as np
-
+from config import Config
 import message
 
 
@@ -27,6 +27,10 @@ class NetworkThread(threading.Thread):
                     break
 
     def is_message_valid(self, msg):
+        if Config.DROP_PROB_RECEIVER:
+            if np.random.random() <= Config.DROP_PROB_RECEIVER:
+                self.context.log_dropped_messages(msg.type)
+                return False
         if msg is None:
             return False
         if msg.fid == self.context.fid:

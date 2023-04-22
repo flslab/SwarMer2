@@ -10,6 +10,8 @@ class MetricTypes:
     WAITS = 5
     ANCHOR = 6
     LOCALIZE = 7
+    DROPPED_MESSAGES = 8
+    FAILURES = 9
 
 
 def get_messages_histogram(msgs, label):
@@ -85,6 +87,12 @@ class Metrics:
     def get_waits(self):
         return self.history[MetricTypes.WAITS]
 
+    def get_dropped_messages(self):
+        return self.history[MetricTypes.DROPPED_MESSAGES]
+
+    def get_failures(self):
+        return self.history[MetricTypes.FAILURES]
+
     def get_final_report(self):
         waits = [d.value for d in self.get_waits()]
         report = {
@@ -99,7 +107,9 @@ class Metrics:
             "bytes_sent": sum([s.meta["length"] for s in self.get_sent_messages()]),
             "bytes_received": sum([r.meta["length"] for r in self.get_received_messages()]),
             "num_messages_sent": len(self.get_sent_messages()),
-            "num_messages_received": len(self.get_received_messages())
+            "num_messages_received": len(self.get_received_messages()),
+            "num_dropped_messages": len(self.get_dropped_messages()),
+            "num_failures": len(self.get_failures())
         }
 
         report.update(self.get_sent_messages_histogram())

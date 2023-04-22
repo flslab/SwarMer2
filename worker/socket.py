@@ -21,11 +21,6 @@ class WorkerSocket:
     def receive(self):
         data, _ = self.sock.recvfrom(1024)
         msg = pickle.loads(data)
-
-        if Config.DROP_PROB_RECEIVER:
-            if np.random.random() <= Config.DROP_PROB_SENDER:
-                return None, 0
-
         return msg, len(data)
 
     def broadcast(self, msg, retry=2):

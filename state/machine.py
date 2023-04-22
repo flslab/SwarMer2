@@ -1,4 +1,4 @@
-import random
+import numpy as np
 import threading
 import uuid
 
@@ -28,7 +28,8 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
         if Config.DECENTRALIZED_SWARM_SIZE:
             self.query_size()
-        self.fail()
+        self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT * np.random.random(), self.fail)
+        self.timer_failure.start()
 
     def handle_size_query(self, msg):
         resp = Message(MessageTypes.SIZE_REPLY, args=msg.args).to_fls(msg)
@@ -83,9 +84,11 @@ class StateMachine:
             self.context.grant_lease(msg.fid)
 
     def handle_challenge_fin(self, msg):
-        self.enter(StateTypes.AVAILABLE)
-        available_message = Message(MessageTypes.SET_AVAILABLE).to_swarm(self.context)
-        self.broadcast(available_message)
+        self.context.remove_lease(msg.fid)
+        if self.context.is_lease_empty():
+            self.enter(StateTypes.AVAILABLE)
+            available_message = Message(MessageTypes.SET_AVAILABLE).to_swarm(self.context)
+            self.broadcast(available_message)
 
     def handle_merge(self, msg):
         self.context.set_swarm_id(msg.swarm_id)
@@ -127,11 +130,7 @@ class StateMachine:
         self.context.grant_lease(msg.fid)
 
     def enter_available_state(self):
-        # print(f"fid: {self.context.fid} swarm: {self.context.swarm_id}")
-
-        # if self.context.swarm_id == 1:
-        #     return
-        if random.random() < self.challenge_probability:
+        if np.random.random() < self.challenge_probability:
             if not self.challenge_ack:
                 if not self.context.increment_range():
                     return
@@ -142,11 +141,8 @@ class StateMachine:
             self.broadcast(challenge_msg)
             logger.info(f"{self.context.fid} sent challenge request")
 
-        # print(self.context.history.merge_lists())
-        # n_waiting = self.barrier.wait()
-        # print(n_waiting)
-
     def enter_busy_localizing_state(self):
+        self.set_lease_timer()
         self.context.log_localize()
         logger.info(f"{self.context.fid} localizing relative to {self.context.anchor.fid}")
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
@@ -199,7 +195,7 @@ class StateMachine:
             size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
             self.broadcast(size_query)
 
-    def renew_lease(self):
+    def set_lease_timer(self):
         if self.timer_lease is not None:
             self.timer_lease.cancel()
             self.timer_lease = None
@@ -207,16 +203,17 @@ class StateMachine:
         self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
         self.timer_lease.start()
 
+    def renew_lease(self):
         if self.state == StateTypes.BUSY_LOCALIZING:
             renew_message = Message(MessageTypes.LEASE_RENEW, args=(self.context.query_id,)).to_fls(self.context.anchor)
             self.broadcast(renew_message)
+            self.set_lease_timer()
 
     def fail(self):
+        self.cancel_timers()
         self.enter(StateTypes.DEPLOYING)
         self.context.fail()
-        print(f"{self.context.fid} failed")
-        self.context.deploy()
-        self.enter(StateTypes.AVAILABLE)
+        self.start()
 
     def enter(self, state):
         self.leave(self.state)
@@ -228,7 +225,7 @@ class StateMachine:
             self.timer_available = None
 
         self.timer_available = \
-            threading.Timer(0.1 + random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
+            threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
         if self.state != StateTypes.BUSY_ANCHOR\
                 and self.state != StateTypes.BUSY_LOCALIZING\
                 and self.state != StateTypes.DEPLOYING:
@@ -256,12 +253,6 @@ class StateMachine:
         event = msg.type
         self.context.update_neighbor(msg)
 
-        # if event == MessageTypes.FOLLOW or event == MessageTypes.MERGE or event == MessageTypes.FOLLOW_MERGE:
-        #     print("follow")
-        #
-        # if event == MessageTypes.SET_WAITING:
-        #     print("set waiting")
-
         if self.state == StateTypes.AVAILABLE:
             if event == MessageTypes.CHALLENGE_INIT:
                 self.handle_challenge_init(msg)
@@ -271,7 +262,6 @@ class StateMachine:
                 self.handle_challenge_ack(msg)
             elif event == MessageTypes.SET_WAITING:
                 self.enter(StateTypes.WAITING)
-                # print("set waiting__")
 
         elif self.state == StateTypes.BUSY_LOCALIZING:
             if event == MessageTypes.LEASE_GRANT:
@@ -286,20 +276,16 @@ class StateMachine:
                 self.handle_challenge_fin(msg)
 
             self.context.refresh_lease_table()
-            # print(f"{self.context.fid} - {self.state}")
             if self.context.is_lease_empty():
                 self.enter(StateTypes.AVAILABLE)
 
         elif self.state == StateTypes.WAITING:
             if event == MessageTypes.FOLLOW:
                 self.handle_follow(msg)
-                # print("follow__")
             elif event == MessageTypes.MERGE:
                 self.handle_merge(msg)
-                # print("follow__")
             elif event == MessageTypes.FOLLOW_MERGE:
                 self.handle_follow_merge(msg)
-                # print("follow__")
             elif event == MessageTypes.SET_AVAILABLE:
                 self.enter(StateTypes.AVAILABLE)
             elif event == MessageTypes.CHALLENGE_INIT:
