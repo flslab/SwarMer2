@@ -5,7 +5,7 @@ from multiprocessing import shared_memory
 import scipy.io
 import time
 import os
-
+import threading
 from config import Config
 from constants import Constants
 from message import Message, MessageTypes
@@ -15,6 +15,13 @@ import utils
 
 hd_timer = None
 hds = []
+should_stop = False
+
+
+def set_stop():
+    global should_stop
+    should_stop = True
+    print('will stop next round')
 
 
 def compute_hd(sh_arrays, gtl):
@@ -57,10 +64,15 @@ def send_message_to_all(message):
 
 
 if __name__ == '__main__':
+    # if len(sys.argv) > 1:
+    #     Config.set_from_file(sys.argv[1])
+
+    # print(vars(Config))
     # count = Config.NUMBER_POINTS
     # count = 30
     # np.random.default_rng(1)
     results_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE, str(int(time.time())))
+    shape_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE)
     if not os.path.exists(results_directory):
         os.makedirs(os.path.join(results_directory, 'json'), exist_ok=True)
     mat = scipy.io.loadmat(f'assets/{Config.SHAPE}.mat')
@@ -133,6 +145,8 @@ if __name__ == '__main__':
     round_time = [time.time()]
     swarms_metrics = []
 
+    threading.Timer(Config.DURATION, set_stop).start()
+
     print('waiting for processes ...')
 
     if Config.CENTRALIZED_SWARM_SIZE:
@@ -148,13 +162,13 @@ if __name__ == '__main__':
                     print(f'one swarm was detected by the server round{num_round}')
                     round_time.append(t)
                     compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
-                    if num_round < max_rounds:
-                        server_message = Message(MessageTypes.THAW_SWARM, args=(round_time,)).from_server().to_all()
-                        send_message_to_all(server_message)
-                    else:
+                    if should_stop:
                         server_message = Message(MessageTypes.STOP).from_server().to_all()
                         send_message_to_all(server_message)
                         break
+                    else:
+                        server_message = Message(MessageTypes.THAW_SWARM, args=(round_time,)).from_server().to_all()
+                        send_message_to_all(server_message)
 
             time.sleep(1)
     else:
@@ -210,7 +224,7 @@ if __name__ == '__main__':
     utils.write_swarms(swarms_metrics, round_time, results_directory)
     utils.write_configs(results_directory)
     utils.create_csv_from_json(results_directory)
-    utils.combine_csvs(results_directory)
+    utils.combine_csvs(results_directory, shape_directory)
     # utils.plot_point_cloud(np.stack(shared_arrays), None)
 
     # compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)

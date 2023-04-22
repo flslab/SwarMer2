@@ -28,8 +28,9 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
         if Config.DECENTRALIZED_SWARM_SIZE:
             self.query_size()
-        self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT * np.random.random(), self.fail)
-        self.timer_failure.start()
+        if Config.FAILURE_TIMEOUT:
+            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT * np.random.random(), self.fail)
+            self.timer_failure.start()
 
     def handle_size_query(self, msg):
         resp = Message(MessageTypes.SIZE_REPLY, args=msg.args).to_fls(msg)

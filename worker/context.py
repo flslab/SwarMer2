@@ -78,12 +78,15 @@ class WorkerContext:
         vm.solve()
         dur = vm.total_time
         self.log_wait_time(dur)
-        # time.sleep(dur)
-        fin_time = time.time() + dur
-        while True:
-            if time.time() >= fin_time:
-                break
-        self.set_el(dest)
+
+        if Config.BUSY_WAITING:
+            fin_time = time.time() + dur
+            while True:
+                if time.time() >= fin_time:
+                    break
+            self.set_el(dest)
+        else:
+            time.sleep(dur)
 
     def add_dead_reckoning_error(self, vector):
         if vector[0] or vector[1]:
