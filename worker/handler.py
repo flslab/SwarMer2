@@ -17,8 +17,8 @@ class HandlerThread(threading.Thread):
                 continue
 
             event = item.event
-            if event.type == MessageTypes.STOP:
-                self.event_queue.clear()
+            if event.type == MessageTypes.THAW_SWARM:
+                self.flush_all()
             self.state_machine.drive(event)
             self.flush_queue()
 
@@ -38,3 +38,8 @@ class HandlerThread(threading.Thread):
                         item.stale = False
                 else:
                     item.stale = True
+
+    def flush_all(self):
+        with self.event_queue.mutex:
+            for item in self.event_queue.queue:
+                item.stale = True
