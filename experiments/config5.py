@@ -20,7 +20,7 @@ class Config:
     SIZE_QUERY_PARTICIPATION_PERCENT = 1
     DECENTRALIZED_SWARM_SIZE = False
     CENTRALIZED_SWARM_SIZE = True
-    BUSY_WAITING = True  #
+    BUSY_WAITING = False  #
     SAMPLE_SIZE = 32  #
     DURATION = 10 * 60
     SHAPE = 'dragon'

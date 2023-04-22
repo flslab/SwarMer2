@@ -9,7 +9,7 @@ class Config:
     DEAD_RECKONING_ANGLE = 5
     CHALLENGE_PROB_DECAY = 5
     INITIAL_CHALLENGE_PROB = 1
-    CHALLENGE_LEASE_DURATION = 0.1  #
+    CHALLENGE_LEASE_DURATION = 1  #
     FAILURE_TIMEOUT = 0
     NUMBER_ROUND = 5
     ACCELERATION = 3
@@ -21,7 +21,7 @@ class Config:
     DECENTRALIZED_SWARM_SIZE = False
     CENTRALIZED_SWARM_SIZE = True
     BUSY_WAITING = True  #
-    SAMPLE_SIZE = 32  #
+    SAMPLE_SIZE = 64  #
     DURATION = 10 * 60
     SHAPE = 'dragon'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results'

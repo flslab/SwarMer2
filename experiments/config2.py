@@ -21,7 +21,7 @@ class Config:
     DECENTRALIZED_SWARM_SIZE = False
     CENTRALIZED_SWARM_SIZE = True
     BUSY_WAITING = True  #
-    SAMPLE_SIZE = 32  #
+    SAMPLE_SIZE = 64  #
     DURATION = 10 * 60
     SHAPE = 'dragon'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results'
