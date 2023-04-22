@@ -27,7 +27,7 @@ class NetworkThread(threading.Thread):
                     break
 
     def is_message_valid(self, msg):
-        if msg.type == message.MessageTypes.STOP or msg.type == message.MessageTypes.THAW_SWARM:
+        if msg.type == message.MessageTypes.STOP:
             return True
         if Config.DROP_PROB_RECEIVER:
             if np.random.random() <= Config.DROP_PROB_RECEIVER:
