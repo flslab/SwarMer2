@@ -24,8 +24,10 @@ class MessageTypes(Enum):
     def get_cat(self):
         if 1 <= self.value <= 4:
             return 'CHALLENGE'
-        elif 5 <= self.value <= 9:
-            return 'POST_CHALLENGE'
+        elif 5 <= self.value <= 7:
+            return 'FOLLOW_MERGE'
+        elif 8 <= self.value <= 9:
+            return 'STATE_CHANGE'
         elif 10 <= self.value <= 11:
             return 'LEASE'
         elif 12 <= self.value <= 13:
