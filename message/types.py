@@ -20,3 +20,17 @@ class MessageTypes(Enum):
     THAW_SWARM = 14
     REPORT = 15
     FIN = 16
+
+    def get_cat(self):
+        if 1 <= self.value <= 4:
+            return 'CHALLENGE'
+        elif 5 <= self.value <= 9:
+            return 'POST_CHALLENGE'
+        elif 10 <= self.value <= 11:
+            return 'LEASE'
+        elif 12 <= self.value <= 13:
+            return 'SIZE'
+        elif self.value == 14:
+            return 'THAW'
+        elif self.value == 0 or self.value == 16:
+            return 'TERMINATION'

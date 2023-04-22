@@ -27,7 +27,7 @@ class HandlerThread(threading.Thread):
         with self.event_queue.mutex:
             for item in self.event_queue.queue:
                 t = item.event.type
-                if t == MessageTypes.SIZE_REPLY:
+                if t == MessageTypes.SIZE_REPLY or t == MessageTypes.THAW_SWARM or t == MessageTypes.STOP:
                     item.stale = False
                 elif t == MessageTypes.CHALLENGE_FIN or t == MessageTypes.CHALLENGE_INIT\
                         or t == MessageTypes.CHALLENGE_ACK or t == MessageTypes.CHALLENGE_ACCEPT:

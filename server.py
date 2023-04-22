@@ -1,4 +1,3 @@
-import threading
 import socket
 import pickle
 import numpy as np
@@ -10,7 +9,6 @@ import os
 from config import Config
 from constants import Constants
 from message import Message, MessageTypes
-from state import StateMachine
 import worker
 import utils
 
@@ -53,8 +51,8 @@ def send_message_to_all(message):
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     # sock.settimeout(0.2)
     sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
-    time.sleep(0.1)
-    sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
+    # time.sleep(0.1)
+    # sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
     sock.close()
 
 
@@ -64,7 +62,7 @@ if __name__ == '__main__':
     # np.random.default_rng(1)
     results_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE, str(int(time.time())))
     if not os.path.exists(results_directory):
-        os.makedirs(results_directory, exist_ok=True)
+        os.makedirs(os.path.join(results_directory, 'json'), exist_ok=True)
     mat = scipy.io.loadmat(f'assets/{Config.SHAPE}.mat')
     point_cloud = mat['p']
 
@@ -133,6 +131,7 @@ if __name__ == '__main__':
     num_round = 0
     max_rounds = Config.NUMBER_ROUND
     round_time = [time.time()]
+    swarms_metrics = []
 
     print('waiting for processes ...')
 
@@ -141,11 +140,13 @@ if __name__ == '__main__':
             swarms = compute_swarm_size(shared_arrays)
             # print(swarms)
             if 1 in swarms:
+                t = time.time()
                 print(swarms[1])
+                swarms_metrics.append((t, swarms))
                 if len(swarms) == 1 and swarms[1] == count:
                     num_round += 1
                     print(f'one swarm was detected by the server round{num_round}')
-                    round_time.append(time.time())
+                    round_time.append(t)
                     compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
                     if num_round < max_rounds:
                         server_message = Message(MessageTypes.THAW_SWARM, args=(round_time,)).from_server().to_all()
@@ -206,6 +207,8 @@ if __name__ == '__main__':
     timestamp = int(time.time())
 
     utils.write_hds(hds, round_time, results_directory)
+    utils.write_swarms(swarms_metrics, round_time, results_directory)
+    utils.write_configs(results_directory)
     utils.create_csv_from_json(results_directory)
     utils.combine_csvs(results_directory)
     # utils.plot_point_cloud(np.stack(shared_arrays), None)

@@ -212,18 +212,11 @@ class StateMachine:
             self.broadcast(renew_message)
 
     def fail(self):
-        if self.timer_failure is not None:
-            self.timer_failure.cancel()
-            self.timer_failure = None
-
-        self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
-        self.timer_failure.start()
-        if random.random() < Config.FAILURE_PROB:
-            self.enter(StateTypes.DEPLOYING)
-            self.context.fail()
-            print(f"{self.context.fid} failed")
-            self.context.deploy()
-            self.enter(StateTypes.AVAILABLE)
+        self.enter(StateTypes.DEPLOYING)
+        self.context.fail()
+        print(f"{self.context.fid} failed")
+        self.context.deploy()
+        self.enter(StateTypes.AVAILABLE)
 
     def enter(self, state):
         self.leave(self.state)
