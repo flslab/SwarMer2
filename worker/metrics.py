@@ -25,18 +25,18 @@ def get_messages_histogram(msgs, label):
         key_bytes_cat = f'bytes_{label}_cat_{msg_type.get_cat()}'
         key_num_cat = f'num_{label}_cat_{msg_type.get_cat()}'
 
-        if key_bytes in hist:
-            hist[key_bytes] += msg_length
+        if key_number in hist:
+            # hist[key_bytes] += msg_length
             hist[key_number] += 1
         else:
-            hist[key_bytes] = msg_length
+            # hist[key_bytes] = msg_length
             hist[key_number] = 1
 
-        if key_bytes_cat in hist:
-            hist[key_bytes_cat] += msg_length
+        if key_num_cat in hist:
+            # hist[key_bytes_cat] += msg_length
             hist[key_num_cat] += 1
         else:
-            hist[key_bytes_cat] = msg_length
+            # hist[key_bytes_cat] = msg_length
             hist[key_num_cat] = 1
 
     return hist
