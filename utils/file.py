@@ -92,7 +92,7 @@ def combine_csvs(directory):
     current_date_time = current_datetime.strftime("%H:%M:%S_%m:%d:%Y")
 
     csv_files = glob.glob(f"{directory}/*.csv")
-    xslx_dir = os.path.join(*directory.split('/')[:-1])
+    xslx_dir = os.path.join('/', *directory.split('/')[:-1])
 
     with pd.ExcelWriter(os.path.join(xslx_dir, f'{Config.SHAPE}_{current_date_time}.xlsx')) as writer:
         for csv_file in csv_files:
