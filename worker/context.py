@@ -84,9 +84,10 @@ class WorkerContext:
             while True:
                 if time.time() >= fin_time:
                     break
-            self.set_el(dest)
         else:
             time.sleep(dur)
+
+        self.set_el(dest)
 
     def add_dead_reckoning_error(self, vector):
         if vector[0] or vector[1]:
