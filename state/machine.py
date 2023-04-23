@@ -60,7 +60,7 @@ class StateMachine:
         if msg.args[0] == self.context.challenge_id:
             self.challenge_ack = True
             self.context.set_challenge_id(None)
-            challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK, args=msg.args).to_fls(msg)
+            challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK).to_fls(msg)
             self.broadcast(challenge_ack_message)
             if msg.swarm_id < self.context.swarm_id:
                 self.context.set_anchor(msg)
@@ -70,13 +70,12 @@ class StateMachine:
                 self.enter(StateTypes.BUSY_ANCHOR)
 
     def handle_challenge_ack(self, msg):
-        if msg.args[0] == self.context.challenge_id:
-            if msg.swarm_id < self.context.swarm_id:
-                self.context.set_anchor(msg)
-                self.enter(StateTypes.BUSY_LOCALIZING)
-            else:
-                self.context.grant_lease(msg.fid)
-                self.enter(StateTypes.BUSY_ANCHOR)
+        if msg.swarm_id < self.context.swarm_id:
+            self.context.set_anchor(msg)
+            self.enter(StateTypes.BUSY_LOCALIZING)
+        else:
+            self.context.grant_lease(msg.fid)
+            self.enter(StateTypes.BUSY_ANCHOR)
 
     def handle_cancel_lease(self, msg):
         self.context.cancel_lease(msg.fid)
