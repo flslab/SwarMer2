@@ -8,8 +8,8 @@ import pandas as pd
 import glob
 
 
-def write_json(file_name, results, directory):
-    with open(os.path.join(directory, 'json', f"{file_name}.json"), "w") as f:
+def write_json(fid, results, directory):
+    with open(os.path.join(directory, 'json', f"{fid:03}.json"), "w") as f:
         json.dump(results, f)
 
 
@@ -21,8 +21,10 @@ def create_csv_from_json(directory):
     rows = []
 
     json_dir = os.path.join(directory, 'json')
+    filenames = os.listdir(json_dir)
+    filenames.sort()
 
-    for filename in os.listdir(json_dir):
+    for filename in filenames:
         if filename.endswith('.json'):
             with open(os.path.join(json_dir, filename)) as f:
                 data = json.load(f)
