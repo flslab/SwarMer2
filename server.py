@@ -156,7 +156,7 @@ if __name__ == '__main__':
             if 1 in swarms:
                 t = time.time()
                 print(swarms[1])
-                swarms_metrics.append((t, swarms))
+                # swarms_metrics.append((t, swarms))
                 if len(swarms) == 1 and swarms[1] == count:
                     num_round += 1
                     print(f'one swarm was detected by the server round{num_round}')
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     timestamp = int(time.time())
 
     utils.write_hds(hds, round_time, results_directory)
-    utils.write_swarms(swarms_metrics, round_time, results_directory)
+    # utils.write_swarms(swarms_metrics, round_time, results_directory)
     utils.write_configs(results_directory)
     utils.create_csv_from_json(results_directory)
     utils.combine_csvs(results_directory, shape_directory)

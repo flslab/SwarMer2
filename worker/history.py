@@ -13,9 +13,10 @@ class History:
         return self.lists[item]
 
     def log(self, category, value, meta={}):
-        entry = HistoryEntry(value, meta)
-        self.lists[category].append(entry)
-        return entry
+        if category == 9:
+            entry = HistoryEntry(value, meta)
+            self.lists[category].append(entry)
+            return entry
 
     def merge_lists(self):
         lists = list(self.lists.values())
