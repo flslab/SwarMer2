@@ -30,7 +30,7 @@ class HandlerThread(threading.Thread):
             for item in self.event_queue.queue:
                 t = item.event.type
                 if t == MessageTypes.SIZE_REPLY or t == MessageTypes.THAW_SWARM or t == MessageTypes.STOP\
-                        or t == MessageTypes.LEASE_RENEW:
+                        or t == MessageTypes.LEASE_RENEW or t == MessageTypes.LEASE_CANCEL:
                     item.stale = False
                 elif t == MessageTypes.CHALLENGE_FIN or t == MessageTypes.CHALLENGE_INIT\
                         or t == MessageTypes.CHALLENGE_ACK or t == MessageTypes.CHALLENGE_ACCEPT:

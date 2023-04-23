@@ -70,8 +70,8 @@ class StateMachine:
                 self.context.set_anchor(msg)
                 self.enter(StateTypes.BUSY_LOCALIZING)
             else:
-                self.enter(StateTypes.BUSY_ANCHOR)
                 self.context.grant_lease(msg.fid)
+                self.enter(StateTypes.BUSY_ANCHOR)
 
         else:
             logger.info(f"{self.context.fid} challenge id does not match")
@@ -81,15 +81,18 @@ class StateMachine:
             self.context.set_anchor(msg)
             self.enter(StateTypes.BUSY_LOCALIZING)
         else:
-            self.enter(StateTypes.BUSY_ANCHOR)
             self.context.grant_lease(msg.fid)
+            self.enter(StateTypes.BUSY_ANCHOR)
 
-    def handle_challenge_fin(self, msg):
-        self.context.remove_lease(msg.fid)
+    def handle_cancel_lease(self, msg):
+        self.context.cancel_lease(msg.fid)
         if self.context.is_lease_empty():
             self.enter(StateTypes.AVAILABLE)
-            available_message = Message(MessageTypes.SET_AVAILABLE).to_swarm(self.context)
-            self.broadcast(available_message)
+
+    def handle_challenge_fin(self, msg):
+        self.context.release_lease(msg.fid)
+        if self.context.is_lease_empty():
+            self.enter(StateTypes.AVAILABLE)
 
     def handle_merge(self, msg):
         self.context.set_swarm_id(msg.swarm_id)
@@ -176,11 +179,17 @@ class StateMachine:
 
     def leave_busy_anchor_state(self):
         self.context.clear_lease_table()
+        available_message = Message(MessageTypes.SET_AVAILABLE).to_swarm(self.context)
+        self.broadcast(available_message)
 
     def leave_busy_localizing(self):
+        cancel_message = Message(MessageTypes.LEASE_CANCEL, args=(self.context.query_id,)).to_fls(self.context.anchor)
+        self.broadcast(cancel_message)
         if self.timer_lease is not None:
             self.timer_lease.cancel()
             self.timer_lease = None
+        self.context.set_challenge_id(None)
+        self.context.set_anchor(None)
 
     def query_size(self):
         if self.timer_size is not None:
@@ -275,6 +284,8 @@ class StateMachine:
                 self.handle_merge(msg)
             elif event == MessageTypes.CHALLENGE_FIN:
                 self.handle_challenge_fin(msg)
+            elif event == MessageTypes.LEASE_CANCEL:
+                self.handle_cancel_lease(msg)
 
             self.context.refresh_lease_table()
             if self.context.is_lease_empty():

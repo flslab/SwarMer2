@@ -1,4 +1,5 @@
 import numpy as np
+from config import Config
 
 
 class MetricTypes:
@@ -12,6 +13,10 @@ class MetricTypes:
     LOCALIZE = 7
     DROPPED_MESSAGES = 8
     FAILURES = 9
+    GRANTED_LEASE = 10
+    EXPIRED_LEASE = 11
+    CANCELED_LEASE = 12
+    RELEASED_LEASE = 13
 
 
 def get_messages_histogram(msgs, label, cat):
@@ -81,8 +86,17 @@ class Metrics:
     def get_sent_messages(self):
         return self.history[MetricTypes.SENT_MESSAGES]
 
+    def get_granted_leases(self):
+        return sum(self.history[MetricTypes.GRANTED_LEASE])
+
     def get_expired_leases(self):
-        return self.history[MetricTypes.LEASES]
+        return sum(self.history[MetricTypes.EXPIRED_LEASE])
+
+    def get_canceled_leases(self):
+        return sum(self.history[MetricTypes.CANCELED_LEASE])
+
+    def get_released_leases(self):
+        return sum(self.history[MetricTypes.RELEASED_LEASE])
 
     def get_waits(self):
         return self.history[MetricTypes.WAITS]
@@ -95,24 +109,31 @@ class Metrics:
 
     def get_final_report(self):
         waits = [d.value for d in self.get_waits()]
-        report = {
-            # "A0_total_distance": self.get_total_distance(),
-            # "A1_num_moved": len(waits),
-            # "A1_min_wait(s)": min(waits),
-            # "A1_max_wait(s)": max(waits),
-            # "A1_total_wait(s)": sum(waits),
-            # "A2_num_expired_leases": len(self.get_expired_leases()),
-            # "A3_num_anchor": len(self.history[MetricTypes.ANCHOR]),
-            # "A3_num_localize": len(self.history[MetricTypes.LOCALIZE]),
-            # "A4_bytes_sent": sum([s.meta["length"] for s in self.get_sent_messages()]),
-            # "A4_bytes_received": sum([r.meta["length"] for r in self.get_received_messages()]),
-            # "A4_num_messages_sent": len(self.get_sent_messages()),
-            # "A4_num_messages_received": len(self.get_received_messages()),
-            # "A4_num_dropped_messages": len(self.get_dropped_messages()),
-            "A5_num_failures": len(self.get_failures())
-        }
-
-        # report.update(self.get_sent_messages_histogram())
-        # report.update(self.get_received_messages_histogram())
+        if Config.DURATION < 660:
+            report = {
+                "A0_total_distance": self.get_total_distance(),
+                "A1_num_moved": len(waits),
+                "A1_min_wait(s)": min(waits),
+                "A1_max_wait(s)": max(waits),
+                "A1_total_wait(s)": sum(waits),
+                "A2_num_granted_leases": self.get_granted_leases(),
+                "A2_num_expired_leases": self.get_expired_leases(),
+                "A2_num_canceled_leases": self.get_canceled_leases(),
+                "A2_num_released_leases": self.get_released_leases(),
+                "A3_num_anchor": len(self.history[MetricTypes.ANCHOR]),
+                "A3_num_localize": len(self.history[MetricTypes.LOCALIZE]),
+                "A4_bytes_sent": sum([s.meta["length"] for s in self.get_sent_messages()]),
+                "A4_bytes_received": sum([r.meta["length"] for r in self.get_received_messages()]),
+                "A4_num_messages_sent": len(self.get_sent_messages()),
+                "A4_num_messages_received": len(self.get_received_messages()),
+                "A4_num_dropped_messages": len(self.get_dropped_messages()),
+                "A5_num_failures": len(self.get_failures())
+            }
+            report.update(self.get_sent_messages_histogram())
+            report.update(self.get_received_messages_histogram())
+        else:
+            report = {
+                "A5_num_failures": len(self.get_failures())
+            }
 
         return report

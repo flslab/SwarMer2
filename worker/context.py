@@ -29,6 +29,8 @@ class WorkerContext:
         self.message_id = 0
         self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
         self.lease = dict()
+        for i in range(10, 14):
+            self.history.lists[i].append(0)
 
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
@@ -150,8 +152,17 @@ class WorkerContext:
         self.history.log(MetricTypes.SENT_MESSAGES, msg_type, meta)
         self.message_id += 1
 
-    def log_expired_lease(self, fid):
-        self.history.log(MetricTypes.LEASES, fid)
+    def log_expired_lease(self):
+        self.history.log_sum(MetricTypes.EXPIRED_LEASE)
+
+    def log_canceled_lease(self):
+        self.history.log_sum(MetricTypes.CANCELED_LEASE)
+
+    def log_released_lease(self):
+        self.history.log_sum(MetricTypes.RELEASED_LEASE)
+
+    def log_granted_lease(self):
+        self.history.log_sum(MetricTypes.GRANTED_LEASE)
 
     def log_wait_time(self, duration):
         self.history.log(MetricTypes.WAITS, duration)
@@ -171,15 +182,22 @@ class WorkerContext:
 
         for expired_lease in expired_leases:
             self.lease.pop(expired_lease)
-            self.log_expired_lease(expired_lease)
+            self.log_expired_lease()
             # print(f"anchor {self.fid} removed the lease for {expired_lease}")
 
     def grant_lease(self, fid):
         self.lease[fid] = time.time() + Config.CHALLENGE_LEASE_DURATION + 0.1
+        self.log_granted_lease()
 
-    def remove_lease(self, fid):
+    def release_lease(self, fid):
         if fid in self.lease:
             self.lease.pop(fid)
+            self.log_released_lease()
+
+    def cancel_lease(self, fid):
+        if fid in self.lease:
+            self.lease.pop(fid)
+            self.log_canceled_lease()
 
     def is_lease_empty(self):
         return len(self.lease) == 0

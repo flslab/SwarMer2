@@ -1,6 +1,7 @@
 import time
 import heapq
 from functools import total_ordering
+from config import Config
 
 
 class History:
@@ -13,10 +14,13 @@ class History:
         return self.lists[item]
 
     def log(self, category, value, meta={}):
-        if category == 9:
+        if category == 9 or Config.DURATION < 660:
             entry = HistoryEntry(value, meta)
             self.lists[category].append(entry)
             return entry
+
+    def log_sum(self, category):
+        self.lists[category][0] += 1
 
     def merge_lists(self):
         lists = list(self.lists.values())

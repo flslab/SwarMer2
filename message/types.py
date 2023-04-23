@@ -20,6 +20,7 @@ class MessageTypes(Enum):
     THAW_SWARM = 14
     REPORT = 15
     FIN = 16
+    LEASE_CANCEL = 17
 
     def get_cat(self):
         if 1 <= self.value <= 4:
@@ -28,7 +29,7 @@ class MessageTypes(Enum):
             return 'FOLLOW'
         elif 8 <= self.value <= 9:
             return 'STATE_CHANGE'
-        elif 10 <= self.value <= 11:
+        elif 10 <= self.value <= 11 or self.value == 17:
             return 'LEASE'
         elif 12 <= self.value <= 13:
             return 'SIZE'

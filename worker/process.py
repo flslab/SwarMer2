@@ -15,7 +15,7 @@ broadcast_address = ("<broadcast>", 5000)
 class WorkerProcess(multiprocessing.Process):
     def __init__(self, count, process_id, gtl, el, shared_el, results_directory):
         super(WorkerProcess, self).__init__()
-        self.history = History(10)
+        self.history = History(14)
         self.metrics = Metrics(self.history, results_directory)
         self.context = WorkerContext(count, process_id, gtl, el, shared_el, self.history)
         self.sock = WorkerSocket()
