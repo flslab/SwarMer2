@@ -151,7 +151,9 @@ class StateMachine:
         follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
             .to_swarm(self.context)
         self.broadcast(follow_merge_message)
+        print(self.context.anchor)
         self.context.move(v)
+        print(self.context.anchor)
         self.context.set_swarm_id(self.context.anchor.swarm_id)
 
         challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
@@ -217,20 +219,12 @@ class StateMachine:
         self.start()
 
     def enter(self, state):
-        self.leave(self.state)
-
-        self.state = state
-
         if self.timer_available is not None:
             self.timer_available.cancel()
             self.timer_available = None
 
-        self.timer_available = \
-            threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
-        if self.state != StateTypes.BUSY_ANCHOR\
-                and self.state != StateTypes.BUSY_LOCALIZING\
-                and self.state != StateTypes.DEPLOYING:
-            self.timer_available.start()
+        self.leave(self.state)
+        self.state = state
 
         if self.state == StateTypes.AVAILABLE:
             self.enter_available_state()
@@ -240,6 +234,13 @@ class StateMachine:
             self.enter_busy_anchor_state()
         elif self.state == StateTypes.WAITING:
             self.enter_waiting_state()
+
+        if self.state != StateTypes.BUSY_ANCHOR \
+                and self.state != StateTypes.BUSY_LOCALIZING \
+                and self.state != StateTypes.DEPLOYING:
+            self.timer_available = \
+                threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
+            self.timer_available.start()
 
     def reenter(self, state):
         if self.state != StateTypes.BUSY_ANCHOR\
