@@ -17,7 +17,7 @@ def create_csv_from_json(directory):
     if not os.path.exists(directory):
         return
 
-    headers = []
+    headers_set = set()
     rows = []
 
     json_dir = os.path.join(directory, 'json')
@@ -28,10 +28,16 @@ def create_csv_from_json(directory):
         if filename.endswith('.json'):
             with open(os.path.join(json_dir, filename)) as f:
                 data = json.load(f)
-                if len(headers) == 0:
-                    headers = list(data.keys())
-                    rows.append(['fid'] + headers)
+                headers_set = headers_set.union(set(list(data.keys())))
 
+    headers = list(headers_set)
+    headers.sort()
+    rows.append(['fid'] + headers)
+
+    for filename in filenames:
+        if filename.endswith('.json'):
+            with open(os.path.join(json_dir, filename)) as f:
+                data = json.load(f)
                 fid = filename.split('.')[0]
                 row = [fid] + [data[h] if h in data else 0 for h in headers]
                 rows.append(row)
@@ -100,4 +106,4 @@ def combine_csvs(directory, xslx_dir):
             df = pd.read_csv(csv_file)
             sheet_name = csv_file.split('/')[-1][:-4]
             df.to_excel(writer, sheet_name=sheet_name, index=False)
-    shutil.rmtree(os.path.join(directory))
+    # shutil.rmtree(os.path.join(directory))

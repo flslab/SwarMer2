@@ -25,7 +25,7 @@ class MessageTypes(Enum):
         if 1 <= self.value <= 4:
             return 'CHALLENGE'
         elif 5 <= self.value <= 7:
-            return 'FOLLOW_MERGE'
+            return 'FOLLOW'
         elif 8 <= self.value <= 9:
             return 'STATE_CHANGE'
         elif 10 <= self.value <= 11:
