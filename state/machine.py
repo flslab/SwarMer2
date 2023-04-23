@@ -150,9 +150,8 @@ class StateMachine:
         follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
             .to_swarm(self.context)
         self.broadcast(follow_merge_message)
-        print(f'{self.context.anchor} {self.state}')
         self.context.move(v)
-        print(f'{self.context.anchor} {self.state}')
+
         self.context.set_swarm_id(self.context.anchor.swarm_id)
 
         challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
