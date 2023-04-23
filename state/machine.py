@@ -52,16 +52,12 @@ class StateMachine:
                 self.send_to_server(fin_message)
 
     def handle_challenge_init(self, msg):
-        logger.info(f"{self.context.fid} received challenge message from {msg.fid}")
         if msg.swarm_id != self.context.swarm_id:
             challenge_accept_message = Message(MessageTypes.CHALLENGE_ACCEPT, args=msg.args).to_fls(msg)
             self.broadcast(challenge_accept_message)
-            logger.info(f"{self.context.fid} sent challenge accept to {msg.fid}")
 
     def handle_challenge_accept(self, msg):
-        logger.info(f"{self.context.fid} received challenge accept from {msg.fid}")
         if msg.args[0] == self.context.challenge_id:
-            logger.info(f"{self.context.fid} challenge id matches")
             self.challenge_ack = True
             self.context.set_challenge_id(None)
             challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK, args=msg.args).to_fls(msg)
@@ -72,9 +68,6 @@ class StateMachine:
             else:
                 self.context.grant_lease(msg.fid)
                 self.enter(StateTypes.BUSY_ANCHOR)
-
-        else:
-            logger.info(f"{self.context.fid} challenge id does not match")
 
     def handle_challenge_ack(self, msg):
         if msg.args[0] == self.context.challenge_id:
@@ -144,12 +137,10 @@ class StateMachine:
             self.context.set_challenge_id(str(uuid.uuid4())[:8])
             challenge_msg = Message(MessageTypes.CHALLENGE_INIT, args=(self.context.challenge_id,)).to_all()
             self.broadcast(challenge_msg)
-            logger.info(f"{self.context.fid} sent challenge request")
 
     def enter_busy_localizing_state(self):
         self.set_lease_timer()
         self.context.log_localize()
-        logger.info(f"{self.context.fid} localizing relative to {self.context.anchor.fid}")
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
 
@@ -173,7 +164,6 @@ class StateMachine:
         self.context.log_anchor()
         waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
         self.broadcast(waiting_message)
-        # self.challenge_probability /= Config.CHALLENGE_REQUEST_DECAY
 
     def enter_waiting_state(self):
         pass
@@ -252,7 +242,10 @@ class StateMachine:
             self.enter_waiting_state()
 
     def reenter(self, state):
-        self.enter(state)
+        if self.state != StateTypes.BUSY_ANCHOR\
+                and self.state != StateTypes.BUSY_LOCALIZING\
+                and self.state != StateTypes.DEPLOYING:
+            self.enter(state)
 
     def leave(self, state):
         if state == StateTypes.BUSY_ANCHOR:
