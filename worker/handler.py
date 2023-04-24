@@ -20,10 +20,10 @@ class HandlerThread(threading.Thread):
             if event.type == MessageTypes.THAW_SWARM:
                 self.flush_all()
             self.state_machine.drive(event)
-            self.flush_queue()
-
             if event.type == MessageTypes.STOP:
                 break
+
+            self.flush_queue()
 
     def flush_queue(self):
         with self.event_queue.mutex:
