@@ -203,4 +203,5 @@ class WorkerContext:
         return len(self.lease) == 0
 
     def clear_lease_table(self):
-        self.lease.clear()
+        for fid in self.lease:
+            self.release_lease(fid)
