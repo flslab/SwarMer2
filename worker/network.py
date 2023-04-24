@@ -28,12 +28,13 @@ class NetworkThread(threading.Thread):
 
     def is_message_valid(self, msg):
         if msg is None:
+            self.context.log_dropped_messages()
             return False
         if msg.type == message.MessageTypes.STOP:
             return True
         if Config.DROP_PROB_RECEIVER:
             if np.random.random() <= Config.DROP_PROB_RECEIVER:
-                self.context.log_dropped_messages(msg.type)
+                self.context.log_dropped_messages()
                 return False
         if msg.fid == self.context.fid:
             return False

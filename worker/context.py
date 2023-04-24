@@ -29,6 +29,7 @@ class WorkerContext:
         self.message_id = 0
         self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
         self.lease = dict()
+        self.history.lists[MetricTypes.DROPPED_MESSAGES].append(0)
         for i in range(10, 14):
             self.history.lists[i].append(0)
 
@@ -144,8 +145,8 @@ class WorkerContext:
         meta = {"length": length}
         self.history.log(MetricTypes.RECEIVED_MASSAGES, msg_type, meta)
 
-    def log_dropped_messages(self, msg_type):
-        self.history.log(MetricTypes.DROPPED_MESSAGES, msg_type)
+    def log_dropped_messages(self):
+        self.history.log_sum(MetricTypes.DROPPED_MESSAGES)
 
     def log_sent_message(self, msg_type, length):
         meta = {"length": length}

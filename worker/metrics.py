@@ -102,7 +102,7 @@ class Metrics:
         return self.history[MetricTypes.WAITS]
 
     def get_dropped_messages(self):
-        return self.history[MetricTypes.DROPPED_MESSAGES]
+        return sum(self.history[MetricTypes.DROPPED_MESSAGES])
 
     def get_failures(self):
         return self.history[MetricTypes.FAILURES]
@@ -126,7 +126,7 @@ class Metrics:
                 "A4_bytes_received": sum([r.meta["length"] for r in self.get_received_messages()]),
                 "A4_num_messages_sent": len(self.get_sent_messages()),
                 "A4_num_messages_received": len(self.get_received_messages()),
-                "A4_num_dropped_messages": len(self.get_dropped_messages()),
+                "A4_num_dropped_messages": self.get_dropped_messages(),
                 "A5_num_failures": len(self.get_failures())
             }
             report.update(self.get_sent_messages_histogram())
