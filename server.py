@@ -17,6 +17,10 @@ hd_timer = None
 hds = []
 should_stop = False
 
+server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
 
 def set_stop():
     global should_stop
@@ -53,14 +57,7 @@ def compute_swarm_size(sh_arrays):
 
 
 def send_message_to_all(message):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    # sock.settimeout(0.2)
-    sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
-    # time.sleep(0.1)
-    # sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
-    sock.close()
+    server_sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
 
 
 if __name__ == '__main__':
@@ -234,6 +231,7 @@ if __name__ == '__main__':
         s.close()
         s.unlink()
 
+    server_sock.close()
     # print("writing bag file...")
     # import bag
     #
