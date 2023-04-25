@@ -135,7 +135,7 @@ class WorkerContext:
 
     def thaw_swarm(self):
         self.reset_swarm()
-        self.reset_range()
+        # self.reset_range()
         self.size = 1
         self.anchor = None
         self.query_id = None
