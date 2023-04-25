@@ -17,10 +17,6 @@ hd_timer = None
 hds = []
 should_stop = False
 
-server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
 
 def set_stop():
     global should_stop
@@ -54,10 +50,6 @@ def compute_swarm_size(sh_arrays):
         else:
             swarm_counts[swarm_id] = 1
     return swarm_counts
-
-
-def send_message_to_all(message):
-    server_sock.sendto(pickle.dumps(message), Constants.BROADCAST_ADDRESS)
 
 
 if __name__ == '__main__':
@@ -147,6 +139,9 @@ if __name__ == '__main__':
     print('waiting for processes ...')
 
     if Config.CENTRALIZED_SWARM_SIZE:
+        ser_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         while True:
             swarms = compute_swarm_size(shared_arrays)
             # print(swarms)
@@ -162,13 +157,13 @@ if __name__ == '__main__':
                     compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
                     if should_stop:
                         server_message = Message(MessageTypes.STOP).from_server().to_all()
-                        send_message_to_all(server_message)
+                        ser_sock.sendto(pickle.dumps(server_message), Constants.BROADCAST_ADDRESS)
                         break
                     else:
                         server_message = Message(MessageTypes.THAW_SWARM, args=(round_time,)).from_server().to_all()
-                        send_message_to_all(server_message)
-
+                        ser_sock.sendto(pickle.dumps(server_message), Constants.BROADCAST_ADDRESS)
             time.sleep(1)
+        ser_sock.close()
     else:
         while True:
             data, _ = server_sock.recvfrom(2048)
@@ -186,7 +181,7 @@ if __name__ == '__main__':
                     msg_args = None
 
                 server_message = Message(msg_type, args=msg_args).from_server().to_all()
-                send_message_to_all(server_message)
+                # send_message_to_all(server_message)
                 continue
 
             final_point_cloud[msg.fid - 1] = msg.el
@@ -231,7 +226,6 @@ if __name__ == '__main__':
         s.close()
         s.unlink()
 
-    server_sock.close()
     # print("writing bag file...")
     # import bag
     #
