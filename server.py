@@ -142,6 +142,13 @@ if __name__ == '__main__':
         ser_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+        thaw_message = Message(MessageTypes.THAW_SWARM).from_server().to_all()
+        stop_message = Message(MessageTypes.STOP).from_server().to_all()
+
+        dumped_stop_msg = pickle.dumps(stop_message)
+        dumped_thaw_msg = pickle.dumps(thaw_message)
+
         while True:
             swarms = compute_swarm_size(shared_arrays)
             # print(swarms)
@@ -156,12 +163,10 @@ if __name__ == '__main__':
                     round_time.append(t)
                     compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
                     if should_stop:
-                        server_message = Message(MessageTypes.STOP).from_server().to_all()
-                        ser_sock.sendto(pickle.dumps(server_message), Constants.BROADCAST_ADDRESS)
+                        ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
                         break
                     else:
-                        server_message = Message(MessageTypes.THAW_SWARM, args=(round_time,)).from_server().to_all()
-                        ser_sock.sendto(pickle.dumps(server_message), Constants.BROADCAST_ADDRESS)
+                        ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
             time.sleep(1)
         ser_sock.close()
     else:

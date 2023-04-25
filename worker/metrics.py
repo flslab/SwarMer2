@@ -50,11 +50,7 @@ def get_messages_histogram(msgs, label, cat):
 class Metrics:
     def __init__(self, history, results_directory):
         self.results_directory = results_directory
-        self.rounds_timestamp = []
         self.history = history
-
-    def set_round_times(self, times):
-        self.rounds_timestamp = times
 
     def get_total_distance(self):
         way_points = self.get_location_history()

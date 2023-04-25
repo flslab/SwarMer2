@@ -102,7 +102,6 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
-        self.metrics.set_round_times(msg.args[0])
         self.challenge_ack = False
         self.cancel_timers()
         self.context.thaw_swarm()

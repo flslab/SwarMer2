@@ -30,6 +30,8 @@ class NetworkThread(threading.Thread):
         if msg is None:
             self.context.log_dropped_messages()
             return False
+        if self.context.fid == 1 and msg.type == message.MessageTypes.THAW_SWARM:
+            print('thaw')
         if msg.type == message.MessageTypes.STOP:
             return True
         if Config.DROP_PROB_RECEIVER:
