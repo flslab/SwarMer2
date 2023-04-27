@@ -120,8 +120,6 @@ if __name__ == '__main__':
             s.unlink()
         exit()
 
-    server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    server_sock.bind(Constants.SERVER_ADDRESS)
     fin_message_sent = False
     final_point_cloud = np.zeros([count, 3])
     fin_processes = np.zeros(count)
@@ -142,11 +140,9 @@ if __name__ == '__main__':
         ser_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        ser_sock.settimeout(.2)
 
         thaw_message = Message(MessageTypes.THAW_SWARM).from_server().to_all()
-        stop_message = Message(MessageTypes.STOP).from_server().to_all()
-
-        dumped_stop_msg = pickle.dumps(stop_message)
         dumped_thaw_msg = pickle.dumps(thaw_message)
 
         while True:
@@ -163,13 +159,18 @@ if __name__ == '__main__':
                     round_time.append(t)
                     compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
                     if should_stop:
+                        stop_message = Message(MessageTypes.STOP).from_server().to_all()
+                        dumped_stop_msg = pickle.dumps(stop_message)
                         ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                        time.sleep(1)
                         break
                     else:
                         ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
             time.sleep(1)
-        ser_sock.close()
     else:
+        server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        server_sock.bind(Constants.SERVER_ADDRESS)
+
         while True:
             data, _ = server_sock.recvfrom(2048)
             msg = pickle.loads(data)
@@ -207,11 +208,7 @@ if __name__ == '__main__':
                 end_time = time.time()
                 print(f"final hd: {final_hd} computed in {end_time-start_time} (s)")
                 break
-
-    server_sock.close()
-
-    # print(shared_array)
-    # utils.plot_point_cloud(shared_array, None)
+        server_sock.close()
 
     for p in processes:
         p.join()

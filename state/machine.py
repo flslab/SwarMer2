@@ -22,6 +22,7 @@ class StateMachine:
         self.challenge_ack = False
         self.challenge_probability = Config.INITIAL_CHALLENGE_PROB
         self.stop_handled = False
+        self.waiting_for = None
 
     def start(self):
         self.context.deploy()
@@ -116,14 +117,20 @@ class StateMachine:
         # fin_message = Message(MessageTypes.FIN, args=(self.metrics.get_final_report(),))
         # fin_message = Message(MessageTypes.FIN)
         self.cancel_timers()
-        final_report = self.metrics.get_final_report()
+        # final_report = self.metrics.get_final_report()
+        _final_report = self.metrics.get_final_report_()
         file_name = self.context.fid
 
-        write_json(file_name, final_report, self.metrics.results_directory)
+        write_json(file_name, _final_report, self.metrics.results_directory)
+        # write_json(1000+file_name, _final_report, self.metrics.results_directory)
         # self.send_to_server(fin_message)
 
     def handle_lease_renew(self, msg):
         self.context.grant_lease(msg.fid)
+
+    def handle_set_waiting(self, msg):
+        self.waiting_for = msg.args[0]
+        self.enter(StateTypes.WAITING)
 
     def enter_available_state(self):
         if np.random.random() < self.challenge_probability:
@@ -139,7 +146,7 @@ class StateMachine:
     def enter_busy_localizing_state(self):
         self.set_lease_timer()
         self.context.log_localize()
-        waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
+        waiting_message = Message(MessageTypes.SET_WAITING, args=(StateTypes.BUSY_LOCALIZING,)).to_swarm(self.context)
         self.broadcast(waiting_message)
 
         d_gtl = self.context.gtl - self.context.anchor.gtl
@@ -161,7 +168,7 @@ class StateMachine:
 
     def enter_busy_anchor_state(self):
         self.context.log_anchor()
-        waiting_message = Message(MessageTypes.SET_WAITING).to_swarm(self.context)
+        waiting_message = Message(MessageTypes.SET_WAITING, args=(StateTypes.BUSY_ANCHOR,)).to_swarm(self.context)
         self.broadcast(waiting_message)
 
     def enter_waiting_state(self):
@@ -263,7 +270,7 @@ class StateMachine:
             elif event == MessageTypes.CHALLENGE_ACK:
                 self.handle_challenge_ack(msg)
             elif event == MessageTypes.SET_WAITING:
-                self.enter(StateTypes.WAITING)
+                self.handle_set_waiting(msg)
 
         elif self.state == StateTypes.BUSY_LOCALIZING:
             if event == MessageTypes.LEASE_GRANT:
@@ -292,10 +299,12 @@ class StateMachine:
                 self.handle_follow_merge(msg)
             elif event == MessageTypes.SET_AVAILABLE:
                 self.enter(StateTypes.AVAILABLE)
-            elif event == MessageTypes.CHALLENGE_INIT:
-                self.handle_challenge_init(msg)
-            elif event == MessageTypes.CHALLENGE_ACK:
-                self.handle_challenge_ack(msg)
+
+            if self.waiting_for == StateTypes.BUSY_ANCHOR:
+                if event == MessageTypes.CHALLENGE_INIT:
+                    self.handle_challenge_init(msg)
+                elif event == MessageTypes.CHALLENGE_ACK:
+                    self.handle_challenge_ack(msg)
 
         if event == MessageTypes.STOP:
             self.handle_stop(msg)

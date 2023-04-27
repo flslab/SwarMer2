@@ -4,20 +4,18 @@ import queue
 import state
 from .network import NetworkThread
 from .handler import HandlerThread
-from .socket import WorkerSocket
+from .worker_socket import WorkerSocket
 from .context import WorkerContext
 from .history import History
 from .metrics import Metrics
-
-broadcast_address = ("<broadcast>", 5000)
 
 
 class WorkerProcess(multiprocessing.Process):
     def __init__(self, count, process_id, gtl, el, shared_el, results_directory):
         super(WorkerProcess, self).__init__()
-        self.history = History(14)
+        self.history = History(1)
         self.metrics = Metrics(self.history, results_directory)
-        self.context = WorkerContext(count, process_id, gtl, el, shared_el, self.history)
+        self.context = WorkerContext(count, process_id, gtl, el, shared_el, self.metrics)
         self.sock = WorkerSocket()
         self.state_machine = state.StateMachine(self.context, self.sock, self.metrics)
 
@@ -31,3 +29,13 @@ class WorkerProcess(multiprocessing.Process):
 
         network_thread.join()
         handler_thread.join()
+
+        print(f"process_stopped_{self.context.fid}")
+
+        while not event_queue.empty():
+            try:
+                event_queue.get(False)
+            except queue.Empty:
+                continue
+            event_queue.task_done()
+        exit()

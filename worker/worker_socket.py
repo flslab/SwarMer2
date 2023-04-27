@@ -47,3 +47,17 @@ class WorkerSocket:
     def is_ready(self):
         ready = select.select([self.sock], [], [], 1)
         return ready[0]
+
+    def send_test_msgs(self):
+        id = 1
+        n = 5
+        for i in range(n):
+            self.broadcast((id, i))
+
+        for i in range(2 * n):
+            print(ws.receive())
+
+
+if __name__ == '__main__':
+    ws = WorkerSocket()
+    ws.send_test_msgs()

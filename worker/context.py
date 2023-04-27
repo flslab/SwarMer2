@@ -9,7 +9,7 @@ from .metrics import MetricTypes
 
 
 class WorkerContext:
-    def __init__(self, count, fid, gtl, el, shm_name, history):
+    def __init__(self, count, fid, gtl, el, shm_name, metrics):
         self.count = count
         self.fid = fid
         self.gtl = gtl
@@ -21,17 +21,19 @@ class WorkerContext:
         self.anchor = None
         self.query_id = None
         self.challenge_id = None
-        self.history = history
-        self.history.log(MetricTypes.LOCATION, self.el)
+        # self.history = history
+        # self.history.log(MetricTypes.LOCATION, self.el)
         # self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
         self.shm_name = shm_name
         self.set_swarm_id(self.fid)
         self.message_id = 0
         self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
         self.lease = dict()
-        self.history.lists[MetricTypes.DROPPED_MESSAGES].append(0)
-        for i in range(10, 14):
-            self.history.lists[i].append(0)
+        # self.history.lists[MetricTypes.DROPPED_MESSAGES].append(0)
+        # for i in range(10, 14):
+        #     self.history.lists[i].append(0)
+
+        self.metrics = metrics
 
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
@@ -41,7 +43,7 @@ class WorkerContext:
             shared_array = np.ndarray((4,), dtype=np.float64, buffer=shared_mem.buf)
             shared_array[3] = self.swarm_id
             shared_mem.close()
-        self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
+        # self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
 
     def set_el(self, el):
         self.el = el
@@ -51,7 +53,7 @@ class WorkerContext:
             shared_array[:3] = self.el[:]
             shared_mem.close()
 
-        self.history.log(MetricTypes.LOCATION, self.el)
+        # self.history.log(MetricTypes.LOCATION, self.el)
 
     def set_query_id(self, query_id):
         self.query_id = query_id
@@ -71,12 +73,14 @@ class WorkerContext:
     def fail(self):
         self.reset_swarm()
         self.set_el(np.array([.0, .0, .0]))
-        self.history.log(MetricTypes.FAILURES, 1)
+        # self.history.log(MetricTypes.FAILURES, 1)
+        self.metrics.log_sum("A5_num_failures", 1)
 
     def move(self, vector):
         erred_v = self.add_dead_reckoning_error(vector)
         dest = self.el + erred_v
-        self.history.log(MetricTypes.LOCATION, self.el)
+        # self.history.log(MetricTypes.LOCATION, self.el)
+        self.metrics.log_sum("A0_total_distance", np.linalg.norm(vector))
         vm = velocity.VelocityModel(self.el, dest)
         vm.solve()
         dur = vm.total_time
@@ -143,36 +147,49 @@ class WorkerContext:
 
     def log_received_message(self, msg_type, length):
         meta = {"length": length}
-        self.history.log(MetricTypes.RECEIVED_MASSAGES, msg_type, meta)
+        # self.history.log(MetricTypes.RECEIVED_MASSAGES, msg_type, meta)
+        self.metrics.log_received_msg(msg_type, length)
 
     def log_dropped_messages(self):
-        self.history.log_sum(MetricTypes.DROPPED_MESSAGES)
+        # self.history.log_sum(MetricTypes.DROPPED_MESSAGES)
+        self.metrics.log_sum("A4_num_dropped_messages", 1)
 
     def log_sent_message(self, msg_type, length):
         meta = {"length": length}
-        self.history.log(MetricTypes.SENT_MESSAGES, msg_type, meta)
+        # self.history.log(MetricTypes.SENT_MESSAGES, msg_type, meta)
+        self.metrics.log_sent_msg(msg_type, length)
         self.message_id += 1
 
     def log_expired_lease(self):
-        self.history.log_sum(MetricTypes.EXPIRED_LEASE)
+        # self.history.log_sum(MetricTypes.EXPIRED_LEASE)
+        self.metrics.log_sum("A2_num_expired_leases", 1)
 
     def log_canceled_lease(self):
-        self.history.log_sum(MetricTypes.CANCELED_LEASE)
+        # self.history.log_sum(MetricTypes.CANCELED_LEASE)
+        self.metrics.log_sum("A2_num_canceled_leases", 1)
 
     def log_released_lease(self):
-        self.history.log_sum(MetricTypes.RELEASED_LEASE)
+        # self.history.log_sum(MetricTypes.RELEASED_LEASE)
+        self.metrics.log_sum("A2_num_released_leases", 1)
 
     def log_granted_lease(self):
-        self.history.log_sum(MetricTypes.GRANTED_LEASE)
+        # self.history.log_sum(MetricTypes.GRANTED_LEASE)
+        self.metrics.log_sum("A2_num_granted_leases", 1)
 
-    def log_wait_time(self, duration):
-        self.history.log(MetricTypes.WAITS, duration)
+    def log_wait_time(self, dur):
+        # self.history.log(MetricTypes.WAITS, dur)
+        self.metrics.log_sum("A1_num_moved", 1)
+        self.metrics.log_sum("A1_total_wait(s)", dur)
+        self.metrics.log_max("A1_max_wait(s)", dur)
+        self.metrics.log_min("A1_min_wait(s)", dur)
 
     def log_localize(self):
-        self.history.log(MetricTypes.LOCALIZE, 1)
+        # self.history.log(MetricTypes.LOCALIZE, 1)
+        self.metrics.log_sum("A3_num_localize", 1)
 
     def log_anchor(self):
-        self.history.log(MetricTypes.ANCHOR, 1)
+        # self.history.log(MetricTypes.ANCHOR, 1)
+        self.metrics.log_sum("A3_num_anchor", 1)
 
     def refresh_lease_table(self):
         expired_leases = []
