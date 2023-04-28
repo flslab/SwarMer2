@@ -27,7 +27,7 @@ def_conf = {
     "SAMPLE_SIZE": "64",
     "DURATION": "600",
     "SHAPE": "'dragon'",
-    "RESULTS_PATH": "'results'",
+    "RESULTS_PATH": "'/proj/nova-PG0/hamed/results'",
 }
 
 props = [
@@ -45,7 +45,7 @@ props = [
     },
     {
         "keys": ["SAMPLE_SIZE"],
-        "values": ["32", "64"]
+        "values": ["64", "0"]
     },
 ]
 

@@ -21,7 +21,7 @@ class HandlerThread(threading.Thread):
                 self.flush_all()
             self.state_machine.drive(event)
             if event.type == MessageTypes.STOP:
-                print(f"handler_stopped_{self.context.fid}")
+                # print(f"handler_stopped_{self.context.fid}")
                 break
 
             self.flush_queue()

@@ -30,7 +30,7 @@ class WorkerProcess(multiprocessing.Process):
         network_thread.join()
         handler_thread.join()
 
-        print(f"process_stopped_{self.context.fid}")
+        # print(f"process_stopped_{self.context.fid}")
 
         while not event_queue.empty():
             try:

@@ -11,6 +11,7 @@ from constants import Constants
 from message import Message, MessageTypes
 import worker
 import utils
+import glob
 
 
 hd_timer = None
@@ -211,7 +212,16 @@ if __name__ == '__main__':
         server_sock.close()
 
     for p in processes:
-        p.join()
+        p.join(5)
+        if p.is_alive():
+            json_files = glob.glob(os.path.join(results_directory, "json", "*.json"))
+            print(len(json_files))
+            if len(json_files) == count:
+                break
+
+    for p in processes:
+        if p.is_alive():
+            p.terminate()
 
     timestamp = int(time.time())
 

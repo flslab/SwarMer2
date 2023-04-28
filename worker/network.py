@@ -24,7 +24,7 @@ class NetworkThread(threading.Thread):
                 self.latest_message_id[msg.fid] = msg.id
                 self.event_queue.put(NetworkThread.prioritize_message(msg))
                 if msg is not None and msg.type == message.MessageTypes.STOP:
-                    print(f"network_stopped_{self.context.fid}")
+                    # print(f"network_stopped_{self.context.fid}")
                     break
 
     def is_message_valid(self, msg):
