@@ -179,8 +179,10 @@ class StateMachine:
         self.broadcast(available_message)
 
     def leave_busy_localizing(self):
-        cancel_message = Message(MessageTypes.LEASE_CANCEL, args=(self.context.query_id,)).to_fls(self.context.anchor)
-        self.broadcast(cancel_message)
+        if self.context.anchor:
+            cancel_message = Message(MessageTypes.LEASE_CANCEL,
+                                     args=(self.context.query_id,)).to_fls(self.context.anchor)
+            self.broadcast(cancel_message)
         if self.timer_lease is not None:
             self.timer_lease.cancel()
             self.timer_lease = None
