@@ -64,16 +64,14 @@ class StateMachine:
             challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK).to_fls(msg)
             self.broadcast(challenge_ack_message)
             if msg.swarm_id < self.context.swarm_id:
-                self.context.set_anchor(msg)
-                self.enter(StateTypes.BUSY_LOCALIZING)
+                self.enter(StateTypes.BUSY_LOCALIZING, msg)
             else:
                 self.context.grant_lease(msg.fid)
                 self.enter(StateTypes.BUSY_ANCHOR)
 
     def handle_challenge_ack(self, msg):
         if msg.swarm_id < self.context.swarm_id:
-            self.context.set_anchor(msg)
-            self.enter(StateTypes.BUSY_LOCALIZING)
+            self.enter(StateTypes.BUSY_LOCALIZING, msg)
         else:
             self.context.grant_lease(msg.fid)
             self.enter(StateTypes.BUSY_ANCHOR)
@@ -143,7 +141,8 @@ class StateMachine:
             challenge_msg = Message(MessageTypes.CHALLENGE_INIT, args=(self.context.challenge_id,)).to_all()
             self.broadcast(challenge_msg)
 
-    def enter_busy_localizing_state(self):
+    def enter_busy_localizing_state(self, msg):
+        self.context.set_anchor(msg)
         self.set_lease_timer()
         self.context.log_localize()
         waiting_message = Message(MessageTypes.SET_WAITING, args=(StateTypes.BUSY_LOCALIZING,)).to_swarm(self.context)
@@ -222,7 +221,7 @@ class StateMachine:
         self.context.fail()
         self.start()
 
-    def enter(self, state):
+    def enter(self, state, arg={}):
         if self.timer_available is not None:
             self.timer_available.cancel()
             self.timer_available = None
@@ -233,7 +232,7 @@ class StateMachine:
         if self.state == StateTypes.AVAILABLE:
             self.enter_available_state()
         elif self.state == StateTypes.BUSY_LOCALIZING:
-            self.enter_busy_localizing_state()
+            self.enter_busy_localizing_state(arg)
         elif self.state == StateTypes.BUSY_ANCHOR:
             self.enter_busy_anchor_state()
         elif self.state == StateTypes.WAITING:
@@ -271,10 +270,6 @@ class StateMachine:
                 self.handle_challenge_ack(msg)
             elif event == MessageTypes.SET_WAITING:
                 self.handle_set_waiting(msg)
-
-        elif self.state == StateTypes.BUSY_LOCALIZING:
-            if event == MessageTypes.LEASE_GRANT:
-                pass
 
         elif self.state == StateTypes.BUSY_ANCHOR:
             if event == MessageTypes.LEASE_RENEW:
