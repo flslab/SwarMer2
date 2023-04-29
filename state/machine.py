@@ -148,20 +148,21 @@ class StateMachine:
         waiting_message = Message(MessageTypes.SET_WAITING, args=(StateTypes.BUSY_LOCALIZING,)).to_swarm(self.context)
         self.broadcast(waiting_message)
 
-        d_gtl = self.context.gtl - self.context.anchor.gtl
-        d_el = self.context.el - self.context.anchor.el
-        v = d_gtl - d_el
+        if self.context.anchor is not None:
+            d_gtl = self.context.gtl - self.context.anchor.gtl
+            d_el = self.context.el - self.context.anchor.el
+            v = d_gtl - d_el
 
-        follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
-            .to_swarm(self.context)
-        self.broadcast(follow_merge_message)
-        self.context.move(v)
+            follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
+                .to_swarm(self.context)
+            self.broadcast(follow_merge_message)
+            self.context.move(v)
 
-        self.context.set_swarm_id(self.context.anchor.swarm_id)
+            self.context.set_swarm_id(self.context.anchor.swarm_id)
 
-        challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
-        self.broadcast(challenge_fin_message)
-        self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
+            challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
+            self.broadcast(challenge_fin_message)
+            self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
 
         self.enter(StateTypes.AVAILABLE)
 
@@ -212,7 +213,7 @@ class StateMachine:
         self.timer_lease.start()
 
     def renew_lease(self):
-        if self.state == StateTypes.BUSY_LOCALIZING:
+        if self.state == StateTypes.BUSY_LOCALIZING and self.context.anchor:
             renew_message = Message(MessageTypes.LEASE_RENEW, args=(self.context.query_id,)).to_fls(self.context.anchor)
             self.broadcast(renew_message)
             self.set_lease_timer()

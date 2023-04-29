@@ -33,7 +33,7 @@ def_conf = {
 props = [
     {
         "keys": ["DROP_PROB_RECEIVER"],
-        "values": ["0", "0.1", "0.01", "0.001", "0.0001"]
+        "values": ["0", "0.1", "0.01", "0.001"]
     },
     {
         "keys": ["ACCELERATION", "DECELERATION", "MAX_SPEED"],
