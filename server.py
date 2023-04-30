@@ -154,6 +154,14 @@ if __name__ == '__main__':
                 print(swarms[1])
                 if Config.DURATION < 660:
                     swarms_metrics.append((t, swarms))
+
+                if should_stop and Config.FAILURE_TIMEOUT:
+                    stop_message = Message(MessageTypes.STOP).from_server().to_all()
+                    dumped_stop_msg = pickle.dumps(stop_message)
+                    ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                    time.sleep(1)
+                    break
+
                 if len(swarms) == 1 and swarms[1] == count:
                     num_round += 1
                     print(f'one swarm was detected by the server round{num_round}')

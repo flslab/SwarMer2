@@ -21,18 +21,11 @@ class WorkerContext:
         self.anchor = None
         self.query_id = None
         self.challenge_id = None
-        # self.history = history
-        # self.history.log(MetricTypes.LOCATION, self.el)
-        # self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
         self.shm_name = shm_name
         self.set_swarm_id(self.fid)
         self.message_id = 0
         self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
         self.lease = dict()
-        # self.history.lists[MetricTypes.DROPPED_MESSAGES].append(0)
-        # for i in range(10, 14):
-        #     self.history.lists[i].append(0)
-
         self.metrics = metrics
 
     def set_swarm_id(self, swarm_id):
@@ -73,6 +66,11 @@ class WorkerContext:
     def fail(self):
         self.reset_swarm()
         self.set_el(np.array([.0, .0, .0]))
+        self.radio_range = Config.INITIAL_RANGE
+        self.anchor = None
+        self.query_id = None
+        self.challenge_id = None
+        self.lease = dict()
         # self.history.log(MetricTypes.FAILURES, 1)
         self.metrics.log_sum("A5_num_failures", 1)
 

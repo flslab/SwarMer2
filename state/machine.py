@@ -23,14 +23,16 @@ class StateMachine:
         self.challenge_probability = Config.INITIAL_CHALLENGE_PROB
         self.stop_handled = False
         self.waiting_for = None
+        self.anchor_lock = None
 
     def start(self):
+        self.anchor_lock = threading.Lock()
         self.context.deploy()
         self.enter(StateTypes.AVAILABLE)
         if Config.DECENTRALIZED_SWARM_SIZE:
             self.query_size()
         if Config.FAILURE_TIMEOUT:
-            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT * np.random.random(), self.fail)
+            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
             self.timer_failure.start()
 
     def handle_size_query(self, msg):
@@ -106,6 +108,9 @@ class StateMachine:
         self.context.thaw_swarm()
         self.challenge_probability = 1
         self.enter(StateTypes.AVAILABLE)
+        if Config.FAILURE_TIMEOUT:
+            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
+            self.timer_failure.start()
 
     def handle_stop(self, msg):
         if self.stop_handled:
@@ -149,20 +154,24 @@ class StateMachine:
         self.broadcast(waiting_message)
 
         if self.context.anchor is not None:
-            d_gtl = self.context.gtl - self.context.anchor.gtl
-            d_el = self.context.el - self.context.anchor.el
-            v = d_gtl - d_el
+            with self.anchor_lock:
+                d_gtl = self.context.gtl - self.context.anchor.gtl
+                d_el = self.context.el - self.context.anchor.el
+                v = d_gtl - d_el
 
-            follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
-                .to_swarm(self.context)
-            self.broadcast(follow_merge_message)
+                follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
+                    .to_swarm(self.context)
+                self.broadcast(follow_merge_message)
+
             self.context.move(v)
 
-            self.context.set_swarm_id(self.context.anchor.swarm_id)
+            if self.context.anchor is not None:
+                with self.anchor_lock:
+                    self.context.set_swarm_id(self.context.anchor.swarm_id)
 
-            challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
-            self.broadcast(challenge_fin_message)
-            self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
+                    challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
+                    self.broadcast(challenge_fin_message)
+                    self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
 
         self.enter(StateTypes.AVAILABLE)
 
@@ -219,10 +228,20 @@ class StateMachine:
             self.set_lease_timer()
 
     def fail(self):
-        self.cancel_timers()
-        self.enter(StateTypes.DEPLOYING)
-        self.context.fail()
-        self.start()
+        if self.timer_failure is not None:
+            self.timer_failure.cancel()
+            self.timer_failure = None
+
+        if Config.FAILURE_PROB and np.random.random() <= Config.FAILURE_PROB:
+            # print("failed")
+            self.cancel_timers()
+            self.enter(StateTypes.DEPLOYING)
+            with self.anchor_lock:
+                self.context.fail()
+            self.start()
+        else:
+            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
+            self.timer_failure.start()
 
     def enter(self, state, arg={}):
         if self.timer_available is not None:

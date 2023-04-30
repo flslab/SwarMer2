@@ -12,18 +12,19 @@ def_conf = {
     "DEAD_RECKONING_ANGLE": "5",
     "CHALLENGE_PROB_DECAY": "5",
     "INITIAL_CHALLENGE_PROB": "1",
-    "CHALLENGE_LEASE_DURATION": "1",
-    "FAILURE_TIMEOUT": "0",
+    "CHALLENGE_LEASE_DURATION": "0.1",
+    "FAILURE_TIMEOUT": "1",
+    "FAILURE_PROB": "0",
     "NUMBER_ROUND": "5",
-    "ACCELERATION": "3",
-    "DECELERATION": "3",
-    "MAX_SPEED": "3",
+    "ACCELERATION": "6",
+    "DECELERATION": "6",
+    "MAX_SPEED": "6",
     "DISPLAY_CELL_SIZE": "0.05",
     "HD_TIMOUT": "5",
     "SIZE_QUERY_PARTICIPATION_PERCENT": "1",
     "DECENTRALIZED_SWARM_SIZE": "False",
     "CENTRALIZED_SWARM_SIZE": "True",
-    "BUSY_WAITING": "True",
+    "BUSY_WAITING": "False",
     "SAMPLE_SIZE": "64",
     "DURATION": "600",
     "SHAPE": "'dragon'",
@@ -32,16 +33,8 @@ def_conf = {
 
 props = [
     {
-        "keys": ["DROP_PROB_RECEIVER"],
-        "values": ["0", "0.1", "0.01", "0.001"]
-    },
-    {
-        "keys": ["ACCELERATION", "DECELERATION", "MAX_SPEED"],
-        "values": ["1.5", "3", "6"]
-    },
-    {
-        "keys": ["BUSY_WAITING"],
-        "values": ["True", "False"]
+        "keys": ["FAILURE_PROB"],
+        "values": ["0.1", "0.01", "0.001"]
     },
     {
         "keys": ["SAMPLE_SIZE"],
