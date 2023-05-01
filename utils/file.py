@@ -47,7 +47,23 @@ def create_csv_from_json(directory):
         writer.writerows(rows)
 
 
-def write_hds(hds, rounds, directory):
+def write_hds_time(hds, directory):
+    if not os.path.exists(directory):
+        return
+
+    headers = ['time(s)', 'hd']
+    rows = [headers]
+
+    for i in range(len(hds)):
+        row = [hds[i][0], hds[i][1]]
+        rows.append(row)
+
+    with open(os.path.join(directory, 'hd.csv'), 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerows(rows)
+
+
+def write_hds_round(hds, rounds, directory):
     if not os.path.exists(directory):
         return
 

@@ -15,7 +15,8 @@ import glob
 
 
 hd_timer = None
-hds = []
+hd_round = []
+hd_time = []
 should_stop = False
 
 
@@ -26,20 +27,9 @@ def set_stop():
 
 
 def compute_hd(sh_arrays, gtl):
-    global hd_timer, hds
-    if hd_timer is not None:
-        hd_timer.cancel()
-        hd_timer = None
-
-    # hd_timer = threading.Timer(Config.HD_TIMOUT, compute_hd, args=(sh_arrays, gtl))
-    # hd_timer.start()
-
-    # sh_mem = shared_memory.SharedMemory(name=shm_name)
-    # sh_array = np.ndarray((count, 3), dtype=np.float64, buffer=sh_mem.buf)
-    # print(sh_array)
     hd_t = utils.hausdorff_distance(np.stack(sh_arrays), gtl)
     print(f"__hd__ {hd_t}")
-    hds.append((time.time(), hd_t))
+    return hd_t
 
 
 def compute_swarm_size(sh_arrays):
@@ -137,7 +127,33 @@ if __name__ == '__main__':
 
     print('waiting for processes ...')
 
-    if Config.CENTRALIZED_SWARM_SIZE:
+    if Config.PROBABILISTIC_ROUND:
+        ser_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        ser_sock.settimeout(.2)
+
+        while True:
+            time.sleep(1)
+            t = time.time()
+
+            hdt = compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
+            hd_time.append((t, hdt))
+
+            swarms = compute_swarm_size(shared_arrays)
+            if 1 in swarms:
+                print(swarms[1])
+                if Config.DURATION < 660:
+                    swarms_metrics.append((t, swarms))
+
+            if should_stop:
+                stop_message = Message(MessageTypes.STOP).from_server().to_all()
+                dumped_stop_msg = pickle.dumps(stop_message)
+                ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                time.sleep(1)
+                break
+
+    elif Config.CENTRALIZED_SWARM_SIZE:
         ser_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -166,7 +182,7 @@ if __name__ == '__main__':
                     num_round += 1
                     print(f'one swarm was detected by the server round{num_round}')
                     round_time.append(t)
-                    compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
+                    hd_round.append((t, compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)))
                     if should_stop:
                         stop_message = Message(MessageTypes.STOP).from_server().to_all()
                         dumped_stop_msg = pickle.dumps(stop_message)
@@ -231,9 +247,10 @@ if __name__ == '__main__':
         if p.is_alive():
             p.terminate()
 
-    timestamp = int(time.time())
-
-    utils.write_hds(hds, round_time, results_directory)
+    if Config.PROBABILISTIC_ROUND:
+        utils.write_hds_time(hd_time, results_directory)
+    else:
+        utils.write_hds_round(hd_round, round_time, results_directory)
     if Config.DURATION < 660:
         utils.write_swarms(swarms_metrics, round_time, results_directory)
     utils.write_configs(results_directory)
@@ -245,14 +262,3 @@ if __name__ == '__main__':
     for s in shared_mems:
         s.close()
         s.unlink()
-
-    # print("writing bag file...")
-    # import bag
-    #
-    # msgs = [bag.generate_msg_metrics(path) for path in metrics.values()]
-    # bag.write_msgs_bag(msgs, 'test.bag')
-
-    # bag = rosbag.Bag('test.bag')
-    # for topic, msg, t in bag.read_messages(topics=['topic']):
-    #     print(msg)
-    # bag.close()

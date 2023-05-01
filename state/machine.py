@@ -19,6 +19,7 @@ class StateMachine:
         self.timer_size = None
         self.timer_lease = None
         self.timer_failure = None
+        self.timer_round = None
         self.challenge_ack = False
         self.challenge_probability = Config.INITIAL_CHALLENGE_PROB
         self.stop_handled = False
@@ -29,11 +30,7 @@ class StateMachine:
         self.anchor_lock = threading.Lock()
         self.context.deploy()
         self.enter(StateTypes.AVAILABLE)
-        if Config.DECENTRALIZED_SWARM_SIZE:
-            self.query_size()
-        if Config.FAILURE_TIMEOUT:
-            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
-            self.timer_failure.start()
+        self.start_timers()
 
     def handle_size_query(self, msg):
         resp = Message(MessageTypes.SIZE_REPLY, args=msg.args).to_fls(msg)
@@ -103,14 +100,14 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
+        # print(f"{self.context.fid} thawed")
         self.challenge_ack = False
         self.cancel_timers()
-        self.context.thaw_swarm()
+        with self.anchor_lock:
+            self.context.thaw_swarm()
         self.challenge_probability = 1
         self.enter(StateTypes.AVAILABLE)
-        if Config.FAILURE_TIMEOUT:
-            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
-            self.timer_failure.start()
+        self.start_timers()
 
     def handle_stop(self, msg):
         if self.stop_handled:
@@ -198,6 +195,16 @@ class StateMachine:
             self.timer_lease = None
         self.context.set_challenge_id(None)
         self.context.set_anchor(None)
+
+    def start_round_timer(self):
+        if self.timer_round is not None:
+            self.timer_round.cancel()
+            self.timer_round = None
+
+        h = np.log2(self.context.count)
+        t = np.random.uniform(h, 1.5 * h)
+        self.timer_round = threading.Timer(t, self.handle_thaw_swarm, args=(None,))
+        self.timer_round.start()
 
     def query_size(self):
         if self.timer_size is not None:
@@ -341,6 +348,15 @@ class StateMachine:
         msg.from_fls(self.context).to_server()
         self.sock.send_to_server(msg)
 
+    def start_timers(self):
+        if Config.PROBABILISTIC_ROUND:
+            self.start_round_timer()
+        if Config.DECENTRALIZED_SWARM_SIZE:
+            self.query_size()
+        if Config.FAILURE_TIMEOUT:
+            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
+            self.timer_failure.start()
+
     def cancel_timers(self):
         if self.timer_available is not None:
             self.timer_available.cancel()
@@ -354,3 +370,6 @@ class StateMachine:
         if self.timer_failure is not None:
             self.timer_failure.cancel()
             self.timer_failure = None
+        if self.timer_round is not None:
+            self.timer_round.cancel()
+            self.timer_round = None
