@@ -55,7 +55,7 @@ def write_hds_time(hds, directory):
     rows = [headers]
 
     for i in range(len(hds)):
-        row = [hds[i][0], hds[i][1]]
+        row = [hds[i][0] - hds[0][0], hds[i][1]]
         rows.append(row)
 
     with open(os.path.join(directory, 'hd.csv'), 'w', newline='') as csvfile:
