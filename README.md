@@ -20,4 +20,4 @@ Add the following line:
 
 reload terminal and then run this command:
 
-``ulimit -n 4096``
+``ulimit -n 9999``

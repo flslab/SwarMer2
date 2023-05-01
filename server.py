@@ -48,8 +48,8 @@ if __name__ == '__main__':
     nid = 1
     experiment_name = str(int(time.time()))
     if len(sys.argv) > 1:
-        N = sys.argv[1]
-        nid = sys.argv[2]
+        N = int(sys.argv[1])
+        nid = int(sys.argv[2])
         experiment_name = sys.argv[3]
 
     results_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE, experiment_name)
