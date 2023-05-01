@@ -267,14 +267,10 @@ if __name__ == '__main__':
         server_sock.close()
 
     for p in processes:
-        p.join(5)
+        p.join(20)
+        stop_all()
         if p.is_alive():
-            json_files = glob.glob(os.path.join(results_directory, "json", "*.json"))
-            print(len(json_files))
-            if len(json_files) == count:
-                break
-            else:
-                stop_all()
+            break
 
     for p in processes:
         if p.is_alive():
