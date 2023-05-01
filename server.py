@@ -12,7 +12,7 @@ from message import Message, MessageTypes
 import worker
 import utils
 import glob
-
+import sys
 
 hd_timer = None
 hd_round = []
@@ -44,19 +44,23 @@ def compute_swarm_size(sh_arrays):
 
 
 if __name__ == '__main__':
-    # if len(sys.argv) > 1:
-    #     Config.set_from_file(sys.argv[1])
+    N = 1
+    nid = 0
+    experiment_name = str(int(time.time()))
+    if len(sys.argv) > 1:
+        N = sys.argv[1]
+        nid = sys.argv[2]
+        experiment_name = sys.argv[3]
 
-    # print(vars(Config))
-    # count = Config.NUMBER_POINTS
-    # count = 30
-    # np.random.default_rng(1)
-    results_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE, str(int(time.time())))
+    results_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE, experiment_name)
     shape_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE)
     if not os.path.exists(results_directory):
         os.makedirs(os.path.join(results_directory, 'json'), exist_ok=True)
     mat = scipy.io.loadmat(f'assets/{Config.SHAPE}.mat')
     point_cloud = mat['p']
+
+    total_count = point_cloud.shape[0]
+    h = np.log2(total_count)
 
     if Config.SAMPLE_SIZE != 0:
         np.random.shuffle(point_cloud)
@@ -127,12 +131,12 @@ if __name__ == '__main__':
 
     print('waiting for processes ...')
 
-    if Config.PROBABILISTIC_ROUND:
-        ser_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        ser_sock.settimeout(.2)
+    ser_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    ser_sock.settimeout(.2)
 
+    if Config.PROBABILISTIC_ROUND:
         while True:
             time.sleep(1)
             t = time.time()
@@ -153,12 +157,36 @@ if __name__ == '__main__':
                 time.sleep(1)
                 break
 
-    elif Config.CENTRALIZED_SWARM_SIZE:
-        ser_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        ser_sock.settimeout(.2)
+    elif Config.CENTRALIZED_ROUND:
+        last_thaw_time = time.time()
+        thaw_message = Message(MessageTypes.THAW_SWARM).from_server().to_all()
+        dumped_thaw_msg = pickle.dumps(thaw_message)
 
+        while True:
+            time.sleep(1)
+            t = time.time()
+
+            hdt = compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
+            hd_time.append((t, hdt))
+
+            swarms = compute_swarm_size(shared_arrays)
+            if 1 in swarms:
+                print(swarms[1])
+                if Config.DURATION < 660:
+                    swarms_metrics.append((t, swarms))
+
+            if t - last_thaw_time >= h:
+                ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
+                last_thaw_time = t
+
+            if should_stop:
+                stop_message = Message(MessageTypes.STOP).from_server().to_all()
+                dumped_stop_msg = pickle.dumps(stop_message)
+                ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                time.sleep(1)
+                break
+
+    elif Config.CENTRALIZED_SWARM_SIZE:
         thaw_message = Message(MessageTypes.THAW_SWARM).from_server().to_all()
         dumped_thaw_msg = pickle.dumps(thaw_message)
 
@@ -247,15 +275,19 @@ if __name__ == '__main__':
         if p.is_alive():
             p.terminate()
 
-    if Config.PROBABILISTIC_ROUND:
-        utils.write_hds_time(hd_time, results_directory)
+    if Config.PROBABILISTIC_ROUND or Config.CENTRALIZED_ROUND:
+        utils.write_hds_time(hd_time, results_directory, nid)
     else:
-        utils.write_hds_round(hd_round, round_time, results_directory)
+        utils.write_hds_round(hd_round, round_time, results_directory, nid)
     if Config.DURATION < 660:
-        utils.write_swarms(swarms_metrics, round_time, results_directory)
-    utils.write_configs(results_directory)
-    utils.create_csv_from_json(results_directory)
-    utils.combine_csvs(results_directory, shape_directory)
+        utils.write_swarms(swarms_metrics, round_time, results_directory, nid)
+
+    if nid == 0:
+        utils.write_configs(results_directory)
+
+    if N == 1:
+        utils.create_csv_from_json(results_directory)
+        utils.combine_csvs(results_directory, shape_directory)
     # utils.plot_point_cloud(np.stack(shared_arrays), None)
 
     # compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)

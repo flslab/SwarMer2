@@ -9,7 +9,7 @@ import glob
 
 
 def write_json(fid, results, directory):
-    with open(os.path.join(directory, 'json', f"{fid:03}.json"), "w") as f:
+    with open(os.path.join(directory, 'json', f"{fid:05}.json"), "w") as f:
         json.dump(results, f)
 
 
@@ -47,23 +47,23 @@ def create_csv_from_json(directory):
         writer.writerows(rows)
 
 
-def write_hds_time(hds, directory):
+def write_hds_time(hds, directory, nid):
     if not os.path.exists(directory):
         return
 
-    headers = ['time(s)', 'hd']
+    headers = ['timestamp(s)', 'relative_time(s)', 'hd']
     rows = [headers]
 
     for i in range(len(hds)):
-        row = [hds[i][0] - hds[0][0], hds[i][1]]
+        row = [hds[i][0], hds[i][0] - hds[0][0], hds[i][1]]
         rows.append(row)
 
-    with open(os.path.join(directory, 'hd.csv'), 'w', newline='') as csvfile:
+    with open(os.path.join(directory, f'hd-n{nid}.csv'), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerows(rows)
 
 
-def write_hds_round(hds, rounds, directory):
+def write_hds_round(hds, rounds, directory, nid):
     if not os.path.exists(directory):
         return
 
@@ -74,13 +74,20 @@ def write_hds_round(hds, rounds, directory):
         row = [i+1, rounds[i+1] - rounds[0], hds[i][1]]
         rows.append(row)
 
-    with open(os.path.join(directory, 'hd.csv'), 'w', newline='') as csvfile:
+    with open(os.path.join(directory, f'hd-n{nid}.csv'), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerows(rows)
 
 
-def write_swarms(swarms, rounds, directory):
-    headers = ['times(s)', 'num_swarms', 'average_swarm_size', 'largest_swarm', 'smallest_swarm']
+def write_swarms(swarms, rounds, directory, nid):
+    headers = [
+        'timestamp(s)',
+        'relative times(s)',
+        'num_swarms',
+        'average_swarm_size',
+        'largest_swarm',
+        'smallest_swarm',
+    ]
 
     rows = [headers]
 
@@ -89,10 +96,10 @@ def write_swarms(swarms, rounds, directory):
         num_swarms = len(swarms[i][1])
         sizes = swarms[i][1].values()
 
-        row = [t, num_swarms, sum(sizes)/num_swarms, max(sizes), min(sizes)]
+        row = [swarms[i][0], t, num_swarms, sum(sizes)/num_swarms, max(sizes), min(sizes)]
         rows.append(row)
 
-    with open(os.path.join(directory, 'swarms.csv'), 'w', newline='') as csvfile:
+    with open(os.path.join(directory, f'swarms-n{nid}.csv'), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerows(rows)
 
