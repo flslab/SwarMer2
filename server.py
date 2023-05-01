@@ -13,6 +13,8 @@ import worker
 import utils
 import glob
 import sys
+from stop import stop_all
+
 
 hd_timer = None
 hd_round = []
@@ -260,6 +262,8 @@ if __name__ == '__main__':
             print(len(json_files))
             if len(json_files) == count:
                 break
+            else:
+                stop_all()
 
     for p in processes:
         if p.is_alive():
@@ -275,12 +279,12 @@ if __name__ == '__main__':
     if nid == 0:
         utils.write_configs(results_directory)
 
-    if N > 1:
+    if N > 1 and nid == 0:
         print("wait a fixed time for other nodes")
         time.sleep(10)
 
-    utils.create_csv_from_json(results_directory)
-    utils.combine_csvs(results_directory, shape_directory)
+        utils.create_csv_from_json(results_directory)
+        utils.combine_csvs(results_directory, shape_directory)
 
     for s in shared_memories:
         s.close()
