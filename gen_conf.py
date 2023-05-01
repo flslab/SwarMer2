@@ -13,7 +13,7 @@ def_conf = {
     "CHALLENGE_PROB_DECAY": "5",
     "INITIAL_CHALLENGE_PROB": "1",
     "CHALLENGE_LEASE_DURATION": "0.1",
-    "FAILURE_TIMEOUT": "1",
+    "FAILURE_TIMEOUT": "0",
     "FAILURE_PROB": "0",
     "NUMBER_ROUND": "5",
     "ACCELERATION": "6",
@@ -25,7 +25,7 @@ def_conf = {
     "DECENTRALIZED_SWARM_SIZE": "False",
     "CENTRALIZED_SWARM_SIZE": "True",
     "BUSY_WAITING": "False",
-    "SAMPLE_SIZE": "64",
+    "SAMPLE_SIZE": "0",
     "DURATION": "600",
     "SHAPE": "'dragon'",
     "RESULTS_PATH": "'/proj/nova-PG0/hamed/results'",
@@ -33,12 +33,16 @@ def_conf = {
 
 props = [
     {
-        "keys": ["FAILURE_PROB"],
-        "values": ["0.1", "0.01", "0.001"]
+        "keys": ["DROP_PROB_RECEIVER"],
+        "values": ["0", "0.1", "0.01", "0.001"]
     },
     {
-        "keys": ["SAMPLE_SIZE"],
-        "values": ["64", "0"]
+        "keys": ["ACCELERATION", "DECELERATION", "MAX_SPEED"],
+        "values": ["1.5", "6"]
+    },
+    {
+        "keys": ["SHAPE"],
+        "values": ["'hat'", "'skateboard'"]
     },
 ]
 
