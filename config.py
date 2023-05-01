@@ -10,8 +10,8 @@ class Config:
     CHALLENGE_PROB_DECAY = 5
     INITIAL_CHALLENGE_PROB = 1
     CHALLENGE_LEASE_DURATION = 1
-    FAILURE_TIMEOUT = 0
-    FAILURE_PROB = 0
+    FAILURE_TIMEOUT = 1
+    FAILURE_PROB = 0.1
     NUMBER_ROUND = 5
     ACCELERATION = 6
     DECELERATION = 6
@@ -24,7 +24,7 @@ class Config:
     PROBABILISTIC_ROUND = False
     CENTRALIZED_ROUND = True
     BUSY_WAITING = False
-    SAMPLE_SIZE = 64
+    SAMPLE_SIZE = 0
     DURATION = 600
-    SHAPE = 'dragon'
+    SHAPE = 'skateboard'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results'

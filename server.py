@@ -46,8 +46,8 @@ def compute_swarm_size(sh_arrays):
 
 
 if __name__ == '__main__':
-    N = 2
-    nid = 1
+    N = 1
+    nid = 0
     experiment_name = str(int(time.time()))
     if len(sys.argv) > 1:
         N = int(sys.argv[1])
@@ -69,7 +69,8 @@ if __name__ == '__main__':
     h = np.log2(total_count)
 
     gtl_point_cloud = np.random.uniform(0, 5, size=(total_count, 3))
-    sample = np.array([0.0, 0.0, 0.0, 0.0])
+    # x y z swarm_id is_failed
+    sample = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
 
     node_point_idx = []
     for i in range(total_count):
@@ -84,6 +85,7 @@ if __name__ == '__main__':
     shared_arrays = []
     shared_memories = []
 
+    local_gtl_point_cloud = []
     try:
         for i in node_point_idx:
             shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
@@ -92,6 +94,7 @@ if __name__ == '__main__':
 
             shared_arrays.append(shared_array)
             shared_memories.append(shm)
+            local_gtl_point_cloud.append(gtl_point_cloud[i])
             p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name, results_directory)
             p.start()
             processes.append(p)
@@ -104,7 +107,7 @@ if __name__ == '__main__':
             s.unlink()
         exit()
 
-    gtl_point_cloud = gtl_point_cloud[node_point_idx]
+    gtl_point_cloud = local_gtl_point_cloud
 
     fin_message_sent = False
     final_point_cloud = np.zeros([count, 3])
@@ -157,7 +160,15 @@ if __name__ == '__main__':
             time.sleep(1)
             t = time.time()
 
-            hdt = compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
+            surviving_flss = []
+            gtl_p = []
+            for i in range(len(shared_arrays)):
+                arr = shared_arrays[i]
+                if arr[4] < 1:
+                    surviving_flss.append(arr[:3])
+                    gtl_p.append(gtl_point_cloud[i])
+
+            hdt = compute_hd(surviving_flss, np.stack(gtl_p))
             hd_time.append((t, hdt))
 
             swarms = compute_swarm_size(shared_arrays)
