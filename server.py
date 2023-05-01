@@ -44,8 +44,8 @@ def compute_swarm_size(sh_arrays):
 
 
 if __name__ == '__main__':
-    N = 1
-    nid = 0
+    N = 2
+    nid = 1
     experiment_name = str(int(time.time()))
     if len(sys.argv) > 1:
         N = sys.argv[1]
@@ -59,50 +59,37 @@ if __name__ == '__main__':
     mat = scipy.io.loadmat(f'assets/{Config.SHAPE}.mat')
     point_cloud = mat['p']
 
-    total_count = point_cloud.shape[0]
-    h = np.log2(total_count)
-
     if Config.SAMPLE_SIZE != 0:
         np.random.shuffle(point_cloud)
         point_cloud = point_cloud[:Config.SAMPLE_SIZE]
 
-    count = point_cloud.shape[0]
-    print(count)
-    # np.random.shuffle(gtl_point_cloud)
-    # print(gtl_point_cloud)
-    gtl_point_cloud = np.random.uniform(0, 5, size=(count, 3))
+    total_count = point_cloud.shape[0]
+    h = np.log2(total_count)
+
+    gtl_point_cloud = np.random.uniform(0, 5, size=(total_count, 3))
     sample = np.array([0.0, 0.0, 0.0, 0.0])
-    # gtl_point_cloud = np.array([[0, 0, 1], [0, 0, 2], [5, 5, 1], [5, 5, 2]])
-    # el_point_cloud = gtl_point_cloud + np.random.randint(2, size=(count, 3))
 
-    # shm = shared_memory.SharedMemory(create=True, size=gtl_point_cloud.nbytes)
-    # shared_array = np.ndarray(gtl_point_cloud.shape, dtype=gtl_point_cloud.dtype, buffer=shm.buf)
+    node_point_idx = []
+    for i in range(total_count):
+        if i % N == nid:
+            node_point_idx.append(i)
+            gtl_point_cloud[i] = np.array([point_cloud[i][0], point_cloud[i][1], point_cloud[i][2]])
 
-    # utils.plot_point_cloud(gtl_point_cloud, None)
-    # barrier = multiprocessing.Barrier(count+1, action=press_enter_to_proceed)
-
-    for i in range(count):
-        # o = np.array([0, 0, 10.0])
-        # rx = np.array([16.0, 0, 0])
-        # ry = np.array([0, 16.0, 0])
-        # gtl_point_cloud[i] = o + rx * np.sin(i*2*np.pi/count) + ry * np.cos(i*2*np.pi/count)
-        # gtl_point_cloud[i] = np.array([i, i, i])
-        gtl_point_cloud[i] = np.array([point_cloud[i][0], point_cloud[i][1], point_cloud[i][2]])
-
-    # np.random.shuffle(gtl_point_cloud)
+    count = len(node_point_idx)
+    print(count)
 
     processes = []
     shared_arrays = []
-    shared_mems = []
+    shared_memories = []
 
     try:
-        for i in range(count):
+        for i in node_point_idx:
             shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
             shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
             shared_array[:] = sample[:]
 
             shared_arrays.append(shared_array)
-            shared_mems.append(shm)
+            shared_memories.append(shm)
             p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name, results_directory)
             p.start()
             processes.append(p)
@@ -110,10 +97,12 @@ if __name__ == '__main__':
         print(e)
         for p in processes:
             p.terminate()
-        for s in shared_mems:
+        for s in shared_memories:
             s.close()
             s.unlink()
         exit()
+
+    gtl_point_cloud = gtl_point_cloud[node_point_idx]
 
     fin_message_sent = False
     final_point_cloud = np.zeros([count, 3])
@@ -170,19 +159,20 @@ if __name__ == '__main__':
             hd_time.append((t, hdt))
 
             swarms = compute_swarm_size(shared_arrays)
-            if 1 in swarms:
-                print(swarms[1])
-                if Config.DURATION < 660:
-                    swarms_metrics.append((t, swarms))
+            print(max(swarms.values()))
+            if Config.DURATION < 660:
+                swarms_metrics.append((t, swarms))
 
-            if t - last_thaw_time >= h:
-                ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
-                last_thaw_time = t
+            if N == 1 or nid == 0:
+                if t - last_thaw_time >= h:
+                    ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
+                    last_thaw_time = t
 
             if should_stop:
-                stop_message = Message(MessageTypes.STOP).from_server().to_all()
-                dumped_stop_msg = pickle.dumps(stop_message)
-                ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                if N == 1 or nid == 0:
+                    stop_message = Message(MessageTypes.STOP).from_server().to_all()
+                    dumped_stop_msg = pickle.dumps(stop_message)
+                    ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
                 time.sleep(1)
                 break
 
@@ -248,8 +238,8 @@ if __name__ == '__main__':
                 metrics[msg.fid] = msg.args[0]
             fin_processes[msg.fid - 1] = 1
 
-            shared_mems[msg.fid - 1].close()
-            shared_mems[msg.fid - 1].unlink()
+            shared_memories[msg.fid - 1].close()
+            shared_memories[msg.fid - 1].unlink()
 
             print(f"process {msg.fid} finished")
 
@@ -285,12 +275,13 @@ if __name__ == '__main__':
     if nid == 0:
         utils.write_configs(results_directory)
 
-    if N == 1:
-        utils.create_csv_from_json(results_directory)
-        utils.combine_csvs(results_directory, shape_directory)
-    # utils.plot_point_cloud(np.stack(shared_arrays), None)
+    if N > 1:
+        print("wait a fixed time for other nodes")
+        time.sleep(10)
 
-    # compute_hd([arr[:3] for arr in shared_arrays], gtl_point_cloud)
-    for s in shared_mems:
+    utils.create_csv_from_json(results_directory)
+    utils.combine_csvs(results_directory, shape_directory)
+
+    for s in shared_memories:
         s.close()
         s.unlink()
