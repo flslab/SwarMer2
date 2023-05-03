@@ -27,5 +27,5 @@ class Config:
     MIN_ADJUSTMENT = 0.1
     SAMPLE_SIZE = 0
     DURATION = 600
-    SHAPE = 'dragon'
+    SHAPE = 'skateboard'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results'
