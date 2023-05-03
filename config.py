@@ -24,8 +24,8 @@ class Config:
     PROBABILISTIC_ROUND = False
     CENTRALIZED_ROUND = True
     BUSY_WAITING = False
-    MIN_ADJUSTMENT = 0.001
+    MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
-    DURATION = 600
+    DURATION = 3600
     SHAPE = 'skateboard'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results'
