@@ -268,8 +268,9 @@ if __name__ == '__main__':
 
     for p in processes:
         p.join(45)
-        stop_all()
         if p.is_alive():
+            stop_all()
+            time.sleep(45)
             break
 
     for p in processes:
