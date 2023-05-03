@@ -11,7 +11,7 @@ from .types import StateTypes
 
 class StateMachine:
     def __init__(self, context, sock, metrics):
-        self.state = StateTypes.AVAILABLE
+        self.state = StateTypes.DEPLOYING
         self.context = context
         self.metrics = metrics
         self.sock = sock
@@ -25,6 +25,7 @@ class StateMachine:
         self.stop_handled = False
         self.waiting_for = None
         self.anchor_lock = None
+        self.should_fail = False
 
     def start(self):
         self.anchor_lock = threading.Lock()
@@ -206,6 +207,19 @@ class StateMachine:
         self.timer_round = threading.Timer(t, self.handle_thaw_swarm, args=(None,))
         self.timer_round.start()
 
+    def start_failure_timer(self):
+        if self.timer_failure is not None:
+            self.timer_failure.cancel()
+            self.timer_failure = None
+        self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.set_fail)
+        self.timer_failure.start()
+
+    def set_fail(self):
+        if Config.FAILURE_PROB and np.random.random() <= Config.FAILURE_PROB:
+            self.should_fail = True
+        else:
+            self.start_failure_timer()
+
     def query_size(self):
         if self.timer_size is not None:
             self.timer_size.cancel()
@@ -235,20 +249,13 @@ class StateMachine:
             self.set_lease_timer()
 
     def fail(self):
-        if self.timer_failure is not None:
-            self.timer_failure.cancel()
-            self.timer_failure = None
-
-        if Config.FAILURE_PROB and np.random.random() <= Config.FAILURE_PROB:
-            # print("failed")
-            self.cancel_timers()
-            self.enter(StateTypes.DEPLOYING)
-            with self.anchor_lock:
-                self.context.fail()
-            self.start()
-        else:
-            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
-            self.timer_failure.start()
+        # print("failed")
+        self.should_fail = False
+        self.cancel_timers()
+        self.enter(StateTypes.DEPLOYING)
+        with self.anchor_lock:
+            self.context.fail()
+        self.start()
 
     def enter(self, state, arg={}):
         if self.timer_available is not None:
@@ -287,6 +294,9 @@ class StateMachine:
             self.leave_busy_localizing()
 
     def drive(self, msg):
+        if self.should_fail:
+            self.fail()
+
         event = msg.type
         self.context.update_neighbor(msg)
 
@@ -354,8 +364,7 @@ class StateMachine:
         if Config.DECENTRALIZED_SWARM_SIZE:
             self.query_size()
         if Config.FAILURE_TIMEOUT:
-            self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.fail)
-            self.timer_failure.start()
+            self.start_failure_timer()
 
     def cancel_timers(self):
         if self.timer_available is not None:

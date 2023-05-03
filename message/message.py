@@ -38,8 +38,12 @@ class Message:
         return self
 
     def to_fls(self, ctx):
-        self.dest_fid = ctx.fid
-        self.dest_swarm_id = ctx.swarm_id
+        if ctx in None:
+            self.dest_fid = -1
+            self.dest_swarm_id = -1
+        else:
+            self.dest_fid = ctx.fid
+            self.dest_swarm_id = ctx.swarm_id
         return self
 
     def to_fls_id(self, fid, swarm_id):
