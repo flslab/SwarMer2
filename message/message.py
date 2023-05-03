@@ -38,7 +38,7 @@ class Message:
         return self
 
     def to_fls(self, ctx):
-        if ctx in None:
+        if ctx is None:
             self.dest_fid = -1
             self.dest_swarm_id = -1
         else:
