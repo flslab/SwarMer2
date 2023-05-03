@@ -24,7 +24,8 @@ class Config:
     PROBABILISTIC_ROUND = False
     CENTRALIZED_ROUND = True
     BUSY_WAITING = False
+    MIN_ADJUSTMENT = 0.1
     SAMPLE_SIZE = 0
     DURATION = 600
-    SHAPE = 'hat'
+    SHAPE = 'dragon'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results'

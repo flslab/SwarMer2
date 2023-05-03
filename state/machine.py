@@ -156,12 +156,14 @@ class StateMachine:
                 d_gtl = self.context.gtl - self.context.anchor.gtl
                 d_el = self.context.el - self.context.anchor.el
                 v = d_gtl - d_el
+                d = np.linalg.norm(v)
+                if v >= Config.MIN_ADJUSTMENT:
+                    follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
+                        .to_swarm(self.context)
+                    self.broadcast(follow_merge_message)
 
-                follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
-                    .to_swarm(self.context)
-                self.broadcast(follow_merge_message)
-
-            self.context.move(v)
+            if v >= Config.MIN_ADJUSTMENT:
+                self.context.move(v)
 
             if self.context.anchor is not None:
                 with self.anchor_lock:
