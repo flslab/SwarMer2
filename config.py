@@ -26,5 +26,5 @@ class Config:
     BUSY_WAITING = False
     SAMPLE_SIZE = 0
     DURATION = 600
-    SHAPE = 'skateboard'
+    SHAPE = 'hat'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results'
