@@ -267,7 +267,7 @@ if __name__ == '__main__':
         server_sock.close()
 
     for p in processes:
-        p.join(20)
+        p.join(45)
         stop_all()
         if p.is_alive():
             break
@@ -288,7 +288,7 @@ if __name__ == '__main__':
 
     if N > 1 and nid == 0:
         print("wait a fixed time for other nodes")
-        time.sleep(10)
+        time.sleep(60)
 
         utils.create_csv_from_json(results_directory)
         utils.combine_csvs(results_directory, shape_directory)

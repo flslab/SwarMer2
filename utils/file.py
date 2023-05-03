@@ -27,8 +27,11 @@ def create_csv_from_json(directory):
     for filename in filenames:
         if filename.endswith('.json'):
             with open(os.path.join(json_dir, filename)) as f:
-                data = json.load(f)
-                headers_set = headers_set.union(set(list(data.keys())))
+                try:
+                    data = json.load(f)
+                    headers_set = headers_set.union(set(list(data.keys())))
+                except json.decoder.JSONDecodeError:
+                    print(filename)
 
     headers = list(headers_set)
     headers.sort()
@@ -37,10 +40,13 @@ def create_csv_from_json(directory):
     for filename in filenames:
         if filename.endswith('.json'):
             with open(os.path.join(json_dir, filename)) as f:
-                data = json.load(f)
-                fid = filename.split('.')[0]
-                row = [fid] + [data[h] if h in data else 0 for h in headers]
-                rows.append(row)
+                try:
+                    data = json.load(f)
+                    fid = filename.split('.')[0]
+                    row = [fid] + [data[h] if h in data else 0 for h in headers]
+                    rows.append(row)
+                except json.decoder.JSONDecodeError:
+                    print(filename)
 
     with open(os.path.join(directory, 'metrics.csv'), 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
