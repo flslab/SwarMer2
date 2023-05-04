@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import threading
 import uuid
@@ -101,12 +103,14 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
+        self.enter(StateTypes.DEPLOYING)
         # print(f"{self.context.fid} thawed")
         self.challenge_ack = False
         self.cancel_timers()
         with self.anchor_lock:
             self.context.thaw_swarm()
         self.challenge_probability = 1
+        time.sleep(1)
         self.enter(StateTypes.AVAILABLE)
         self.start_timers()
 
@@ -280,7 +284,7 @@ class StateMachine:
                 and self.state != StateTypes.BUSY_LOCALIZING \
                 and self.state != StateTypes.DEPLOYING:
             self.timer_available = \
-                threading.Timer(0.05 + np.random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
+                threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
             self.timer_available.start()
 
     def reenter(self, state):
