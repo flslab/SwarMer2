@@ -4,7 +4,7 @@ class Config:
     MAX_RANGE = 200
     DROP_PROB_SENDER = 0
     DROP_PROB_RECEIVER = 0
-    STATE_TIMEOUT = 1
+    STATE_TIMEOUT = 0.05
     SIZE_QUERY_TIMEOUT = 10
     DEAD_RECKONING_ANGLE = 5
     CHALLENGE_PROB_DECAY = 5
@@ -26,6 +26,6 @@ class Config:
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
-    DURATION = 3600
+    DURATION = 600
     SHAPE = 'skateboard'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results'

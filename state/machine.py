@@ -280,7 +280,7 @@ class StateMachine:
                 and self.state != StateTypes.BUSY_LOCALIZING \
                 and self.state != StateTypes.DEPLOYING:
             self.timer_available = \
-                threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
+                threading.Timer(0.05 + np.random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
             self.timer_available.start()
 
     def reenter(self, state):
