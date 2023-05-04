@@ -110,7 +110,7 @@ class StateMachine:
         with self.anchor_lock:
             self.context.thaw_swarm()
         self.challenge_probability = 1
-        time.sleep(1)
+        # time.sleep(1)
         self.enter(StateTypes.AVAILABLE)
         self.start_timers()
 
