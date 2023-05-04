@@ -22,7 +22,7 @@ class HandlerThread(threading.Thread):
             if event.type == MessageTypes.THAW_SWARM:
                 t = time.time()
 
-                if t - self.last_thaw > 2:
+                if t - self.last_thaw > 4:
                     self.flush_all()
                 else:
                     continue

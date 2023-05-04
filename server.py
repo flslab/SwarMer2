@@ -176,10 +176,10 @@ if __name__ == '__main__':
             if Config.DURATION < 660:
                 swarms_metrics.append((t, swarms))
 
-            if N == 1 or nid == 0:
-                if t - last_thaw_time >= h:
-                    ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
-                    last_thaw_time = t
+            # if N == 1 or nid == 0:
+            if t - last_thaw_time >= h:
+                ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
+                last_thaw_time = t
 
             if should_stop:
                 if N == 1 or nid == 0:
