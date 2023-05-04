@@ -1,4 +1,5 @@
 import threading
+import time
 from message import MessageTypes
 
 
@@ -8,6 +9,7 @@ class HandlerThread(threading.Thread):
         self.event_queue = event_queue
         self.state_machine = state_machine
         self.context = context
+        self.last_thaw = 0
 
     def run(self):
         self.state_machine.start()
@@ -18,7 +20,13 @@ class HandlerThread(threading.Thread):
 
             event = item.event
             if event.type == MessageTypes.THAW_SWARM:
-                self.flush_all()
+                t = time.time()
+
+                if t - self.last_thaw > 2:
+                    self.flush_all()
+                else:
+                    continue
+                self.last_thaw = t
             self.state_machine.drive(event)
             if event.type == MessageTypes.STOP:
                 # print(f"handler_stopped_{self.context.fid}")

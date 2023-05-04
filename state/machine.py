@@ -103,6 +103,9 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
+        if np.random.random() < 0.005:
+            thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
+            self.broadcast(thaw_message)
         self.enter(StateTypes.DEPLOYING)
         # print(f"{self.context.fid} thawed")
         self.challenge_ack = False
