@@ -25,11 +25,13 @@ def_conf = {
     "DECENTRALIZED_SWARM_SIZE": "False",
     "CENTRALIZED_SWARM_SIZE": "False",
     "PROBABILISTIC_ROUND": "True",
+    "CENTRALIZED_ROUND": "True",
     "BUSY_WAITING": "False",
+    "MIN_ADJUSTMENT": "0",
     "SAMPLE_SIZE": "0",
     "DURATION": "600",
     "SHAPE": "'dragon'",
-    "RESULTS_PATH": "'/proj/nova-PG0/hamed/results'",
+    "RESULTS_PATH": "'results'",
 }
 
 props = [

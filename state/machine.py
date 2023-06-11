@@ -28,6 +28,7 @@ class StateMachine:
         self.waiting_for = None
         self.anchor_lock = None
         self.should_fail = False
+        self.thaw_ids = dict()
 
     def start(self):
         self.anchor_lock = threading.Lock()
@@ -103,9 +104,14 @@ class StateMachine:
         self.enter(StateTypes.AVAILABLE)
 
     def handle_thaw_swarm(self, msg):
-        # if np.random.random() < 0.005:
-        #     thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
-        #     self.broadcast(thaw_message)
+        t = msg.args[0]
+        if t in self.thaw_ids:
+            return
+
+        self.thaw_ids[t] = True
+        if np.random.random() < 0.5:
+            thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
+            self.broadcast(thaw_message)
         self.enter(StateTypes.DEPLOYING)
         # print(f"{self.context.fid} thawed")
         self.challenge_ack = False

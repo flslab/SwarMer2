@@ -153,8 +153,6 @@ if __name__ == '__main__':
 
     elif Config.CENTRALIZED_ROUND:
         last_thaw_time = time.time()
-        thaw_message = Message(MessageTypes.THAW_SWARM).from_server().to_all()
-        dumped_thaw_msg = pickle.dumps(thaw_message)
 
         while True:
             time.sleep(1)
@@ -178,6 +176,8 @@ if __name__ == '__main__':
 
             # if N == 1 or nid == 0:
             if t - last_thaw_time >= h:
+                thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
+                dumped_thaw_msg = pickle.dumps(thaw_message)
                 ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
                 last_thaw_time = t
 
@@ -289,7 +289,7 @@ if __name__ == '__main__':
 
     if N > 1 and nid == 0:
         print("wait a fixed time for other nodes")
-        time.sleep(60)
+        time.sleep(90)
 
         utils.create_csv_from_json(results_directory)
         utils.combine_csvs(results_directory, shape_directory)
