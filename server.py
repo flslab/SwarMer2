@@ -186,6 +186,10 @@ if __name__ == '__main__':
                     stop_message = Message(MessageTypes.STOP).from_server().to_all()
                     dumped_stop_msg = pickle.dumps(stop_message)
                     ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                    time.sleep(1)
+                    ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                    time.sleep(1)
+                    ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
                 time.sleep(1)
                 break
 
@@ -273,10 +277,12 @@ if __name__ == '__main__':
             time.sleep(45)
             break
 
+    print("timeout")
     for p in processes:
         if p.is_alive():
             p.terminate()
 
+    print("done")
     if Config.PROBABILISTIC_ROUND or Config.CENTRALIZED_ROUND:
         utils.write_hds_time(hd_time, results_directory, nid)
     else:
@@ -287,12 +293,12 @@ if __name__ == '__main__':
     if nid == 0:
         utils.write_configs(results_directory)
 
-    if N > 1 and nid == 0:
-        print("wait a fixed time for other nodes")
-        time.sleep(90)
-
-        utils.create_csv_from_json(results_directory)
-        utils.combine_csvs(results_directory, shape_directory)
+    # if N > 1 and nid == 0:
+    #     print("wait a fixed time for other nodes")
+    #     time.sleep(90)
+    #
+    #     utils.create_csv_from_json(results_directory)
+    #     utils.combine_csvs(results_directory, shape_directory)
 
     for s in shared_memories:
         s.close()
