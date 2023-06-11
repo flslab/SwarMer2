@@ -26,6 +26,6 @@ class Config:
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
-    DURATION = 600
+    DURATION = 120
     SHAPE = 'skateboard'
     RESULTS_PATH = 'results'
