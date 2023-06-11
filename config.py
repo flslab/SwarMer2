@@ -28,4 +28,4 @@ class Config:
     SAMPLE_SIZE = 0
     DURATION = 600
     SHAPE = 'racecar'
-    RESULTS_PATH = '/proj/nova-PG0/hamed/results'
+    RESULTS_PATH = 'results'
