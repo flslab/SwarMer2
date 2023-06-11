@@ -110,8 +110,7 @@ class StateMachine:
 
         self.thaw_ids[t] = True
         if np.random.random() < 0.5:
-            thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
-            self.broadcast(thaw_message)
+            self.broadcast(msg)
         self.enter(StateTypes.DEPLOYING)
         # print(f"{self.context.fid} thawed")
         self.challenge_ack = False
