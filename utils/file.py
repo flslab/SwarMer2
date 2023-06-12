@@ -136,3 +136,10 @@ def combine_csvs(directory, xslx_dir):
             sheet_name = csv_file.split('/')[-1][:-4]
             df.to_excel(writer, sheet_name=sheet_name, index=False)
     # shutil.rmtree(os.path.join(directory))
+
+
+if __name__ == '__main__':
+    results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
+    shape_directory = "/Users/hamed/Desktop/60s/results/skateboard"
+    create_csv_from_json(results_directory)
+    combine_csvs(results_directory, shape_directory)
