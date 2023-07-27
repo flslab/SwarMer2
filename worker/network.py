@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass, field
 from typing import Any
 import threading
@@ -31,8 +32,6 @@ class NetworkThread(threading.Thread):
         if msg is None:
             self.context.log_dropped_messages()
             return False
-        if self.context.fid == 1 and msg.type == message.MessageTypes.THAW_SWARM:
-            print('thaw')
         if msg.type == message.MessageTypes.STOP:
             return True
         if Config.DROP_PROB_RECEIVER:
@@ -55,19 +54,21 @@ class NetworkThread(threading.Thread):
 
     @staticmethod
     def prioritize_message(msg):
+        t = time.time()
         if msg.type == message.MessageTypes.STOP or msg.type == message.MessageTypes.THAW_SWARM:
-            return PrioritizedItem(0, msg, False)
+            return PrioritizedItem(0, t, msg, False)
         if msg.type == message.MessageTypes.SIZE_QUERY or msg.type == message.MessageTypes.SIZE_REPLY:
-            return PrioritizedItem(2, msg, False)
+            return PrioritizedItem(2, t, msg, False)
         if msg.type == message.MessageTypes.SET_WAITING or msg.type == message.MessageTypes.FOLLOW_MERGE\
                 or msg.type == message.MessageTypes.FOLLOW or msg.type == message.MessageTypes.MERGE\
                 or msg.type == message.MessageTypes.CHALLENGE_FIN:
-            return PrioritizedItem(1, msg, False)
-        return PrioritizedItem(3, msg, False)
+            return PrioritizedItem(1, t, msg, False)
+        return PrioritizedItem(3, t, msg, False)
 
 
 @dataclass(order=True)
 class PrioritizedItem:
     priority: int
+    time: float
     event: Any = field(compare=False)
     stale: bool = field(compare=False)

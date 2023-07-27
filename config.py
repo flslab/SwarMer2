@@ -25,7 +25,7 @@ class Config:
     CENTRALIZED_ROUND = True
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
-    SAMPLE_SIZE = 0
-    DURATION = 120
-    SHAPE = 'racecar'
+    SAMPLE_SIZE = 20
+    DURATION = 20
+    SHAPE = 'butterfly'
     RESULTS_PATH = 'results'

@@ -277,9 +277,9 @@ if __name__ == '__main__':
             time.sleep(45)
             break
 
-    print("timeout")
     for p in processes:
         if p.is_alive():
+            print("timeout")
             p.terminate()
 
     print("done")

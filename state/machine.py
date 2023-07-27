@@ -8,11 +8,12 @@ import uuid
 from message import Message, MessageTypes
 from config import Config
 from utils import logger, write_json
+from worker.network import PrioritizedItem
 from .types import StateTypes
 
 
 class StateMachine:
-    def __init__(self, context, sock, metrics):
+    def __init__(self, context, sock, metrics, event_queue):
         self.state = StateTypes.DEPLOYING
         self.context = context
         self.metrics = metrics
@@ -26,12 +27,11 @@ class StateMachine:
         self.challenge_probability = Config.INITIAL_CHALLENGE_PROB
         self.stop_handled = False
         self.waiting_for = None
-        self.anchor_lock = None
         self.should_fail = False
+        self.event_queue = event_queue
         self.thaw_ids = dict()
 
     def start(self):
-        self.anchor_lock = threading.Lock()
         self.context.deploy()
         self.enter(StateTypes.AVAILABLE)
         self.start_timers()
@@ -115,8 +115,7 @@ class StateMachine:
         # print(f"{self.context.fid} thawed")
         self.challenge_ack = False
         self.cancel_timers()
-        with self.anchor_lock:
-            self.context.thaw_swarm()
+        self.context.thaw_swarm()
         self.challenge_probability = 1
         # time.sleep(1)
         self.enter(StateTypes.AVAILABLE)
@@ -164,26 +163,24 @@ class StateMachine:
         self.broadcast(waiting_message)
 
         if self.context.anchor is not None:
-            with self.anchor_lock:
-                d_gtl = self.context.gtl - self.context.anchor.gtl
-                d_el = self.context.el - self.context.anchor.el
-                v = d_gtl - d_el
-                d = np.linalg.norm(v)
-                if d >= Config.MIN_ADJUSTMENT:
-                    follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
-                        .to_swarm(self.context)
-                    self.broadcast(follow_merge_message)
+            d_gtl = self.context.gtl - self.context.anchor.gtl
+            d_el = self.context.el - self.context.anchor.el
+            v = d_gtl - d_el
+            d = np.linalg.norm(v)
+            if d >= Config.MIN_ADJUSTMENT:
+                follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
+                    .to_swarm(self.context)
+                self.broadcast(follow_merge_message)
 
             if d >= Config.MIN_ADJUSTMENT:
                 self.context.move(v)
 
             if self.context.anchor is not None:
-                with self.anchor_lock:
-                    self.context.set_swarm_id(self.context.anchor.swarm_id)
+                self.context.set_swarm_id(self.context.anchor.swarm_id)
 
-                    challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
-                    self.broadcast(challenge_fin_message)
-                    self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
+                challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
+                self.broadcast(challenge_fin_message)
+                self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
 
         self.enter(StateTypes.AVAILABLE)
 
@@ -267,9 +264,13 @@ class StateMachine:
         self.should_fail = False
         self.cancel_timers()
         self.enter(StateTypes.DEPLOYING)
-        with self.anchor_lock:
-            self.context.fail()
+        self.context.fail()
         self.start()
+
+    def put_state_in_q(self, event):
+        msg = Message(event).to_fls(self.context)
+        item = PrioritizedItem(1, time.time(), msg, False)
+        self.event_queue.put(item)
 
     def enter(self, state, arg={}):
         if self.timer_available is not None:

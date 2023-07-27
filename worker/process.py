@@ -17,13 +17,13 @@ class WorkerProcess(multiprocessing.Process):
         self.metrics = Metrics(self.history, results_directory)
         self.context = WorkerContext(count, process_id, gtl, el, shared_el, self.metrics)
         self.sock = WorkerSocket()
-        self.state_machine = state.StateMachine(self.context, self.sock, self.metrics)
 
     def run(self):
         event_queue = queue.PriorityQueue()
+        state_machine = state.StateMachine(self.context, self.sock, self.metrics, event_queue)
 
         network_thread = NetworkThread(event_queue, self.context, self.sock)
-        handler_thread = HandlerThread(event_queue, self.state_machine, self.context)
+        handler_thread = HandlerThread(event_queue, state_machine, self.context)
         network_thread.start()
         handler_thread.start()
 
