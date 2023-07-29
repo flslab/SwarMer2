@@ -215,14 +215,14 @@ class StateMachine:
 
         h = np.log2(self.context.count)
         t = np.random.uniform(h, 1.5 * h)
-        self.timer_round = threading.Timer(t, self.handle_thaw_swarm, args=(None,))
+        self.timer_round = threading.Timer(t, self.put_state_in_q, args=(MessageTypes.THAW_SWARM_INTERNAL,))
         self.timer_round.start()
 
     def start_failure_timer(self):
         if self.timer_failure is not None:
             self.timer_failure.cancel()
             self.timer_failure = None
-        self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.set_fail)
+        self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.put_state_in_q, args=(MessageTypes.FAIL_INTERNAL,))
         self.timer_failure.start()
 
     def set_fail(self):
@@ -250,7 +250,7 @@ class StateMachine:
             self.timer_lease.cancel()
             self.timer_lease = None
 
-        self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
+        self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION, self.put_state_in_q, args=(MessageTypes.RENEW_LEASE_INTERNAL,))
         self.timer_lease.start()
 
     def renew_lease(self):
@@ -293,14 +293,14 @@ class StateMachine:
                 and self.state != StateTypes.BUSY_LOCALIZING \
                 and self.state != StateTypes.DEPLOYING:
             self.timer_available = \
-                threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.reenter, (StateTypes.AVAILABLE,))
+                threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.put_state_in_q, args=(MessageTypes.SET_AVAILABLE_INTERNAL,))
             self.timer_available.start()
 
-    def reenter(self, state):
+    def reenter_available_state(self):
         if self.state != StateTypes.BUSY_ANCHOR\
                 and self.state != StateTypes.BUSY_LOCALIZING\
                 and self.state != StateTypes.DEPLOYING:
-            self.enter(state)
+            self.enter(StateTypes.AVAILABLE)
 
     def leave(self, state):
         if state == StateTypes.BUSY_ANCHOR:
@@ -363,6 +363,14 @@ class StateMachine:
             self.handle_size_reply(msg)
         elif event == MessageTypes.THAW_SWARM:
             self.handle_thaw_swarm(msg)
+        elif event == MessageTypes.RENEW_LEASE_INTERNAL:
+            self.renew_lease()
+        elif event == MessageTypes.SET_AVAILABLE_INTERNAL:
+            self.reenter_available_state()
+        elif event == MessageTypes.FAIL_INTERNAL:
+            self.set_fail()
+        elif event == MessageTypes.THAW_SWARM_INTERNAL:
+            self.handle_thaw_swarm(Message(MessageTypes.THAW_SWARM, args=(time.time(),)).from_fls(self.context).to_all())
 
     def broadcast(self, msg):
         msg.from_fls(self.context)

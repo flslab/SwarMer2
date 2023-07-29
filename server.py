@@ -54,6 +54,37 @@ if __name__ == '__main__':
         nid = int(sys.argv[2])
         experiment_name = sys.argv[3]
 
+    IS_CLUSTER_SERVER = N != 1 and nid == 0
+    IS_CLUSTER_CLIENT = N != 1 and nid != 0
+
+    if IS_CLUSTER_SERVER:
+        ServerSocket = socket.socket()
+        ServerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        while True:
+            try:
+                ServerSocket.bind(Constants.SERVER_ADDRESS)
+            except OSError:
+                time.sleep(10)
+                continue
+            break
+        ServerSocket.listen(N - 1)
+
+        clients = []
+        for i in range(N - 1):
+            client, address = ServerSocket.accept()
+            print(address)
+            clients.append(client)
+
+    if IS_CLUSTER_CLIENT:
+        client_socket = socket.socket()
+        while True:
+            try:
+                client_socket.connect(Constants.SERVER_ADDRESS)
+            except OSError:
+                time.sleep(10)
+                continue
+            break
+
     results_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE, experiment_name)
     shape_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE)
     if not os.path.exists(results_directory):
@@ -125,10 +156,7 @@ if __name__ == '__main__':
 
     print('waiting for processes ...')
 
-    ser_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    ser_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    ser_sock.settimeout(.2)
+    ser_sock = worker.WorkerSocket()
 
     if Config.PROBABILISTIC_ROUND:
         while True:
@@ -155,7 +183,7 @@ if __name__ == '__main__':
         last_thaw_time = time.time()
 
         while True:
-            time.sleep(1)
+            time.sleep(0.1)
             t = time.time()
 
             surviving_flss = []
@@ -166,30 +194,24 @@ if __name__ == '__main__':
                     surviving_flss.append(arr[:3])
                     gtl_p.append(gtl_point_cloud[i])
 
-            hdt = compute_hd(surviving_flss, np.stack(gtl_p))
-            hd_time.append((t, hdt))
-
             swarms = compute_swarm_size(shared_arrays)
+            merged_flss = max(swarms.values())
             print(max(swarms.values()))
             if Config.DURATION < 660:
                 swarms_metrics.append((t, swarms))
 
             # if N == 1 or nid == 0:
-            if t - last_thaw_time >= h:
+            # if t - last_thaw_time >= h:
+            if merged_flss == count:
                 thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
-                dumped_thaw_msg = pickle.dumps(thaw_message)
-                ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
+                ser_sock.broadcast(thaw_message)
                 last_thaw_time = t
 
             if should_stop:
+                hdt = compute_hd(surviving_flss, np.stack(gtl_p))
+                hd_time.append((t, hdt))
                 if N == 1 or nid == 0:
-                    stop_message = Message(MessageTypes.STOP).from_server().to_all()
-                    dumped_stop_msg = pickle.dumps(stop_message)
-                    ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
-                    time.sleep(1)
-                    ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
-                    time.sleep(1)
-                    ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                    stop_all()
                 time.sleep(1)
                 break
 

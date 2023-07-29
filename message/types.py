@@ -22,6 +22,11 @@ class MessageTypes(Enum):
     FIN = 16
     LEASE_CANCEL = 17
 
+    RENEW_LEASE_INTERNAL = 20
+    SET_AVAILABLE_INTERNAL = 21
+    FAIL_INTERNAL = 22
+    THAW_SWARM_INTERNAL = 23
+
     def get_cat(self):
         if 1 <= self.value <= 4:
             return 'CHALLENGE'
