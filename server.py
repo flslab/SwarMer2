@@ -175,13 +175,12 @@ if __name__ == '__main__':
             if should_stop:
                 stop_message = Message(MessageTypes.STOP).from_server().to_all()
                 dumped_stop_msg = pickle.dumps(stop_message)
-                ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                ser_sock.broadcast(dumped_stop_msg)
                 time.sleep(1)
                 break
 
     elif Config.CENTRALIZED_ROUND:
-        last_thaw_time = time.time()
-
+        reset = True
         while True:
             time.sleep(0.1)
             t = time.time()
@@ -196,16 +195,20 @@ if __name__ == '__main__':
 
             swarms = compute_swarm_size(shared_arrays)
             merged_flss = max(swarms.values())
-            print(max(swarms.values()))
-            if Config.DURATION < 660:
-                swarms_metrics.append((t, swarms))
+            print(merged_flss)
+            # if Config.DURATION < 660:
+            #     swarms_metrics.append((t, swarms))
 
             # if N == 1 or nid == 0:
             # if t - last_thaw_time >= h:
-            if merged_flss == count:
+            if merged_flss == count and reset:
+                print(merged_flss, count, reset)
                 thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
                 ser_sock.broadcast(thaw_message)
-                last_thaw_time = t
+                print(time.time())
+                reset = False
+            if merged_flss != count:
+                reset = True
 
             if should_stop:
                 hdt = compute_hd(surviving_flss, np.stack(gtl_p))
@@ -231,7 +234,7 @@ if __name__ == '__main__':
                 if should_stop and Config.FAILURE_TIMEOUT:
                     stop_message = Message(MessageTypes.STOP).from_server().to_all()
                     dumped_stop_msg = pickle.dumps(stop_message)
-                    ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                    ser_sock.broadcast(dumped_stop_msg)
                     time.sleep(1)
                     break
 
@@ -243,11 +246,11 @@ if __name__ == '__main__':
                     if should_stop:
                         stop_message = Message(MessageTypes.STOP).from_server().to_all()
                         dumped_stop_msg = pickle.dumps(stop_message)
-                        ser_sock.sendto(dumped_stop_msg, Constants.BROADCAST_ADDRESS)
+                        ser_sock.broadcast(dumped_stop_msg)
                         time.sleep(1)
                         break
                     else:
-                        ser_sock.sendto(dumped_thaw_msg, Constants.BROADCAST_ADDRESS)
+                        ser_sock.broadcast(dumped_thaw_msg)
             time.sleep(1)
     else:
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -309,8 +312,8 @@ if __name__ == '__main__':
         utils.write_hds_time(hd_time, results_directory, nid)
     else:
         utils.write_hds_round(hd_round, round_time, results_directory, nid)
-    if Config.DURATION < 660:
-        utils.write_swarms(swarms_metrics, round_time, results_directory, nid)
+    # if Config.DURATION < 660:
+    #     utils.write_swarms(swarms_metrics, round_time, results_directory, nid)
 
     if nid == 0:
         utils.write_configs(results_directory)

@@ -19,14 +19,14 @@ class HandlerThread(threading.Thread):
                 continue
 
             event = item.event
-            if event.type == MessageTypes.THAW_SWARM:
-                t = time.time()
-
-                if t - self.last_thaw > 4:
-                    self.flush_all()
-                else:
-                    continue
-                self.last_thaw = t
+            # if event.type == MessageTypes.THAW_SWARM:
+            #     t = time.time()
+            #
+            #     if t - self.last_thaw > 4:
+            #         self.flush_all()
+            #     else:
+            #         continue
+            #     self.last_thaw = t
             self.state_machine.drive(event)
             if event.type == MessageTypes.STOP:
                 # print(f"handler_stopped_{self.context.fid}")

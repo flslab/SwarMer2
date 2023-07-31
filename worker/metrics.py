@@ -1,4 +1,5 @@
 import math
+import time
 
 import numpy as np
 from config import Config
@@ -25,6 +26,8 @@ class TimelineEvents:
     COORDINATE = 1
     SWARM = 2
     COLOR = 3
+    ILLUMINATE = 4
+    FAIL = 5
 
 
 def update_dict_sum(obj, key):
@@ -88,11 +91,17 @@ class Metrics:
     def log_min(self, key, value):
         self.general_metrics[key] = min(self.general_metrics[key], value)
 
-    def log_coordinate_change(self, t, coord):
-        self.timeline.append([t, TimelineEvents.COORDINATE, coord])
+    def log_coordinate_change(self, coord):
+        self.timeline.append([time.time(), TimelineEvents.COORDINATE, coord.tolist()])
 
-    def log_swarm_change(self, t, swarm):
-        self.timeline.append([t, TimelineEvents.SWARM, swarm])
+    def log_swarm_change(self, swarm):
+        self.timeline.append([time.time(), TimelineEvents.SWARM, swarm])
+
+    def log_failure(self):
+        self.timeline.append([time.time(), TimelineEvents.FAIL])
+
+    def log_illuminate(self):
+        self.timeline.append([time.time(), TimelineEvents.ILLUMINATE])
 
     def log_received_msg(self, msg_type, length):
         log_msg_hist(self.received_msg_hist, msg_type, 'received', 'C')

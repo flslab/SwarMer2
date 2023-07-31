@@ -1,3 +1,5 @@
+import json
+import os
 import time
 
 import numpy as np
@@ -108,6 +110,7 @@ class StateMachine:
         if t in self.thaw_ids:
             return
 
+        print(f"{self.context.fid}, {msg.args[0]}, {time.time()}")
         self.thaw_ids[t] = True
         if np.random.random() < 0.5:
             self.broadcast(msg)
@@ -134,6 +137,8 @@ class StateMachine:
         file_name = self.context.fid
 
         write_json(file_name, _final_report, self.metrics.results_directory)
+        with open(os.path.join(self.metrics.results_directory, f"timeline_{self.context.fid:05}.json"), "w") as f:
+            json.dump(self.metrics.timeline, f)
         # write_json(1000+file_name, _final_report, self.metrics.results_directory)
         # self.send_to_server(fin_message)
 

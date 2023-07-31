@@ -1,11 +1,16 @@
+import heapq
 import os
 import json
 import csv
 import shutil
 
+from matplotlib import pyplot as plt
+
 from config import Config
 import pandas as pd
 import glob
+
+from worker.metrics import TimelineEvents
 
 
 def write_json(fid, results, directory):
@@ -136,6 +141,84 @@ def combine_csvs(directory, xslx_dir):
             sheet_name = csv_file.split('/')[-1][:-4]
             df.to_excel(writer, sheet_name=sheet_name, index=False)
     # shutil.rmtree(os.path.join(directory))
+
+
+def read_timelines(path, fid='*'):
+    json_files = glob.glob(f"{path}/timeline_{fid}.json")
+    timelines = []
+
+    for jf in json_files:
+        with open(jf) as f:
+            timelines.append(json.load(f))
+
+    start_time = min([tl[0][0] for tl in timelines if len(tl)])
+
+    merged_timeline = merge_timelines(timelines)
+
+    return {
+        "start_time": start_time,
+        "timeline": merged_timeline,
+    }
+
+
+def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.1):
+    xs = [0]
+    ys = []
+
+    current_points = {}
+
+    while len(timeline):
+        event = timeline[0]
+        e_type = event[1]
+        e_fid = event[-1]
+        t = event[0] - start_time
+        if xs[-1] <= t < xs[-1] + sw:
+            if event[1] == TimelineEvents.ILLUMINATE or event[1] == TimelineEvents.COORDINATE:
+                current_points[e_fid] = current_points[event[2]]
+            elif event[1] == TimelineEvents.FAIL:
+                current_points.pop(e_fid)
+            timeline.pop(0)
+        else:
+            xs.append(xs[-1] + sw)
+            ys.append()
+
+    return xs, ys
+
+
+def merge_timelines(timelines):
+    lists = timelines
+    heap = []
+    for i, lst in enumerate(lists):
+        if lst:
+            heap.append((lst[0][0], i, 0))
+    heapq.heapify(heap)
+
+    merged = []
+    while heap:
+        val, lst_idx, elem_idx = heapq.heappop(heap)
+        merged.append(lists[lst_idx][elem_idx] + [lst_idx])
+        if elem_idx + 1 < len(lists[lst_idx]):
+            next_elem = lists[lst_idx][elem_idx + 1][0]
+            heapq.heappush(heap, (next_elem, lst_idx, elem_idx + 1))
+    return merged
+
+
+def gen_sw_charts(path, fid):
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    data = merge_network_heuristic_timelines(path, fid)
+
+    r_xs, r_ys = gen_sliding_window_chart_data(data['received_bytes'], data['start_time'], lambda x: x[2])
+    s_xs, s_ys = gen_sliding_window_chart_data(data['sent_bytes'], data['start_time'], lambda x: x[2])
+    # h_xs, h_ys = gen_sliding_window_chart_data(data['heuristic'], data['start_time'], lambda x: 1)
+    ax.step(r_xs, r_ys, where='post', label="Received Bytes", color="#00d5ff")
+    ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
+    # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
+    ax.legend()
+    plt.ylim([1, 100000])
+    plt.yscale('log')
+    plt.show()
+    # plt.savefig(f'{path}/{fid}.png')
 
 
 if __name__ == '__main__':

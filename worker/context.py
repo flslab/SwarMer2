@@ -22,11 +22,11 @@ class WorkerContext:
         self.query_id = None
         self.challenge_id = None
         self.shm_name = shm_name
-        self.set_swarm_id(self.fid)
         self.message_id = 0
         self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
         self.lease = dict()
         self.metrics = metrics
+        self.set_swarm_id(self.fid)
 
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
@@ -36,6 +36,8 @@ class WorkerContext:
             shared_array = np.ndarray((5,), dtype=np.float64, buffer=shared_mem.buf)
             shared_array[3] = self.swarm_id
             shared_mem.close()
+
+        self.metrics.log_swarm_change(swarm_id)
         # self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
 
     def set_el(self, el):
@@ -46,6 +48,7 @@ class WorkerContext:
             shared_array[:3] = self.el[:]
             shared_mem.close()
 
+        self.metrics.log_coordinate_change(el)
         # self.history.log(MetricTypes.LOCATION, self.el)
 
     def set_query_id(self, query_id):
@@ -83,6 +86,7 @@ class WorkerContext:
         self.lease = dict()
         # self.history.log(MetricTypes.FAILURES, 1)
         self.metrics.log_sum("A5_num_failures", 1)
+        self.metrics.log_failure()
 
     def move(self, vector):
         erred_v = self.add_dead_reckoning_error(vector)
