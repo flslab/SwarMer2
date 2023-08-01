@@ -10,7 +10,6 @@ import uuid
 from message import Message, MessageTypes
 from config import Config
 from utils import logger
-from utils.file import write_json
 from worker.network import PrioritizedItem
 from .types import StateTypes
 
@@ -137,7 +136,9 @@ class StateMachine:
         _final_report = self.metrics.get_final_report_()
         file_name = self.context.fid
 
-        write_json(file_name, _final_report, self.metrics.results_directory)
+        with open(os.path.join(self.metrics.results_directory, 'json', f"{file_name:05}.json"), "w") as f:
+            json.dump(_final_report, f)
+
         with open(os.path.join(self.metrics.results_directory, f"timeline_{self.context.fid:05}.json"), "w") as f:
             json.dump(self.metrics.timeline, f)
         # write_json(1000+file_name, _final_report, self.metrics.results_directory)

@@ -2,7 +2,7 @@ import heapq
 import os
 import json
 import csv
-import shutil
+import matplotlib as mpl
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -227,6 +227,8 @@ def gen_sw_charts(path, fid):
     data = read_timelines(path, fid)
 
     r_xs, r_ys, s_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+    with open(f"{path}/charts.json", "w") as f:
+        json.dump([r_xs, r_ys, s_ys], f)
     # s_xs, s_ys = gen_sliding_window_chart_data(data['sent_bytes'], data['start_time'], lambda x: x[2])
     # h_xs, h_ys = gen_sliding_window_chart_data(data['heuristic'], data['start_time'], lambda x: 1)
     ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
@@ -241,7 +243,10 @@ def gen_sw_charts(path, fid):
 
 
 if __name__ == '__main__':
-    gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/butterfly/1690842937", "*")
+    mpl.use('macosx')
+
+    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/butterfly/1690842937", "*")
+    gen_sw_charts("/Users/hamed/Desktop/swarmer_chess/1690871291", "*")
     # results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
     # shape_directory = "/Users/hamed/Desktop/60s/results/skateboard"
     # create_csv_from_json(results_directory)
