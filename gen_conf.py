@@ -7,7 +7,7 @@ def_conf = {
     "MAX_RANGE": "200",
     "DROP_PROB_SENDER": "0",
     "DROP_PROB_RECEIVER": "0",
-    "STATE_TIMEOUT": "1",
+    "STATE_TIMEOUT": "0.4",
     "SIZE_QUERY_TIMEOUT": "10",
     "DEAD_RECKONING_ANGLE": "5",
     "CHALLENGE_PROB_DECAY": "5",
@@ -24,28 +24,29 @@ def_conf = {
     "SIZE_QUERY_PARTICIPATION_PERCENT": "1",
     "DECENTRALIZED_SWARM_SIZE": "False",
     "CENTRALIZED_SWARM_SIZE": "False",
-    "PROBABILISTIC_ROUND": "True",
+    "PROBABILISTIC_ROUND": "False",
     "CENTRALIZED_ROUND": "True",
     "BUSY_WAITING": "False",
     "MIN_ADJUSTMENT": "0",
     "SAMPLE_SIZE": "0",
     "DURATION": "600",
-    "SHAPE": "'dragon'",
+    "SHAPE": "'chess'",
     "RESULTS_PATH": "'results'",
+    "MULTICAST": "True",
 }
 
 props = [
-    {
-        "keys": ["DROP_PROB_RECEIVER"],
-        "values": ["0", "0.1", "0.01", "0.001"]
-    },
-    {
-        "keys": ["ACCELERATION", "DECELERATION", "MAX_SPEED"],
-        "values": ["1.5", "6"]
-    },
+    # {
+    #     "keys": ["DROP_PROB_RECEIVER"],
+    #     "values": ["0", "0.1", "0.01", "0.001"]
+    # },
+    # {
+    #     "keys": ["ACCELERATION", "DECELERATION", "MAX_SPEED"],
+    #     "values": ["1.5", "6"]
+    # },
     {
         "keys": ["SHAPE"],
-        "values": ["'hat'", "'skateboard'"]
+        "values": ["'dragon'", "'skateboard'", "'racecar'"]
     },
 ]
 
