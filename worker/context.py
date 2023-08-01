@@ -64,6 +64,7 @@ class WorkerContext:
         self.radio_range = radio_range
 
     def deploy(self):
+        self.metrics.log_illuminate(self.gtl)
         self.move(self.gtl - self.el)
         if self.shm_name:
             shared_mem = shared_memory.SharedMemory(name=self.shm_name)

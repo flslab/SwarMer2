@@ -25,8 +25,8 @@ class Config:
     CENTRALIZED_ROUND = True
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
-    SAMPLE_SIZE = 20
-    DURATION = 20
-    SHAPE = 'butterfly'
+    SAMPLE_SIZE = 0
+    DURATION = 600
+    SHAPE = 'chess'
     RESULTS_PATH = 'results'
     MULTICAST = True

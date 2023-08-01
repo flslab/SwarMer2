@@ -4,12 +4,14 @@ import json
 import csv
 import shutil
 
+import numpy as np
 from matplotlib import pyplot as plt
 
 from config import Config
 import pandas as pd
 import glob
 
+from utils import hausdorff_distance
 from worker.metrics import TimelineEvents
 
 
@@ -161,11 +163,14 @@ def read_timelines(path, fid='*'):
     }
 
 
-def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.1):
+def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):
     xs = [0]
-    ys = []
+    ys = [-1]
+    swarm_ys = [-1]
 
     current_points = {}
+    current_swarms = {}
+    gtl_points = {}
 
     while len(timeline):
         event = timeline[0]
@@ -173,16 +178,29 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.1):
         e_fid = event[-1]
         t = event[0] - start_time
         if xs[-1] <= t < xs[-1] + sw:
-            if event[1] == TimelineEvents.ILLUMINATE or event[1] == TimelineEvents.COORDINATE:
-                current_points[e_fid] = current_points[event[2]]
-            elif event[1] == TimelineEvents.FAIL:
+            if e_type == TimelineEvents.COORDINATE:
+                current_points[e_fid] = event[2]
+            elif e_type == TimelineEvents.FAIL:
                 current_points.pop(e_fid)
+                gtl_points.pop(e_fid)
+            elif e_type == TimelineEvents.ILLUMINATE:
+                gtl_points[e_fid] = event[2]
+            elif e_type == TimelineEvents.SWARM:
+                current_swarms[e_fid] = event[2]
             timeline.pop(0)
         else:
+            swarm_ys[-1] = len(set(current_swarms.values()))
+            if len(current_points) and len(gtl_points):
+                ys[-1] = hausdorff_distance(np.stack(list(current_points.values())), np.stack(list(gtl_points.values())))
             xs.append(xs[-1] + sw)
-            ys.append()
+            ys.append(-1)
+            swarm_ys.append(-1)
 
-    return xs, ys
+    if ys[-1] == -1:
+        xs.pop(-1)
+        ys.pop(-1)
+        swarm_ys.pop(-1)
+    return xs, ys, swarm_ys
 
 
 def merge_timelines(timelines):
@@ -206,23 +224,25 @@ def merge_timelines(timelines):
 def gen_sw_charts(path, fid):
     fig = plt.figure()
     ax = fig.add_subplot()
-    data = merge_network_heuristic_timelines(path, fid)
+    data = read_timelines(path, fid)
 
-    r_xs, r_ys = gen_sliding_window_chart_data(data['received_bytes'], data['start_time'], lambda x: x[2])
-    s_xs, s_ys = gen_sliding_window_chart_data(data['sent_bytes'], data['start_time'], lambda x: x[2])
+    r_xs, r_ys, s_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+    # s_xs, s_ys = gen_sliding_window_chart_data(data['sent_bytes'], data['start_time'], lambda x: x[2])
     # h_xs, h_ys = gen_sliding_window_chart_data(data['heuristic'], data['start_time'], lambda x: 1)
-    ax.step(r_xs, r_ys, where='post', label="Received Bytes", color="#00d5ff")
-    ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
+    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
+    ax.step(r_xs, s_ys, where='post', label="Number of swarms", color="#ee2010")
+    # ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
     # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
     ax.legend()
-    plt.ylim([1, 100000])
+    # plt.ylim([1, 100000])
     plt.yscale('log')
     plt.show()
     # plt.savefig(f'{path}/{fid}.png')
 
 
 if __name__ == '__main__':
-    results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
-    shape_directory = "/Users/hamed/Desktop/60s/results/skateboard"
-    create_csv_from_json(results_directory)
-    combine_csvs(results_directory, shape_directory)
+    gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/butterfly/1690842937", "*")
+    # results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
+    # shape_directory = "/Users/hamed/Desktop/60s/results/skateboard"
+    # create_csv_from_json(results_directory)
+    # combine_csvs(results_directory, shape_directory)

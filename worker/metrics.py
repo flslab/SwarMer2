@@ -100,8 +100,8 @@ class Metrics:
     def log_failure(self):
         self.timeline.append([time.time(), TimelineEvents.FAIL])
 
-    def log_illuminate(self):
-        self.timeline.append([time.time(), TimelineEvents.ILLUMINATE])
+    def log_illuminate(self, coord):
+        self.timeline.append([time.time(), TimelineEvents.ILLUMINATE, coord.tolist()])
 
     def log_received_msg(self, msg_type, length):
         log_msg_hist(self.received_msg_hist, msg_type, 'received', 'C')

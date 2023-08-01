@@ -9,7 +9,8 @@ import uuid
 
 from message import Message, MessageTypes
 from config import Config
-from utils import logger, write_json
+from utils import logger
+# from utils.file import write_json
 from worker.network import PrioritizedItem
 from .types import StateTypes
 
