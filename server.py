@@ -185,34 +185,34 @@ if __name__ == '__main__':
             time.sleep(0.1)
             t = time.time()
 
-            surviving_flss = []
-            gtl_p = []
-            for i in range(len(shared_arrays)):
-                arr = shared_arrays[i]
-                if arr[4] < 1:
-                    surviving_flss.append(arr[:3])
-                    gtl_p.append(gtl_point_cloud[i])
+            # surviving_flss = []
+            # gtl_p = []
+            # for i in range(len(shared_arrays)):
+            #     arr = shared_arrays[i]
+            #     if arr[4] < 1:
+            #         surviving_flss.append(arr[:3])
+            #         gtl_p.append(gtl_point_cloud[i])
 
             swarms = compute_swarm_size(shared_arrays)
             merged_flss = max(swarms.values())
-            print(merged_flss)
+            # print(merged_flss)
             # if Config.DURATION < 660:
             #     swarms_metrics.append((t, swarms))
 
             # if N == 1 or nid == 0:
             # if t - last_thaw_time >= h:
             if merged_flss == count and reset:
-                print(merged_flss, count, reset)
+                print(merged_flss)
                 thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
                 ser_sock.broadcast(thaw_message)
-                print(time.time())
+                # print(time.time())
                 reset = False
             if merged_flss != count:
                 reset = True
 
             if should_stop:
-                hdt = compute_hd(surviving_flss, np.stack(gtl_p))
-                hd_time.append((t, hdt))
+                # hdt = compute_hd(surviving_flss, np.stack(gtl_p))
+                # hd_time.append((t, hdt))
                 if N == 1 or nid == 0:
                     stop_all()
                 time.sleep(1)
@@ -308,10 +308,10 @@ if __name__ == '__main__':
             p.terminate()
 
     print("done")
-    if Config.PROBABILISTIC_ROUND or Config.CENTRALIZED_ROUND:
-        utils.write_hds_time(hd_time, results_directory, nid)
-    else:
-        utils.write_hds_round(hd_round, round_time, results_directory, nid)
+    # if Config.PROBABILISTIC_ROUND or Config.CENTRALIZED_ROUND:
+        # utils.write_hds_time(hd_time, results_directory, nid)
+    # else:
+    #     utils.write_hds_round(hd_round, round_time, results_directory, nid)
     # if Config.DURATION < 660:
     #     utils.write_swarms(swarms_metrics, round_time, results_directory, nid)
 

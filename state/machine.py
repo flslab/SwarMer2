@@ -10,7 +10,7 @@ import uuid
 from message import Message, MessageTypes
 from config import Config
 from utils import logger
-# from utils.file import write_json
+from utils.file import write_json
 from worker.network import PrioritizedItem
 from .types import StateTypes
 
@@ -111,7 +111,7 @@ class StateMachine:
         if t in self.thaw_ids:
             return
 
-        print(f"{self.context.fid}, {msg.args[0]}, {time.time()}")
+        # print(f"{self.context.fid}, {msg.args[0]}, {time.time()}")
         self.thaw_ids[t] = True
         if np.random.random() < 0.5:
             self.broadcast(msg)

@@ -21,8 +21,8 @@ class NetworkThread(threading.Thread):
             msg, length = self.sock.receive()
             # self.context.log_received_message(msg.type, length)
             if self.is_message_valid(msg):
-                if msg.type == message.MessageTypes.THAW_SWARM:
-                    print(self.context.fid, msg)
+                # if msg.type == message.MessageTypes.THAW_SWARM:
+                #     print(self.context.fid, msg)
                 self.context.log_received_message(msg.type, length)
                 self.latest_message_id[msg.fid] = msg.id
                 self.event_queue.put(NetworkThread.prioritize_message(msg))
