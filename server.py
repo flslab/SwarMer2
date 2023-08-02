@@ -183,6 +183,8 @@ if __name__ == '__main__':
         reset = True
         last_thaw_time = time.time()
         round_duration = 0
+        last_merged_flss = 0
+        no_change_counter = 0
         while True:
             time.sleep(0.1)
             t = time.time()
@@ -197,13 +199,19 @@ if __name__ == '__main__':
 
             swarms = compute_swarm_size(shared_arrays)
             merged_flss = max(swarms.values())
+
+            if merged_flss == last_merged_flss:
+                no_change_counter += 1
+            last_merged_flss = merged_flss
             # print(merged_flss)
             # if Config.DURATION < 660:
             #     swarms_metrics.append((t, swarms))
 
             # if N == 1 or nid == 0:
             # if t - last_thaw_time >= h:
-            if (merged_flss == count or (round_duration != 0 and t - last_thaw_time >= round_duration)) and reset:
+            if (merged_flss == count or
+                (round_duration != 0 and t - last_thaw_time >= round_duration) or
+                    (no_change_counter == 10)) and reset:
                 print(merged_flss)
                 thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
                 ser_sock.broadcast(thaw_message)
