@@ -27,6 +27,7 @@ class WorkerContext:
         self.lease = dict()
         self.metrics = metrics
         self.set_swarm_id(self.fid)
+        self.last_expanded = 0
 
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
@@ -137,12 +138,9 @@ class WorkerContext:
         self.neighbors[ctx.fid] = ctx.swarm_id
 
     def increment_range(self):
-        if self.radio_range < Config.MAX_RANGE:
-            self.set_radio_range(self.radio_range + 5)
-            logger.critical(f"{self.fid} range incremented to {self.radio_range}")
-            return True
-        else:
-            return False
+        if time.time() - self.last_expanded > 0.05:
+            if self.radio_range < Config.MAX_RANGE:
+                self.set_radio_range(self.radio_range + 5)
 
     def reset_range(self):
         self.set_radio_range(Config.INITIAL_RANGE)

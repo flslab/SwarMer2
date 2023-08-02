@@ -182,6 +182,7 @@ if __name__ == '__main__':
     elif Config.CENTRALIZED_ROUND:
         reset = True
         last_thaw_time = time.time()
+        round_duration = 0
         while True:
             time.sleep(0.1)
             t = time.time()
@@ -202,12 +203,13 @@ if __name__ == '__main__':
 
             # if N == 1 or nid == 0:
             # if t - last_thaw_time >= h:
-            if (merged_flss == count or t - last_thaw_time >= h) and reset:
+            if (merged_flss == count or (round_duration != 0 and t - last_thaw_time >= round_duration)) and reset:
                 print(merged_flss)
                 thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
                 ser_sock.broadcast(thaw_message)
+                if round_duration == 0:
+                    round_duration = t - last_thaw_time
                 last_thaw_time = t
-                # print(time.time())
                 reset = False
             if merged_flss != count:
                 reset = True

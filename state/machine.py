@@ -154,8 +154,7 @@ class StateMachine:
     def enter_available_state(self):
         if np.random.random() < self.challenge_probability:
             if not self.challenge_ack:
-                if not self.context.increment_range():
-                    return
+                self.context.increment_range()
 
             self.challenge_ack = False
             self.context.set_challenge_id(str(uuid.uuid4())[:8])
