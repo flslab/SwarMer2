@@ -190,7 +190,7 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):
             timeline.pop(0)
         else:
             swarm_ys[-1] = len(set(current_swarms.values()))
-            if len(current_points) and len(gtl_points):
+            if len(current_points) > 1 and len(gtl_points):
                 ys[-1] = hausdorff_distance(np.stack(list(current_points.values())), np.stack(list(gtl_points.values())))
             xs.append(xs[-1] + sw)
             ys.append(-1)
@@ -200,6 +200,7 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):
         xs.pop(-1)
         ys.pop(-1)
         swarm_ys.pop(-1)
+    print(ys)
     return xs, ys, swarm_ys
 
 
@@ -221,18 +222,35 @@ def merge_timelines(timelines):
     return merged
 
 
-def gen_sw_charts(path, fid):
+def gen_sw_charts(path, fid, read_from_file=True):
     fig = plt.figure()
     ax = fig.add_subplot()
-    data = read_timelines(path, fid)
 
-    r_xs, r_ys, s_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
-    with open(f"{path}/charts.json", "w") as f:
-        json.dump([r_xs, r_ys, s_ys], f)
+    if read_from_file:
+        with open(f"{path}/charts.json") as f:
+            chart_data = json.load(f)
+            r_xs = chart_data[0]
+            t_idx = next(i for i, v in enumerate(r_xs) if v > 30)
+            r_xs = chart_data[0][:t_idx]
+            r_ys = chart_data[1][:t_idx]
+            s_ys = chart_data[2][:t_idx]
+    else:
+        data = read_timelines(path, fid)
+        r_xs, r_ys, s_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+        with open(f"{path}/charts.json", "w") as f:
+            json.dump([r_xs, r_ys, s_ys], f)
+
     # s_xs, s_ys = gen_sliding_window_chart_data(data['sent_bytes'], data['start_time'], lambda x: x[2])
     # h_xs, h_ys = gen_sliding_window_chart_data(data['heuristic'], data['start_time'], lambda x: 1)
-    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
     ax.step(r_xs, s_ys, where='post', label="Number of swarms", color="#ee2010")
+    while True:
+        if r_ys[0] == -1:
+            r_ys.pop(0)
+            r_xs.pop(0)
+        else:
+            break
+
+    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
     # ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
     # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
     ax.legend()
@@ -245,8 +263,8 @@ def gen_sw_charts(path, fid):
 if __name__ == '__main__':
     mpl.use('macosx')
 
-    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/butterfly/1690842937", "*")
-    gen_sw_charts("/Users/hamed/Desktop/swarmer_chess/1690871291", "*")
+    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1690991016", "*")
+    gen_sw_charts("/Users/hamed/Desktop/dragon_swarmer", "*")
     # results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
     # shape_directory = "/Users/hamed/Desktop/60s/results/skateboard"
     # create_csv_from_json(results_directory)

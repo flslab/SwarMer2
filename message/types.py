@@ -27,6 +27,9 @@ class MessageTypes(Enum):
     FAIL_INTERNAL = 22
     THAW_SWARM_INTERNAL = 23
 
+    QUERY_SWARM = 30
+    REPLY_SWARM = 31
+
     def get_cat(self):
         if 1 <= self.value <= 4:
             return 'CHALLENGE'

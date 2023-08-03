@@ -1,5 +1,7 @@
 import socket
 import pickle
+import struct
+
 import numpy as np
 from multiprocessing import shared_memory
 import scipy.io
@@ -20,6 +22,44 @@ hd_timer = None
 hd_round = []
 hd_time = []
 should_stop = False
+
+
+def query_swarm_client(connection):
+    query_msg = Message(MessageTypes.QUERY_SWARM)
+    connection.send(pickle.dumps(query_msg))
+
+
+def pull_swarm_client(connection):
+    data = recv_msg(connection)
+    message = pickle.loads(data)
+    return message.args[0]
+
+
+def send_msg(sock, msg):
+    # Prefix each message with a 4-byte big-endian unsigned integer (network byte order)
+    msg = struct.pack('>I', len(msg)) + msg
+    sock.sendall(msg)
+
+
+def recv_msg(sock):
+    # Read message length and unpack it into an integer
+    raw_msglen = recvall(sock, 4)
+    if not raw_msglen:
+        return None
+    msglen = struct.unpack('>I', raw_msglen)[0]
+    # Read the message data
+    return recvall(sock, msglen)
+
+
+def recvall(sock, n):
+    # Helper function to recv n bytes or return None if EOF is hit
+    data = bytearray()
+    while len(data) < n:
+        packet = sock.recv(n - len(data))
+        if not packet:
+            return None
+        data.extend(packet)
+    return data
 
 
 def set_stop():
@@ -180,55 +220,70 @@ if __name__ == '__main__':
                 break
 
     elif Config.CENTRALIZED_ROUND:
-        reset = True
-        last_thaw_time = time.time()
-        round_duration = 0
-        last_merged_flss = 0
-        no_change_counter = 0
-        while True:
-            time.sleep(0.1)
-            t = time.time()
+        if IS_CLUSTER_CLIENT:
+            while True:
+                server_msg = client_socket.recv(2048)
+                server_msg = pickle.loads(server_msg)
 
-            # surviving_flss = []
-            # gtl_p = []
-            # for i in range(len(shared_arrays)):
-            #     arr = shared_arrays[i]
-            #     if arr[4] < 1:
-            #         surviving_flss.append(arr[:3])
-            #         gtl_p.append(gtl_point_cloud[i])
+                if server_msg.type == MessageTypes.QUERY_SWARM:
+                    swarms = compute_swarm_size(shared_arrays)
+                    merged_flss = max(swarms.values())
+                    response = Message(MessageTypes.REPLY_SWARM, args=(merged_flss,))
+                    send_msg(client_socket, pickle.dumps(response))
+                elif server_msg.type == MessageTypes.STOP:
+                    break
+        else:
+            reset = True
+            last_thaw_time = time.time()
+            round_duration = 0
+            last_merged_flss = 0
+            no_change_counter = 0
+            while True:
+                time.sleep(0.1)
+                t = time.time()
 
-            swarms = compute_swarm_size(shared_arrays)
-            merged_flss = max(swarms.values())
+                swarms = compute_swarm_size(shared_arrays)
+                merged_flss = max(swarms.values())
 
-            if merged_flss == last_merged_flss:
-                no_change_counter += 1
-            last_merged_flss = merged_flss
-            # print(merged_flss)
-            # if Config.DURATION < 660:
-            #     swarms_metrics.append((t, swarms))
+                if IS_CLUSTER_SERVER:
+                    for i in range(N - 1):
+                        query_swarm_client(clients[i])
 
-            # if N == 1 or nid == 0:
-            # if t - last_thaw_time >= h:
-            if (merged_flss == count or
-                (round_duration != 0 and t - last_thaw_time >= round_duration) or
-                    (no_change_counter == 10)) and reset:
-                print(merged_flss)
-                thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
-                ser_sock.broadcast(thaw_message)
-                if round_duration == 0:
-                    round_duration = t - last_thaw_time
-                last_thaw_time = t
-                reset = False
-            if merged_flss != count:
-                reset = True
+                    for i in range(N - 1):
+                        client_merged_flss = pull_swarm_client(clients[i])
+                        merged_flss += client_merged_flss
 
-            if should_stop:
-                # hdt = compute_hd(surviving_flss, np.stack(gtl_p))
-                # hd_time.append((t, hdt))
-                if N == 1 or nid == 0:
-                    stop_all()
-                time.sleep(1)
-                break
+                if merged_flss == last_merged_flss:
+                    no_change_counter += 1
+                else:
+                    no_change_counter = 0
+                last_merged_flss = merged_flss
+                # print(merged_flss)
+                # if Config.DURATION < 660:
+                #     swarms_metrics.append((t, swarms))
+
+                # if N == 1 or nid == 0:
+                # if t - last_thaw_time >= h:
+                if (merged_flss == total_count or
+                    (round_duration != 0 and t - last_thaw_time >= round_duration) or
+                        (no_change_counter == 100)) and reset:
+                    print(merged_flss)
+                    thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
+                    ser_sock.broadcast(thaw_message)
+                    if round_duration == 0:
+                        round_duration = t - last_thaw_time
+                    last_thaw_time = t
+                    reset = False
+                if merged_flss != count:
+                    reset = True
+
+                if should_stop:
+                    # hdt = compute_hd(surviving_flss, np.stack(gtl_p))
+                    # hd_time.append((t, hdt))
+                    if N == 1 or nid == 0:
+                        stop_all()
+                    time.sleep(1)
+                    break
 
     elif Config.CENTRALIZED_SWARM_SIZE:
         thaw_message = Message(MessageTypes.THAW_SWARM).from_server().to_all()
