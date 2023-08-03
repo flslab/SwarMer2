@@ -31,7 +31,7 @@ def_conf = {
     "SAMPLE_SIZE": "0",
     "DURATION": "600",
     "SHAPE": "'chess'",
-    "RESULTS_PATH": "'results'",
+    "RESULTS_PATH": "'/proj/nova-PG0/hamed/results'",
     "MULTICAST": "False",
 }
 
