@@ -46,7 +46,7 @@ props = [
     # },
     {
         "keys": ["SHAPE"],
-        "values": ["'chess'", "'dragon'"]
+        "values": ["'chess'", "'dragon'", "'skateboard'"]
     },
 ]
 

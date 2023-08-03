@@ -230,7 +230,7 @@ def gen_sw_charts(path, fid, read_from_file=True):
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)
             r_xs = chart_data[0]
-            t_idx = next(i for i, v in enumerate(r_xs) if v > 30)
+            t_idx = next(i for i, v in enumerate(r_xs) if v > 60)
             r_xs = chart_data[0][:t_idx]
             r_ys = chart_data[1][:t_idx]
             s_ys = chart_data[2][:t_idx]
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     mpl.use('macosx')
 
     # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1690991016", "*")
-    gen_sw_charts("/Users/hamed/Desktop/dragon_swarmer", "*")
+    gen_sw_charts("/Users/hamed/Desktop/swarmer_c_d/03_Aug_15_26_35", "*", True)
     # results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
     # shape_directory = "/Users/hamed/Desktop/60s/results/skateboard"
     # create_csv_from_json(results_directory)

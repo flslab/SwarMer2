@@ -110,7 +110,6 @@ class StateMachine:
         if t in self.thaw_ids:
             return
 
-        # print(f"{self.context.fid}, {msg.args[0]}, {time.time()}")
         self.thaw_ids[t] = True
         if np.random.random() < 0.5:
             self.broadcast(msg)
@@ -128,6 +127,9 @@ class StateMachine:
         if self.stop_handled:
             return
         self.stop_handled = True
+
+        if np.random.random() < 0.5:
+            self.broadcast(msg)
         # self.metrics.set_round_times(msg.args[0])
         # fin_message = Message(MessageTypes.FIN, args=(self.metrics.get_final_report(),))
         # fin_message = Message(MessageTypes.FIN)
