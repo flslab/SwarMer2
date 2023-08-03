@@ -32,7 +32,7 @@ def_conf = {
     "DURATION": "600",
     "SHAPE": "'chess'",
     "RESULTS_PATH": "'results'",
-    "MULTICAST": "True",
+    "MULTICAST": "False",
 }
 
 props = [
@@ -46,7 +46,7 @@ props = [
     # },
     {
         "keys": ["SHAPE"],
-        "values": ["'dragon'", "'skateboard'", "'racecar'"]
+        "values": ["'chess'", "'dragon'"]
     },
 ]
 
