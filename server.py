@@ -87,7 +87,7 @@ def compute_hd(sh_arrays, gtl):
 def compute_swarm_size(sh_arrays):
     swarm_counts = {}
     for arr in sh_arrays:
-        swarm_id = arr[3]
+        swarm_id = arr[0]
         if swarm_id in swarm_counts:
             swarm_counts[swarm_id] += 1
         else:

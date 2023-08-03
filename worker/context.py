@@ -34,8 +34,8 @@ class WorkerContext:
         self.swarm_id = swarm_id
         if self.shm_name:
             shared_mem = shared_memory.SharedMemory(name=self.shm_name)
-            shared_array = np.ndarray((5,), dtype=np.float64, buffer=shared_mem.buf)
-            shared_array[3] = self.swarm_id
+            shared_array = np.ndarray((1,), dtype=np.float64, buffer=shared_mem.buf)
+            shared_array[0] = self.swarm_id
             shared_mem.close()
 
         self.metrics.log_swarm_change(swarm_id)
@@ -43,11 +43,11 @@ class WorkerContext:
 
     def set_el(self, el):
         self.el = el
-        if self.shm_name:
-            shared_mem = shared_memory.SharedMemory(name=self.shm_name)
-            shared_array = np.ndarray((5,), dtype=np.float64, buffer=shared_mem.buf)
-            shared_array[:3] = self.el[:]
-            shared_mem.close()
+        # if self.shm_name:
+        #     shared_mem = shared_memory.SharedMemory(name=self.shm_name)
+        #     shared_array = np.ndarray((5,), dtype=np.float64, buffer=shared_mem.buf)
+        #     shared_array[:3] = self.el[:]
+        #     shared_mem.close()
 
         self.metrics.log_coordinate_change(el)
         # self.history.log(MetricTypes.LOCATION, self.el)
@@ -67,18 +67,18 @@ class WorkerContext:
     def deploy(self):
         self.metrics.log_illuminate(self.gtl)
         self.move(self.gtl - self.el)
-        if self.shm_name:
-            shared_mem = shared_memory.SharedMemory(name=self.shm_name)
-            shared_array = np.ndarray((5,), dtype=np.float64, buffer=shared_mem.buf)
-            shared_array[4] = 0
-            shared_mem.close()
+        # if self.shm_name:
+        #     shared_mem = shared_memory.SharedMemory(name=self.shm_name)
+        #     shared_array = np.ndarray((1,), dtype=np.float64, buffer=shared_mem.buf)
+        #     shared_array[4] = 0
+        #     shared_mem.close()
 
     def fail(self):
-        if self.shm_name:
-            shared_mem = shared_memory.SharedMemory(name=self.shm_name)
-            shared_array = np.ndarray((5,), dtype=np.float64, buffer=shared_mem.buf)
-            shared_array[4] = 2
-            shared_mem.close()
+        # if self.shm_name:
+        #     shared_mem = shared_memory.SharedMemory(name=self.shm_name)
+        #     shared_array = np.ndarray((5,), dtype=np.float64, buffer=shared_mem.buf)
+        #     shared_array[4] = 2
+        #     shared_mem.close()
         self.reset_swarm()
         self.set_el(np.array([.0, .0, .0]))
         self.radio_range = Config.INITIAL_RANGE
