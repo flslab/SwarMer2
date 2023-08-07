@@ -163,7 +163,7 @@ def read_timelines(path, fid='*'):
     }
 
 
-def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):
+def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.001):  # 0.01
     xs = [0]
     ys = [-1]
     swarm_ys = [-1]
@@ -177,6 +177,10 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):
         e_type = event[1]
         e_fid = event[-1]
         t = event[0] - start_time
+        # if t < 20:
+        #     continue
+        # if t > 50:
+        #     break
         if xs[-1] <= t < xs[-1] + sw:
             if e_type == TimelineEvents.COORDINATE:
                 current_points[e_fid] = event[2]
@@ -264,7 +268,7 @@ if __name__ == '__main__':
     mpl.use('macosx')
 
     # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1690991016", "*")
-    gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer/results/racecar/04_Aug_21_28_08", "*", False)
+    gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer/results/dragon/04_Aug_22_33_20", "*", False)
     # results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
     # shape_directory = "/Users/hamed/Desktop/60s/results/skateboard"
     # create_csv_from_json(results_directory)
