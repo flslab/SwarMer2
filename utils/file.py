@@ -200,7 +200,7 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):
         xs.pop(-1)
         ys.pop(-1)
         swarm_ys.pop(-1)
-    print(ys)
+    # print(ys)
     return xs, ys, swarm_ys
 
 
@@ -230,7 +230,7 @@ def gen_sw_charts(path, fid, read_from_file=True):
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)
             r_xs = chart_data[0]
-            t_idx = next(i for i, v in enumerate(r_xs) if v > 120)
+            t_idx = next(i for i, v in enumerate(r_xs) if v > 300)
             r_xs = chart_data[0][:t_idx]
             r_ys = chart_data[1][:t_idx]
             s_ys = chart_data[2][:t_idx]
@@ -254,7 +254,7 @@ def gen_sw_charts(path, fid, read_from_file=True):
     # ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
     # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
     ax.legend()
-    # plt.ylim([1, 100000])
+    plt.ylim([10e-13, 10e3])
     plt.yscale('log')
     plt.show()
     # plt.savefig(f'{path}/{fid}.png')
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     mpl.use('macosx')
 
     # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1690991016", "*")
-    gen_sw_charts("/Users/hamed/Desktop/swarmer_3/dragon", "*", True)
+    gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer/results/racecar/04_Aug_21_28_08", "*", False)
     # results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
     # shape_directory = "/Users/hamed/Desktop/60s/results/skateboard"
     # create_csv_from_json(results_directory)
