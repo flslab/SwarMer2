@@ -1,5 +1,5 @@
 import itertools
-
+import os
 
 def_conf = {
     "THAW_SWARMS": "False",
@@ -56,6 +56,9 @@ if __name__ == '__main__':
     print(props_values)
     combinations = list(itertools.product(*props_values))
     print(len(combinations))
+
+    if not os.path.exists('experiments'):
+        os.makedirs('experiments', exist_ok=True)
 
     for j in range(len(combinations)):
         c = combinations[j]
