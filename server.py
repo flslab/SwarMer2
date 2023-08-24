@@ -230,16 +230,17 @@ if __name__ == '__main__':
                     client_merged_flss = pull_swarm_client(clients[i])
                     merged_flss += client_merged_flss
 
-            if (merged_flss == total_count or
-                (round_duration != 0 and t - last_thaw_time >= round_duration) or
-                    (round_duration == 0 and t - last_thaw_time >= 2*h)) and reset:
-                print(merged_flss)
-                thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
-                ser_sock.broadcast(thaw_message)
-                if round_duration == 0 and merged_flss == total_count:
-                    round_duration = t - last_thaw_time
-                last_thaw_time = t
-                reset = False
+            if merged_flss == total_count:
+                # (round_duration != 0 and t - last_thaw_time >= round_duration) or
+                #     (round_duration == 0 and t - last_thaw_time >= 2*h)):
+                if reset:
+                    print(merged_flss)
+                    thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
+                    ser_sock.broadcast(thaw_message)
+                    if round_duration == 0 and merged_flss == total_count:
+                        round_duration = t - last_thaw_time
+                    last_thaw_time = t
+                    reset = False
             if merged_flss != count:
                 reset = True
 
