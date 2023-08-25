@@ -233,15 +233,15 @@ if __name__ == '__main__':
 
             thaw_condition = False
 
-            if Config.THAW_INTERVAL:
-                thaw_condition |= t - last_thaw_time > Config.THAW_INTERVAL
-            if Config.THAW_MIN_NUM_SWARMS:
-                thaw_condition |= num_swarms == Config.THAW_MIN_NUM_SWARMS
-            if Config.THAW_PERCENTAGE_LARGEST_SWARM:
-                thaw_condition |= merged_flss / total_count >= Config.THAW_PERCENTAGE_LARGEST_SWARM
-            if merged_flss == total_count:
-                # (round_duration != 0 and t - last_thaw_time >= round_duration) or
-                #     (round_duration == 0 and t - last_thaw_time >= 2*h)):
+            # if Config.THAW_INTERVAL:
+            #     thaw_condition |= t - last_thaw_time > Config.THAW_INTERVAL
+            # if Config.THAW_MIN_NUM_SWARMS:
+            #     thaw_condition |= num_swarms == Config.THAW_MIN_NUM_SWARMS
+            # if Config.THAW_PERCENTAGE_LARGEST_SWARM:
+            #     thaw_condition |= merged_flss / total_count >= Config.THAW_PERCENTAGE_LARGEST_SWARM
+            if (merged_flss == total_count or
+                (round_duration != 0 and t - last_thaw_time >= round_duration) or
+                    (round_duration == 0 and t - last_thaw_time >= 2*h)):
                 if reset:
                     print(merged_flss)
                     thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
