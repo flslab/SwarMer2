@@ -205,7 +205,7 @@ if __name__ == '__main__':
             if server_msg.type == MessageTypes.QUERY_SWARM:
                 swarms = compute_swarm_size(shared_arrays)
                 merged_flss = max(swarms.values())
-                response = Message(MessageTypes.REPLY_SWARM, args=(merged_flss,))
+                response = Message(MessageTypes.REPLY_SWARM, args=(swarms,))
                 send_msg(client_socket, pickle.dumps(response))
             elif server_msg.type == MessageTypes.STOP:
                 break
@@ -220,17 +220,21 @@ if __name__ == '__main__':
             t = time.time()
 
             swarms = compute_swarm_size(shared_arrays)
-            merged_flss = max(swarms.values())
-            num_swarms = len(swarms)
 
             if IS_CLUSTER_SERVER:
                 for i in range(N - 1):
                     query_swarm_client(clients[i])
 
                 for i in range(N - 1):
-                    client_merged_flss = pull_swarm_client(clients[i])
-                    merged_flss += client_merged_flss
+                    client_swarms = pull_swarm_client(clients[i])
+                    for sid in client_swarms:
+                        if sid in swarms:
+                            swarms[sid] += client_swarms[sid]
+                        else:
+                            swarms[sid] = client_swarms[sid]
 
+            largest_swarm = max(swarms.values())
+            num_swarms = len(swarms)
             thaw_condition = False
 
             # if Config.THAW_INTERVAL:
@@ -239,18 +243,18 @@ if __name__ == '__main__':
             #     thaw_condition |= num_swarms == Config.THAW_MIN_NUM_SWARMS
             # if Config.THAW_PERCENTAGE_LARGEST_SWARM:
             #     thaw_condition |= merged_flss / total_count >= Config.THAW_PERCENTAGE_LARGEST_SWARM
-            if (merged_flss == total_count or
+            if (largest_swarm == total_count or
                 (round_duration != 0 and t - last_thaw_time >= round_duration) or
                     (round_duration == 0 and t - last_thaw_time >= 2*h)):
                 if reset:
-                    print(merged_flss)
+                    print(largest_swarm)
                     thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
                     ser_sock.broadcast(thaw_message)
-                    if round_duration == 0 and merged_flss == total_count:
+                    if round_duration == 0 and largest_swarm == total_count:
                         round_duration = t - last_thaw_time
                     last_thaw_time = t
                     reset = False
-            if merged_flss != count:
+            if largest_swarm != count:
                 reset = True
 
             if should_stop:
