@@ -163,7 +163,7 @@ def read_timelines(path, fid='*'):
     }
 
 
-def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.001):  # 0.01
+def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0.01
     xs = [0]
     ys = [-1]
     swarm_ys = [-1]
@@ -177,10 +177,12 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.001):  # 
         e_type = event[1]
         e_fid = event[-1]
         t = event[0] - start_time
-        # if t < 20:
+        # if t < 15.65:
+        #     timeline.pop(0)
         #     continue
-        # if t > 50:
-        #     break
+        # print(t)
+        if t > 300:
+            break
         if xs[-1] <= t < xs[-1] + sw:
             if e_type == TimelineEvents.COORDINATE:
                 current_points[e_fid] = event[2]
@@ -194,8 +196,10 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.001):  # 
             timeline.pop(0)
         else:
             swarm_ys[-1] = len(set(current_swarms.values()))
+            # print(len(current_swarms))
             if len(current_points) > 1 and len(gtl_points):
                 ys[-1] = hausdorff_distance(np.stack(list(current_points.values())), np.stack(list(gtl_points.values())))
+                # ys[-1] = 1
             xs.append(xs[-1] + sw)
             ys.append(-1)
             swarm_ys.append(-1)
@@ -260,15 +264,26 @@ def gen_sw_charts(path, fid, read_from_file=True):
     ax.legend()
     plt.ylim([10e-13, 10e3])
     plt.yscale('log')
-    plt.show()
-    # plt.savefig(f'{path}/{fid}.png')
+    # plt.show()
+    plt.savefig(f'{path}/{fid}.png', dpi=300)
 
 
 if __name__ == '__main__':
-    mpl.use('macosx')
+    # mpl.use('macosx')
 
-    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1690991016", "*")
-    gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer/results/dragon/04_Aug_22_33_20", "*", False)
+    paths = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/24_Aug_17_38_36",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/24_Aug_18_30_13",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/24_Aug_18_52_48",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/1692899950",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/1692902499",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/1692903856",
+    ]
+    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1692893284", "*", False)
+    for path in paths:
+        gen_sw_charts(path, "*", False)
+
+    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer/results/dragon/04_Aug_22_33_20", "*", False)
     # results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
     # shape_directory = "/Users/hamed/Desktop/60s/results/skateboard"
     # create_csv_from_json(results_directory)

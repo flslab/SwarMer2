@@ -30,3 +30,6 @@ class Config:
     SHAPE = 'chess'
     RESULTS_PATH = 'results'
     MULTICAST = True
+    THAW_MIN_NUM_SWARMS = 1
+    THAW_PERCENTAGE_LARGEST_SWARM = 80
+    THAW_INTERVAL = 1  # second
