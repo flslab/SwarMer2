@@ -234,4 +234,4 @@ class WorkerContext:
     def clear_lease_table(self):
         keys = list(self.lease.keys())
         for fid in keys:
-            self.release_lease(fid)
+            self.cancel_lease(fid)
