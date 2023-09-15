@@ -67,8 +67,7 @@ class StateMachine:
             self.last_challenge_accept = time.time()
             challenge_accept_message = Message(MessageTypes.CHALLENGE_ACCEPT, args=msg.args).to_fls(msg)
             self.broadcast(challenge_accept_message)
-            if msg.swarm_id < self.context.swarm_id:
-                self.potential_anchors.append(msg)
+            self.potential_anchors.append(msg)
 
     def handle_challenge_accept(self, msg):
         if msg.args[0] == self.context.challenge_id:
