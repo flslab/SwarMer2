@@ -143,7 +143,7 @@ if __name__ == '__main__':
     point_cloud = mat['p']
 
     if Config.SAMPLE_SIZE != 0:
-        np.random.shuffle(point_cloud)
+        # np.random.shuffle(point_cloud)
         point_cloud = point_cloud[:Config.SAMPLE_SIZE]
 
     total_count = point_cloud.shape[0]

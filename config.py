@@ -29,10 +29,10 @@ class Config:
     CENTRALIZED_ROUND = True
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
-    SAMPLE_SIZE = 30
+    SAMPLE_SIZE = 80
     DURATION = 30
     SHAPE = 'chess'
-    RESULTS_PATH = 'results'
+    RESULTS_PATH = '/proj/nova-PG0/hamed/results'
     MULTICAST = False
     THAW_MIN_NUM_SWARMS = 1
     THAW_PERCENTAGE_LARGEST_SWARM = 80
