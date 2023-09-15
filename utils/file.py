@@ -163,7 +163,7 @@ def read_timelines(path, fid='*'):
     }
 
 
-def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.001):  # 0.01
+def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0.01
     xs = [0]
     ys = [-1]
     swarm_ys = [-1]
