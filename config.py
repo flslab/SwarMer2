@@ -30,7 +30,7 @@ class Config:
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
-    DURATION = 30
+    DURATION = 300
     SHAPE = 'dragon'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results/swarmer'
     MULTICAST = False
