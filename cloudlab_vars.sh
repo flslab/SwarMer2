@@ -1,6 +1,6 @@
 #!/bin/bash
 
 idx=1
-num_of_total_servers=5
-HOSTNAME="swarmer-1.nova-PG0.utah.cloudlab.us"
+num_of_total_servers=4
+HOSTNAME="swarmer.nova-PG0.clemson.cloudlab.us"
 USERNAME="hamedamz"
