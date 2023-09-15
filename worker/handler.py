@@ -31,8 +31,8 @@ class HandlerThread(threading.Thread):
             if event.type == MessageTypes.STOP:
                 # print(f"handler_stopped_{self.context.fid}")
                 break
-            if event.type == MessageTypes.THAW_SWARM:
-                self.flush_all()
+            # if event.type == MessageTypes.THAW_SWARM:
+            #     self.flush_all()
 
             self.flush_queue()
 
