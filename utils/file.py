@@ -266,7 +266,7 @@ def gen_sw_charts(path, fid, read_from_file=True):
         else:
             break
 
-    # ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
+    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
     # ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
     # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
     ax.legend()
