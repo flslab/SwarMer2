@@ -174,6 +174,7 @@ class WorkerContext:
     def log_expired_lease(self):
         # self.history.log_sum(MetricTypes.EXPIRED_LEASE)
         self.metrics.log_sum("A2_num_expired_leases", 1)
+        self.metrics.log_lease_expiration()
 
     def log_canceled_lease(self):
         # self.history.log_sum(MetricTypes.CANCELED_LEASE)

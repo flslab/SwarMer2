@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import time
 
 import numpy as np
@@ -14,8 +15,11 @@ from worker.network import PrioritizedItem
 from .types import StateTypes
 
 
-class StateMachine:
+class GossipStateMachine:
     def __init__(self, context, sock, metrics, event_queue):
+        self.timer_gossip = None
+        self.discovered_local_state = dict()
+        self.discovered_global_swarms = set()
         self.last_challenge_init = 0
         self.last_challenge_accept = 0
         self.state = StateTypes.DEPLOYING
@@ -38,7 +42,8 @@ class StateMachine:
 
     def start(self):
         self.context.deploy()
-        self.enter(StateTypes.AVAILABLE)
+        # self.enter(StateTypes.AVAILABLE)
+        self.send_gossip()
         self.start_timers()
 
     def handle_size_query(self, msg):
@@ -95,9 +100,6 @@ class StateMachine:
             self.context.grant_lease(msg.fid)
             self.enter(StateTypes.BUSY_ANCHOR)
 
-    def handle_challenge_ack_anchor(self, msg):
-        self.broadcast(Message(MessageTypes.LEASE_CANCEL).to_fls(msg))
-
     def cancel_lease_of_potential_anchors(self, msg):
         # print([p.fid for p in self.potential_anchors])
         for pa in self.potential_anchors:
@@ -118,7 +120,7 @@ class StateMachine:
 
     def handle_merge(self, msg):
         self.context.set_swarm_id(msg.swarm_id)
-        self.enter(StateTypes.AVAILABLE)
+        # self.enter(StateTypes.AVAILABLE)
 
     def handle_follow(self, msg):
         self.context.move(msg.args[0])
@@ -136,18 +138,19 @@ class StateMachine:
             return
 
         self.thaw_ids[t] = True
-        if np.random.random() < 0.5:
-            self.broadcast(msg)
-        self.context.clear_lease_table()
+        # if np.random.random() < 0.5:
+        #     self.broadcast(msg)
         self.enter(StateTypes.DEPLOYING)
         # print(f"{self.context.fid} thawed")
         self.challenge_ack = False
         self.cancel_timers()
         self.context.thaw_swarm()
         self.challenge_probability = 1
+        self.send_gossip()
+
         # time.sleep(1)
-        self.enter(StateTypes.AVAILABLE)
-        self.start_timers()
+        # self.enter(StateTypes.AVAILABLE)
+        # self.start_timers()
 
     def handle_stop(self, msg):
         if self.stop_handled:
@@ -289,8 +292,7 @@ class StateMachine:
             self.timer_lease.cancel()
             self.timer_lease = None
 
-        # self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION * 0.7, self.put_state_in_q, args=(MessageTypes.RENEW_LEASE_INTERNAL,))
-        self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
+        self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION, self.put_state_in_q, args=(MessageTypes.RENEW_LEASE_INTERNAL,))
         self.timer_lease.start()
 
     def renew_lease(self):
@@ -311,11 +313,12 @@ class StateMachine:
         msg = Message(event).to_fls(self.context)
         item = PrioritizedItem(1, time.time(), msg, False)
         self.event_queue.put(item)
+        # print(item)
 
     def enter(self, state, arg={}):
-        if self.timer_available is not None:
-            self.timer_available.cancel()
-            self.timer_available = None
+        # if self.timer_available is not None:
+        #     self.timer_available.cancel()
+        #     self.timer_available = None
 
         self.leave(self.state)
         self.state = state
@@ -329,12 +332,12 @@ class StateMachine:
         elif self.state == StateTypes.WAITING:
             self.enter_waiting_state()
 
-        if self.state != StateTypes.BUSY_ANCHOR \
-                and self.state != StateTypes.BUSY_LOCALIZING \
-                and self.state != StateTypes.DEPLOYING:
-            self.timer_available = \
-                threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.put_state_in_q, args=(MessageTypes.SET_AVAILABLE_INTERNAL,))
-            self.timer_available.start()
+        # if self.state != StateTypes.BUSY_ANCHOR \
+        #         and self.state != StateTypes.BUSY_LOCALIZING \
+        #         and self.state != StateTypes.DEPLOYING:
+        #     self.timer_available = \
+        #         threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.put_state_in_q, args=(MessageTypes.SET_AVAILABLE_INTERNAL,))
+        #     self.timer_available.start()
 
     def reenter_available_state(self):
         if self.state != StateTypes.BUSY_ANCHOR\
@@ -349,6 +352,7 @@ class StateMachine:
             self.leave_busy_localizing()
 
     def drive(self, msg):
+        # print(msg)
         if self.should_fail:
             self.fail()
 
@@ -374,8 +378,6 @@ class StateMachine:
                 self.handle_challenge_fin(msg)
             elif event == MessageTypes.LEASE_CANCEL:
                 self.handle_cancel_lease(msg)
-            elif event == MessageTypes.CHALLENGE_ACK:
-                self.handle_challenge_ack_anchor(msg)
 
             self.context.refresh_lease_table()
             if self.context.is_lease_empty():
@@ -390,14 +392,12 @@ class StateMachine:
                 self.handle_follow_merge(msg)
             elif event == MessageTypes.SET_AVAILABLE:
                 self.enter(StateTypes.AVAILABLE)
-            elif event == MessageTypes.CHALLENGE_ACK:
-                self.handle_challenge_ack_anchor(msg)
 
-            # if self.waiting_for == StateTypes.BUSY_ANCHOR:
-            #     if event == MessageTypes.CHALLENGE_INIT:
-            #         self.handle_challenge_init(msg)
-            #     elif event == MessageTypes.CHALLENGE_ACK:
-            #         self.handle_challenge_ack(msg)
+            if self.waiting_for == StateTypes.BUSY_ANCHOR:
+                if event == MessageTypes.CHALLENGE_INIT:
+                    self.handle_challenge_init(msg)
+                elif event == MessageTypes.CHALLENGE_ACK:
+                    self.handle_challenge_ack(msg)
 
         if event == MessageTypes.STOP:
             self.handle_stop(msg)
@@ -415,6 +415,12 @@ class StateMachine:
             self.set_fail()
         elif event == MessageTypes.THAW_SWARM_INTERNAL:
             self.handle_thaw_swarm(Message(MessageTypes.THAW_SWARM, args=(time.time(),)).from_fls(self.context).to_all())
+        elif event == MessageTypes.GOSSIP_INTERNAL:
+            self.send_gossip()
+        elif event == MessageTypes.GOSSIP:
+            self.handle_gossip(msg)
+        elif event == MessageTypes.MERGE:
+            self.handle_merge(msg)
 
     def broadcast(self, msg):
         msg.from_fls(self.context)
@@ -449,3 +455,43 @@ class StateMachine:
         if self.timer_round is not None:
             self.timer_round.cancel()
             self.timer_round = None
+        if self.timer_gossip is not None:
+            self.timer_gossip.cancel()
+            self.timer_gossip = None
+
+    def send_gossip(self):
+        number_of_swarms = len(self.discovered_global_swarms)
+        if 0 < number_of_swarms <= Config.GOSSIP_SWARM_COUNT_THRESHOLD:
+            arg = self.discovered_global_swarms
+        else:
+            arg = set()
+        self.broadcast(Message(MessageTypes.GOSSIP, args=(arg,)))
+
+        self.timer_gossip = \
+            threading.Timer(Config.GOSSIP_TIMEOUT, self.put_state_in_q,
+                            args=(MessageTypes.GOSSIP_INTERNAL,))
+        self.timer_gossip.start()
+
+        # print(arg)
+
+    def handle_gossip(self, msg):
+        self.update_discovered_local_state(msg)
+        self.update_discovered_global_swarms()
+        self.check_thaw_condition()
+
+    def update_discovered_local_state(self, msg):
+        gossip_swarms = msg.args[0]
+        self.discovered_local_state[msg.fid] = (time.time(), msg.swarm_id, gossip_swarms)
+        print(f"_local {self.context.fid}:{self.context.swarm_id} {self.discovered_local_state}")
+
+    def update_discovered_global_swarms(self):
+        self.discovered_global_swarms = set()
+        for s in self.discovered_local_state:
+            # print("_", self.discovered_local_state[s])
+            self.discovered_global_swarms |= (self.discovered_local_state[s][2] | {self.discovered_local_state[s][1]})
+        print(f"_global {self.context.fid}:{self.context.swarm_id} {self.discovered_global_swarms}")
+
+    def check_thaw_condition(self):
+        if len(self.discovered_global_swarms) == 1 and list(self.discovered_global_swarms)[0] == self.context.swarm_id:
+            self.broadcast(Message(MessageTypes.THAW_SWARM, args=(int(time.time()),)).to_all())
+            print(f"one swarm detected by {self.context.fid}")

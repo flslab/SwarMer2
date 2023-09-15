@@ -30,6 +30,9 @@ class MessageTypes(Enum):
     QUERY_SWARM = 30
     REPLY_SWARM = 31
 
+    GOSSIP = 40
+    GOSSIP_INTERNAL = 41
+
     def get_cat(self):
         if 1 <= self.value <= 4:
             return 'CHALLENGE'

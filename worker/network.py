@@ -5,12 +5,55 @@ import threading
 import numpy as np
 from config import Config
 import message
+from message import MessageTypes
+from state import StateTypes
+
+
+general_messages = {
+    MessageTypes.STOP,
+    MessageTypes.THAW_SWARM,
+}
+
+available_state_messages = {
+    MessageTypes.CHALLENGE_INIT,
+    MessageTypes.CHALLENGE_ACCEPT,
+    MessageTypes.CHALLENGE_ACK,
+    MessageTypes.SET_WAITING,
+}
+
+anchor_state_messages = {
+    MessageTypes.LEASE_RENEW,
+    MessageTypes.MERGE,
+    MessageTypes.CHALLENGE_FIN,
+    MessageTypes.LEASE_CANCEL,
+    MessageTypes.CHALLENGE_ACK,
+}
+
+localizing_state_messages = {
+    MessageTypes.CHALLENGE_ACK,
+}
+
+waiting_state_messages = {
+    MessageTypes.FOLLOW,
+    MessageTypes.MERGE,
+    MessageTypes.FOLLOW_MERGE,
+    MessageTypes.SET_AVAILABLE,
+    MessageTypes.CHALLENGE_ACK,
+}
+
+valid_state_messages = {
+    StateTypes.AVAILABLE: available_state_messages,
+    StateTypes.WAITING: waiting_state_messages,
+    StateTypes.BUSY_ANCHOR: anchor_state_messages,
+    StateTypes.BUSY_LOCALIZING: localizing_state_messages,
+}
 
 
 class NetworkThread(threading.Thread):
-    def __init__(self, event_queue, context, sock):
+    def __init__(self, event_queue, state_machine, context, sock):
         super(NetworkThread, self).__init__()
         self.event_queue = event_queue
+        self.state_machine = state_machine
         self.context = context
         self.sock = sock
         self.latest_message_id = dict()
@@ -25,10 +68,26 @@ class NetworkThread(threading.Thread):
                 #     print(self.context.fid, msg)
                 self.context.log_received_message(msg.type, length)
                 self.latest_message_id[msg.fid] = msg.id
-                self.event_queue.put(NetworkThread.prioritize_message(msg))
+                self.handle_immediately(msg)
                 if msg is not None and msg.type == message.MessageTypes.STOP:
                     # print(f"network_stopped_{self.context.fid}")
                     break
+
+    def handle_immediately(self, msg):
+        if self.state_machine.state == StateTypes.BUSY_ANCHOR:
+            if msg.type == MessageTypes.CHALLENGE_ACK:
+                self.state_machine.handle_challenge_ack_anchor(msg)
+                return
+        elif self.state_machine.state == StateTypes.WAITING:
+            if msg.type == MessageTypes.CHALLENGE_ACK:
+                self.state_machine.handle_challenge_ack_anchor(msg)
+                return
+        elif self.state_machine.state == StateTypes.BUSY_LOCALIZING:
+            if msg.type == MessageTypes.CHALLENGE_ACK:
+                self.state_machine.handle_challenge_ack_anchor(msg)
+                return
+
+        self.event_queue.put(NetworkThread.prioritize_message(msg))
 
     def is_message_valid(self, msg):
         if msg is None:
@@ -48,9 +107,12 @@ class NetworkThread(threading.Thread):
             return False
         if msg.fid in self.latest_message_id and msg.id < self.latest_message_id[msg.fid]:
             return False
-        if msg.type == message.MessageTypes.CHALLENGE_INIT:
+        if msg.type == message.MessageTypes.CHALLENGE_INIT or msg.type == message.MessageTypes.GOSSIP:
             dist = np.linalg.norm(msg.el - self.context.el)
             if dist > msg.range:
+                return False
+        if self.state_machine in valid_state_messages:
+            if msg.type not in valid_state_messages[self.state_machine.state] or msg.type not in general_messages:
                 return False
         return True
 

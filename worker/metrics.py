@@ -28,6 +28,7 @@ class TimelineEvents:
     COLOR = 3
     ILLUMINATE = 4
     FAIL = 5
+    LEASE_EXP = 6
 
 
 def update_dict_sum(obj, key):
@@ -102,6 +103,9 @@ class Metrics:
 
     def log_illuminate(self, coord):
         self.timeline.append([time.time(), TimelineEvents.ILLUMINATE, coord.tolist()])
+
+    def log_lease_expiration(self):
+        self.timeline.append([time.time(), TimelineEvents.LEASE_EXP])
 
     def log_received_msg(self, msg_type, length):
         log_msg_hist(self.received_msg_hist, msg_type, 'received', 'C')

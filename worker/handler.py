@@ -41,10 +41,17 @@ class HandlerThread(threading.Thread):
                 if t == MessageTypes.SIZE_REPLY or t == MessageTypes.THAW_SWARM or t == MessageTypes.STOP\
                         or t == MessageTypes.LEASE_RENEW or t == MessageTypes.LEASE_CANCEL:
                     item.stale = False
+                elif t == MessageTypes.RENEW_LEASE_INTERNAL \
+                        or t == MessageTypes.SET_AVAILABLE_INTERNAL \
+                        or t == MessageTypes.FAIL_INTERNAL \
+                        or t == MessageTypes.THAW_SWARM_INTERNAL:
+                    item.stale = False
                 elif t == MessageTypes.CHALLENGE_FIN or t == MessageTypes.CHALLENGE_INIT\
                         or t == MessageTypes.CHALLENGE_ACK or t == MessageTypes.CHALLENGE_ACCEPT:
                     if item.event.swarm_id != self.context.swarm_id:
                         item.stale = False
+                    else:
+                        item.stale = True
                 else:
                     item.stale = True
 

@@ -163,10 +163,11 @@ def read_timelines(path, fid='*'):
     }
 
 
-def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0.01
+def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.001):  # 0.01
     xs = [0]
     ys = [-1]
     swarm_ys = [-1]
+    lease_exp_ys = [0]
 
     current_points = {}
     current_swarms = {}
@@ -193,6 +194,8 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
                 gtl_points[e_fid] = event[2]
             elif e_type == TimelineEvents.SWARM:
                 current_swarms[e_fid] = event[2]
+            elif e_type == TimelineEvents.LEASE_EXP:
+                lease_exp_ys[-1] += 1
             timeline.pop(0)
         else:
             swarm_ys[-1] = len(set(current_swarms.values()))
@@ -203,13 +206,16 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
             xs.append(xs[-1] + sw)
             ys.append(-1)
             swarm_ys.append(-1)
+            lease_exp_ys.append(0)
 
     if ys[-1] == -1:
         xs.pop(-1)
         ys.pop(-1)
         swarm_ys.pop(-1)
-    # print(ys)
-    return xs, ys, swarm_ys
+        lease_exp_ys.pop(-1)
+
+    print(sum(lease_exp_ys))
+    return xs, ys, swarm_ys, lease_exp_ys
 
 
 def merge_timelines(timelines):
@@ -242,15 +248,17 @@ def gen_sw_charts(path, fid, read_from_file=True):
             r_xs = chart_data[0][:t_idx]
             r_ys = chart_data[1][:t_idx]
             s_ys = chart_data[2][:t_idx]
+            l_ys = chart_data[3][:t_idx]
     else:
         data = read_timelines(path, fid)
-        r_xs, r_ys, s_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+        r_xs, r_ys, s_ys, l_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
         with open(f"{path}/charts.json", "w") as f:
-            json.dump([r_xs, r_ys, s_ys], f)
+            json.dump([r_xs, r_ys, s_ys, l_ys], f)
 
     # s_xs, s_ys = gen_sliding_window_chart_data(data['sent_bytes'], data['start_time'], lambda x: x[2])
     # h_xs, h_ys = gen_sliding_window_chart_data(data['heuristic'], data['start_time'], lambda x: 1)
     ax.step(r_xs, s_ys, where='post', label="Number of swarms", color="#ee2010")
+    ax.step(r_xs, l_ys, where='post', label="Number of expired leases")
     while True:
         if r_ys[0] == -1:
             r_ys.pop(0)
@@ -258,18 +266,17 @@ def gen_sw_charts(path, fid, read_from_file=True):
         else:
             break
 
-    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
+    # ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
     # ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
     # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
     ax.legend()
-    plt.ylim([10e-13, 10e3])
-    plt.yscale('log')
+    # plt.ylim([10e-13, 10e3])
+    # plt.yscale('log')
     # plt.show()
     plt.savefig(f'{path}/{fid}.png', dpi=300)
 
 
 if __name__ == '__main__':
-    # mpl.use('macosx')
 
     paths = [
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/24_Aug_17_38_36",
@@ -280,7 +287,7 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/1692902499",
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/1692903856",
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/1692992188",
-        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1693588888",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1694542758",
     ]
     # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1693587710", "*", False)
     for path in paths:
