@@ -197,7 +197,7 @@ class StateMachine:
 
     def enter_busy_localizing_state(self, msg):
         self.context.set_anchor(msg)
-        self.set_lease_timer()
+        self.renew_lease()
         self.context.log_localize()
         waiting_message = Message(MessageTypes.SET_WAITING, args=(StateTypes.BUSY_LOCALIZING,)).to_swarm(self.context)
         self.broadcast(waiting_message)
@@ -291,6 +291,7 @@ class StateMachine:
             self.timer_lease = None
 
         # self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION * 0.7, self.put_state_in_q, args=(MessageTypes.RENEW_LEASE_INTERNAL,))
+        # self.renew_lease()
         self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
         self.timer_lease.start()
 
