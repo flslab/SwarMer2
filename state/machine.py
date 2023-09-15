@@ -91,6 +91,7 @@ class StateMachine:
             # if msg.fid == 1:
             self.enter(StateTypes.BUSY_LOCALIZING, msg)
         else:
+            self.broadcast(Message(MessageTypes.LEASE_CANCEL).to_fls(msg))
             # if self.context.fid == 1:
             self.context.grant_lease(msg.fid)
             self.enter(StateTypes.BUSY_ANCHOR)
