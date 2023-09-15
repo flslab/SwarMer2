@@ -29,7 +29,7 @@ class Config:
     CENTRALIZED_ROUND = True
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
-    SAMPLE_SIZE = 100
+    SAMPLE_SIZE = 256
     DURATION = 30
     SHAPE = 'chess'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results/swarmer'
