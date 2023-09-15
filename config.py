@@ -31,7 +31,7 @@ class Config:
     MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
     DURATION = 300
-    SHAPE = 'dragon'
+    SHAPE = 'chess'
     RESULTS_PATH = '/proj/nova-PG0/hamed/results/swarmer'
     MULTICAST = False
     THAW_MIN_NUM_SWARMS = 1
