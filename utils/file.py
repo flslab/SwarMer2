@@ -270,8 +270,8 @@ def gen_sw_charts(path, fid, read_from_file=True):
     # ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
     # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
     ax.legend()
-    # plt.ylim([10e-13, 10e3])
-    # plt.yscale('log')
+    plt.ylim([10e-13, 10e3])
+    plt.yscale('log')
     # plt.show()
     plt.savefig(f'{path}/{fid}.png', dpi=300)
 
