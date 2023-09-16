@@ -31,7 +31,7 @@ class Config:
     MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
     DURATION = 300
-    SHAPE = 'chess'
+    SHAPE = 'dragon'
     RESULTS_PATH = 'results'
     MULTICAST = True
     THAW_MIN_NUM_SWARMS = 1
