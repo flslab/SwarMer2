@@ -184,7 +184,9 @@ class StateMachine:
         #     return
         if time.time() - self.last_challenge_init < Config.CHALLENGE_INIT_DURATION:
             return
-        # if np.random.random() < self.challenge_probability:
+        if np.random.random() > self.challenge_probability:
+            return
+
         if not self.challenge_ack:
             self.context.increment_range()
 

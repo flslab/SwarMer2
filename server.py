@@ -244,7 +244,7 @@ if __name__ == '__main__':
             # if Config.THAW_PERCENTAGE_LARGEST_SWARM:
             #     thaw_condition |= merged_flss / total_count >= Config.THAW_PERCENTAGE_LARGEST_SWARM
             if (largest_swarm == total_count or
-                (round_duration != 0 and t - last_thaw_time >= round_duration) or
+                # (round_duration != 0 and t - last_thaw_time >= round_duration) or
                     (round_duration == 0 and t - last_thaw_time >= h)):
                 if reset:
                     print(largest_swarm)
@@ -306,13 +306,13 @@ if __name__ == '__main__':
         client_socket.send(struct.pack('b', True))
         client_socket.close()
 
-    if nid == 0:
-        # print("wait a fixed time for other nodes")
-        # time.sleep(90)
-
-        # utils.create_csv_from_json(results_directory)
-        # utils.combine_csvs(results_directory, shape_directory)
-
-        utils.gen_sw_charts(results_directory, "*", False)
-        utils.create_csv_from_json(results_directory)
-        utils.combine_csvs(results_directory, results_directory)
+    # if nid == 0:
+    #     # print("wait a fixed time for other nodes")
+    #     # time.sleep(90)
+    #
+    #     # utils.create_csv_from_json(results_directory)
+    #     # utils.combine_csvs(results_directory, shape_directory)
+    #
+    #     utils.gen_sw_charts(results_directory, "*", False)
+    #     utils.create_csv_from_json(results_directory)
+    #     utils.combine_csvs(results_directory, results_directory)
