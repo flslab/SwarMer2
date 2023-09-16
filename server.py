@@ -247,7 +247,7 @@ if __name__ == '__main__':
                 # (round_duration != 0 and t - last_thaw_time >= round_duration) or
                     (round_duration == 0 and t - last_thaw_time >= h)):
                 if reset:
-                    print(largest_swarm)
+                    print(largest_swarm, num_swarms)
                     thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
                     ser_sock.broadcast(thaw_message)
                     if round_duration == 0 and largest_swarm == total_count:
