@@ -32,8 +32,9 @@ class Config:
     SAMPLE_SIZE = 0
     DURATION = 300
     SHAPE = 'chess'
-    RESULTS_PATH = '/proj/nova-PG0/hamed/results/swarmer'
-    MULTICAST = False
+    RESULTS_PATH = 'results'
+    # RESULTS_PATH = '/proj/nova-PG0/hamed/results/swarmer'
+    MULTICAST = True
     THAW_MIN_NUM_SWARMS = 1
     THAW_PERCENTAGE_LARGEST_SWARM = 80
     THAW_INTERVAL = 1  # second

@@ -293,7 +293,7 @@ class StateMachine:
 
         # self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION * 0.7, self.put_state_in_q, args=(MessageTypes.RENEW_LEASE_INTERNAL,))
         # self.renew_lease()
-        self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
+        self.timer_lease = threading.Timer(0.75 * Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
         self.timer_lease.start()
 
     def renew_lease(self):
