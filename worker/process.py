@@ -27,8 +27,8 @@ class WorkerProcess(multiprocessing.Process):
         network_thread.start()
         handler_thread.start()
 
-        network_thread.join()
         handler_thread.join()
+        network_thread.join()
 
         # print(f"process_stopped_{self.context.fid}")
 
