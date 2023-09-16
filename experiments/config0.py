@@ -29,7 +29,7 @@ class Config:
     CENTRALIZED_ROUND = True
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
-    SAMPLE_SIZE = 300
+    SAMPLE_SIZE = 250
     DURATION = 300
     SHAPE = 'chess'
     RESULTS_PATH = 'results'
