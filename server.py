@@ -204,7 +204,6 @@ if __name__ == '__main__':
 
             if server_msg.type == MessageTypes.QUERY_SWARM:
                 swarms = compute_swarm_size(shared_arrays)
-                merged_flss = max(swarms.values())
                 response = Message(MessageTypes.REPLY_SWARM, args=(swarms,))
                 send_msg(client_socket, pickle.dumps(response))
             elif server_msg.type == MessageTypes.STOP:
@@ -216,7 +215,7 @@ if __name__ == '__main__':
         last_merged_flss = 0
         no_change_counter = 0
         while True:
-            time.sleep(0.1)
+            time.sleep(0.2)
             t = time.time()
 
             swarms = compute_swarm_size(shared_arrays)
@@ -277,14 +276,14 @@ if __name__ == '__main__':
         print("secondary nodes are done")
 
     for p in processes:
-        p.join(120)
-        if p.is_alive():
-            break
+        p.join()
+        # if p.is_alive():
+        #     break
 
-    for p in processes:
-        if p.is_alive():
-            print("timeout")
-            p.terminate()
+    # for p in processes:
+    #     if p.is_alive():
+    #         print("timeout")
+    #         p.terminate()
 
     # if Config.PROBABILISTIC_ROUND or Config.CENTRALIZED_ROUND:
         # utils.write_hds_time(hd_time, results_directory, nid)

@@ -6,7 +6,7 @@ class Config:
     MAX_RANGE = 200
     DROP_PROB_SENDER = 0
     DROP_PROB_RECEIVER = 0
-    STATE_TIMEOUT = 0.4
+    STATE_TIMEOUT = 0.5
     SIZE_QUERY_TIMEOUT = 10
     DEAD_RECKONING_ANGLE = 5
     CHALLENGE_PROB_DECAY = 1
@@ -31,9 +31,9 @@ class Config:
     MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
     DURATION = 300
-    SHAPE = 'dragon'
-    RESULTS_PATH = 'results'
-    MULTICAST = True
+    SHAPE = 'chess'
+    RESULTS_PATH = '/proj/nova-PG0/hamed/results/swarmer'
+    MULTICAST = False
     THAW_MIN_NUM_SWARMS = 1
     THAW_PERCENTAGE_LARGEST_SWARM = 80
     THAW_INTERVAL = 1  # second

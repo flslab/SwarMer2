@@ -32,10 +32,10 @@ class WorkerProcess(multiprocessing.Process):
 
         # print(f"process_stopped_{self.context.fid}")
 
-        while not event_queue.empty():
-            try:
-                event_queue.get(False)
-            except queue.Empty:
-                continue
-            event_queue.task_done()
-        exit()
+        # while not event_queue.empty():
+        #     try:
+        #         event_queue.get(False)
+        #     except queue.Empty:
+        #         continue
+        #     event_queue.task_done()
+        # exit()
