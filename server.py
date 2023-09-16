@@ -243,7 +243,7 @@ if __name__ == '__main__':
             #     thaw_condition |= num_swarms == Config.THAW_MIN_NUM_SWARMS
             # if Config.THAW_PERCENTAGE_LARGEST_SWARM:
             #     thaw_condition |= merged_flss / total_count >= Config.THAW_PERCENTAGE_LARGEST_SWARM
-            if (largest_swarm == total_count or
+            if (largest_swarm == total_count or num_swarms == 1 or
                 # (round_duration != 0 and t - last_thaw_time >= round_duration) or
                     (round_duration == 0 and t - last_thaw_time >= h)):
                 if reset:
