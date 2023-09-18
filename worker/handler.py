@@ -1,6 +1,11 @@
 import threading
 import time
-from message import MessageTypes
+from queue import Empty
+
+from config import Config
+from message import MessageTypes, Message
+from state import StateTypes
+from worker.network import PrioritizedItem
 
 
 class HandlerThread(threading.Thread):
@@ -9,30 +14,35 @@ class HandlerThread(threading.Thread):
         self.event_queue = event_queue
         self.state_machine = state_machine
         self.context = context
-        self.last_thaw = 0
+        self.last_challenge = 0
+        self.last_lease_renew = 0
 
     def run(self):
         self.state_machine.start()
         while True:
-            item = self.event_queue.get()
+            t = time.time()
+            if t - self.last_challenge > Config.STATE_TIMEOUT:
+                if self.state_machine.state != StateTypes.BUSY_ANCHOR \
+                        and self.state_machine.state != StateTypes.BUSY_LOCALIZING \
+                        and self.state_machine.state != StateTypes.DEPLOYING:
+                    # msg = Message(MessageTypes.SET_AVAILABLE_INTERNAL).to_fls(self.context)
+                    # item = PrioritizedItem(1, time.time(), msg, False)
+                    # self.event_queue.put(item)
+                    self.state_machine.reenter_available_state()
+                    self.last_challenge = t
+
+            try:
+                item = self.event_queue.get(timeout=0.05)
+            except Empty:
+                continue
             if item.stale:
                 continue
 
             event = item.event
-            # if event.type == MessageTypes.THAW_SWARM:
-            #     t = time.time()
-            #
-            #     if t - self.last_thaw > 4:
-            #         self.flush_all()
-            #     else:
-            #         continue
-            #     self.last_thaw = t
             self.state_machine.drive(event)
+
             if event.type == MessageTypes.STOP:
-                # print(f"handler_stopped_{self.context.fid}")
                 break
-            # if event.type == MessageTypes.THAW_SWARM:
-            #     self.flush_all()
 
             self.flush_queue()
 

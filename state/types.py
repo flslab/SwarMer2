@@ -7,4 +7,3 @@ class StateTypes(Enum):
     BUSY_LOCALIZING = 3
     WAITING = 4
     DEPLOYING = 5
-

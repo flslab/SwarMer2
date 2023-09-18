@@ -292,15 +292,15 @@ class StateMachine:
             self.timer_lease = None
 
         # self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION * 0.7, self.put_state_in_q, args=(MessageTypes.RENEW_LEASE_INTERNAL,))
-        # self.renew_lease()
-        self.timer_lease = threading.Timer(0.75 * Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
-        self.timer_lease.start()
+        self.renew_lease()
+        # self.timer_lease = threading.Timer(0.75 * Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
+        # self.timer_lease.start()
 
     def renew_lease(self):
         if self.state == StateTypes.BUSY_LOCALIZING and self.context.anchor:
             renew_message = Message(MessageTypes.LEASE_RENEW, args=(self.context.query_id,)).to_fls(self.context.anchor)
             self.broadcast(renew_message)
-            self.set_lease_timer()
+            # self.set_lease_timer()
 
     def fail(self):
         # print("failed")
@@ -335,9 +335,11 @@ class StateMachine:
         if self.state != StateTypes.BUSY_ANCHOR \
                 and self.state != StateTypes.BUSY_LOCALIZING \
                 and self.state != StateTypes.DEPLOYING:
-            self.timer_available = \
-                threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.put_state_in_q, args=(MessageTypes.SET_AVAILABLE_INTERNAL,))
-            self.timer_available.start()
+            pass
+            # self.timer_available = \
+            #     threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.put_state_in_q, args=(MessageTypes.SET_AVAILABLE_INTERNAL,))
+            # self.timer_available.start()
+            # self.put_state_in_q(MessageTypes.SET_AVAILABLE_INTERNAL)
 
     def reenter_available_state(self):
         if self.state != StateTypes.BUSY_ANCHOR\

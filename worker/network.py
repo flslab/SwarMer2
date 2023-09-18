@@ -1,5 +1,6 @@
 import time
 from dataclasses import dataclass, field
+from socket import socket
 from typing import Any
 import threading
 import numpy as np
@@ -57,11 +58,23 @@ class NetworkThread(threading.Thread):
         self.context = context
         self.sock = sock
         self.latest_message_id = dict()
+        self.last_lease_renew = 0
 
     def run(self):
+        t = time.time()
+        if t - self.last_lease_renew > 0.5 * Config.CHALLENGE_LEASE_DURATION:
+            if self.state_machine.state == StateTypes.BUSY_LOCALIZING:
+                # msg = Message(MessageTypes.RENEW_LEASE_INTERNAL).to_fls(self.context)
+                # item = PrioritizedItem(1, time.time(), msg, False)
+                # self.event_queue.put(item)
+                self.state_machine.renew_lease()
+                self.last_lease_renew = t
         while True:
             # if self.sock.is_ready():
-            msg, length = self.sock.receive()
+            try:
+                msg, length = self.sock.receive()
+            except BlockingIOError:
+                continue
             # self.context.log_received_message(msg.type, length)
             if self.is_message_valid(msg):
                 # if msg.type == message.MessageTypes.THAW_SWARM:

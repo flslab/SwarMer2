@@ -251,7 +251,7 @@ if __name__ == '__main__':
             #     thaw_condition |= merged_flss / total_count >= Config.THAW_PERCENTAGE_LARGEST_SWARM
             if (largest_swarm == total_count or num_swarms == 1 or
                 # (round_duration != 0 and t - last_thaw_time >= round_duration) or
-                    (round_duration == 0 and t - last_thaw_time >= h)):
+                    (t - last_thaw_time >= h)):
                 if reset:
                     print(largest_swarm, num_swarms)
                     thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
@@ -315,12 +315,11 @@ if __name__ == '__main__':
     if nid == 0:
         with open(f"{results_directory}/utilization.json", "w") as f:
             json.dump([server_time, server_cpu], f)
-    #     # print("wait a fixed time for other nodes")
-    #     # time.sleep(90)
-    #
-    #     # utils.create_csv_from_json(results_directory)
-    #     # utils.combine_csvs(results_directory, shape_directory)
-    #
-    #     utils.gen_sw_charts(results_directory, "*", False)
-    #     utils.create_csv_from_json(results_directory)
-    #     utils.combine_csvs(results_directory, results_directory)
+        # print("wait a fixed time for other nodes")
+        # time.sleep(90)
+
+        # utils.create_csv_from_json(results_directory)
+        # utils.combine_csvs(results_directory, shape_directory)
+        # utils.gen_sw_charts(results_directory, "*", False)
+        # utils.create_csv_from_json(results_directory)
+        # utils.combine_csvs(results_directory, results_directory)
