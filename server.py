@@ -1,3 +1,4 @@
+import json
 import socket
 import pickle
 import struct
@@ -16,6 +17,7 @@ import utils
 import glob
 import sys
 from stop import stop_all
+import psutil
 
 
 hd_timer = None
@@ -32,7 +34,7 @@ def query_swarm_client(connection):
 def pull_swarm_client(connection):
     data = recv_msg(connection)
     message = pickle.loads(data)
-    return message.args[0]
+    return message.args[0], message.args[1]
 
 
 def send_msg(sock, msg):
@@ -204,7 +206,7 @@ if __name__ == '__main__':
 
             if server_msg.type == MessageTypes.QUERY_SWARM:
                 swarms = compute_swarm_size(shared_arrays)
-                response = Message(MessageTypes.REPLY_SWARM, args=(swarms,))
+                response = Message(MessageTypes.REPLY_SWARM, args=(swarms, psutil.cpu_percent()))
                 send_msg(client_socket, pickle.dumps(response))
             elif server_msg.type == MessageTypes.STOP:
                 break
@@ -214,18 +216,23 @@ if __name__ == '__main__':
         round_duration = 0
         last_merged_flss = 0
         no_change_counter = 0
+        server_cpu = []
+        server_time = []
         while True:
             time.sleep(0.2)
             t = time.time()
 
             swarms = compute_swarm_size(shared_arrays)
+            server_cpu.append([psutil.cpu_percent()])
+            server_time.append(time.time())
 
             if IS_CLUSTER_SERVER:
                 for i in range(N - 1):
                     query_swarm_client(clients[i])
 
                 for i in range(N - 1):
-                    client_swarms = pull_swarm_client(clients[i])
+                    client_swarms, client_cpu = pull_swarm_client(clients[i])
+                    server_cpu[-1].append(client_cpu)
                     for sid in client_swarms:
                         if sid in swarms:
                             swarms[sid] += client_swarms[sid]
@@ -305,7 +312,9 @@ if __name__ == '__main__':
         client_socket.send(struct.pack('b', True))
         client_socket.close()
 
-    # if nid == 0:
+    if nid == 0:
+        with open(f"{results_directory}/utilization.json", "w") as f:
+            json.dump([server_time, server_cpu], f)
     #     # print("wait a fixed time for other nodes")
     #     # time.sleep(90)
     #
