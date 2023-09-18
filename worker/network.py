@@ -75,7 +75,7 @@ class NetworkThread(threading.Thread):
                 msg, length = self.sock.receive()
             except BlockingIOError:
                 continue
-            except socket.timeout:
+            except Exception:
                 continue
             # self.context.log_received_message(msg.type, length)
             if self.is_message_valid(msg):
