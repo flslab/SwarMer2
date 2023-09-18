@@ -283,14 +283,14 @@ if __name__ == '__main__':
         print("secondary nodes are done")
 
     for p in processes:
-        p.join()
-        # if p.is_alive():
-        #     break
+        p.join(30)
+        if p.is_alive():
+            continue
 
-    # for p in processes:
-    #     if p.is_alive():
-    #         print("timeout")
-    #         p.terminate()
+    for p in processes:
+        if p.is_alive():
+            print("timeout")
+            p.terminate()
 
     # if Config.PROBABILISTIC_ROUND or Config.CENTRALIZED_ROUND:
         # utils.write_hds_time(hd_time, results_directory, nid)
