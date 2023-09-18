@@ -181,7 +181,7 @@ if __name__ == '__main__':
             p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name, results_directory)
             p.start()
             processes.append(p)
-            time.sleep(0.05)
+            time.sleep(0.1)
     except OSError as e:
         print(e)
         for p in processes:
