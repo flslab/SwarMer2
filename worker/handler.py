@@ -16,10 +16,14 @@ class HandlerThread(threading.Thread):
         self.context = context
         self.last_challenge = 0
         self.last_lease_renew = 0
+        self.start_time = 0
 
     def run(self):
+        self.start_time = time.time()
         self.state_machine.start()
         while True:
+            if time.time() - self.start_time > Config.DURATION + 5:
+                break
             try:
                 item = self.event_queue.get(timeout=0.05)
             except Empty:
