@@ -23,6 +23,7 @@ class HandlerThread(threading.Thread):
         self.state_machine.start()
         while True:
             if time.time() - self.start_time > Config.DURATION + 5:
+                self.state_machine.handle_stop()
                 break
             try:
                 item = self.event_queue.get(timeout=0.05)
