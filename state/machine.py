@@ -150,9 +150,9 @@ class StateMachine:
         self.start_timers()
 
     def handle_stop(self, msg):
-        if self.stop_handled:
-            return
-        self.stop_handled = True
+        # if self.stop_handled:
+        #     return
+        # self.stop_handled = True
 
         if np.random.random() < 0.5:
             self.broadcast(msg)
