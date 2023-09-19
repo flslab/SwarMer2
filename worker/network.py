@@ -1,3 +1,4 @@
+import random
 import time
 from dataclasses import dataclass, field
 from socket import socket
@@ -59,17 +60,29 @@ class NetworkThread(threading.Thread):
         self.sock = sock
         self.latest_message_id = dict()
         self.last_lease_renew = 0
+        self.last_challenge = 0
 
     def run(self):
-        t = time.time()
-        if t - self.last_lease_renew > 0.5 * Config.CHALLENGE_LEASE_DURATION:
-            if self.state_machine.state == StateTypes.BUSY_LOCALIZING:
-                # msg = Message(MessageTypes.RENEW_LEASE_INTERNAL).to_fls(self.context)
-                # item = PrioritizedItem(1, time.time(), msg, False)
-                # self.event_queue.put(item)
-                self.state_machine.renew_lease()
-                self.last_lease_renew = t
         while True:
+            t = time.time()
+            if t - self.last_lease_renew > 0.5 * Config.CHALLENGE_LEASE_DURATION:
+                if self.state_machine.state == StateTypes.BUSY_LOCALIZING:
+                    # msg = Message(MessageTypes.RENEW_LEASE_INTERNAL).to_fls(self.context)
+                    # item = PrioritizedItem(1, time.time(), msg, False)
+                    # self.event_queue.put(item)
+                    self.state_machine.renew_lease()
+                    self.last_lease_renew = t
+            if t - self.last_challenge > Config.STATE_TIMEOUT:
+                if self.state_machine.state != StateTypes.BUSY_ANCHOR \
+                        and self.state_machine.state != StateTypes.BUSY_LOCALIZING \
+                        and self.state_machine.state != StateTypes.DEPLOYING:
+                    # msg = Message(MessageTypes.SET_AVAILABLE_INTERNAL).to_fls(self.context)
+                    # item = PrioritizedItem(1, time.time(), msg, False)
+                    # self.event_queue.put(item)
+                    self.state_machine.reenter_available_state()
+                    self.last_challenge = t
+            if random.random() < 0.001:
+                time.sleep(0.005)
             # if self.sock.is_ready():
             try:
                 msg, length = self.sock.receive()
