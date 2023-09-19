@@ -24,7 +24,7 @@ class HandlerThread(threading.Thread):
         while True:
             if time.time() - self.start_time > Config.DURATION + 5:
                 print(f"{self.context.fid}_timeout")
-                self.state_machine.handle_stop()
+                self.state_machine.handle_stop(Message(MessageTypes.STOP).from_server().to_all())
                 print(f"{self.context.fid}_stopped")
                 break
             try:
