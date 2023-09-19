@@ -1,6 +1,6 @@
 #!/bin/bash
 
-N=14 # number of total servers
+N=16 # number of total servers
 USERNAME="ubuntu"
 KEY_PATH="/Users/hamed/Desktop/hamed-vir.pem"
 LOCAL_KEY_PATH="~/SwarMer/hamed-vir.pem"
@@ -21,4 +21,6 @@ HOSTNAMES=(
 "172.31.19.46"
 "172.31.43.102"
 "172.31.24.190"
+"172.31.43.41"
+"172.31.32.216"
 )
