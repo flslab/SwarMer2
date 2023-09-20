@@ -269,8 +269,6 @@ class StateMachine:
     def set_fail(self):
         if Config.FAILURE_PROB and np.random.random() <= Config.FAILURE_PROB:
             self.should_fail = True
-        else:
-            self.start_failure_timer()
 
     def query_size(self):
         if self.timer_size is not None:

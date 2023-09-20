@@ -62,9 +62,11 @@ class NetworkThread(threading.Thread):
         self.last_lease_renew = 0
         self.last_challenge = 0
         self.start_time = 0
+        self.last_fail_check = 0
 
     def run(self):
         self.start_time = time.time()
+        self.last_fail_check = self.start_time + 1
         while True:
             t = time.time()
             if t - self.last_lease_renew > 0.5 * Config.CHALLENGE_LEASE_DURATION:
@@ -85,6 +87,9 @@ class NetworkThread(threading.Thread):
                     self.last_challenge = t
             if t - self.start_time > Config.DURATION + 5:
                 break
+            if Config.FAILURE_TIMEOUT and t - self.last_fail_check > Config.FAILURE_TIMEOUT:
+                self.state_machine.set_fail()
+                self.last_fail_check = t
             if random.random() < 0.001:
                 time.sleep(0.005)
             # if self.sock.is_ready():
