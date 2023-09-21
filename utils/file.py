@@ -5,7 +5,7 @@ import csv
 import matplotlib as mpl
 
 import numpy as np
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, ticker
 
 from config import Config
 import pandas as pd
@@ -172,9 +172,20 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
     current_points = {}
     current_swarms = {}
     gtl_points = {}
+    total_failures = 0
 
-    while len(timeline):
-        event = timeline[0]
+    # for event in timeline:
+    #     e_type = event[1]
+    #     t = event[0] - start_time
+    #     if t > 300:
+    #         break
+    #     if e_type == TimelineEvents.FAIL:
+    #         total_failures += 1
+    # print(total_failures)
+    # return
+    i = 0
+    while i < len(timeline):
+        event = timeline[i]
         e_type = event[1]
         e_fid = event[-1]
         t = event[0] - start_time
@@ -196,7 +207,7 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
                 current_swarms[e_fid] = event[2]
             elif e_type == TimelineEvents.LEASE_EXP:
                 lease_exp_ys[-1] += 1
-            timeline.pop(0)
+            i += 1
         else:
             swarm_ys[-1] = len(set(current_swarms.values()))
             # print(len(current_swarms))
@@ -208,13 +219,6 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
             swarm_ys.append(-1)
             lease_exp_ys.append(0)
 
-    if ys[-1] == -1:
-        xs.pop(-1)
-        ys.pop(-1)
-        swarm_ys.pop(-1)
-        lease_exp_ys.pop(-1)
-
-    print(sum(lease_exp_ys))
     return xs, ys, swarm_ys, lease_exp_ys
 
 
@@ -243,15 +247,16 @@ def gen_sw_charts(path, fid, read_from_file=True):
     if read_from_file:
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)
+            # r_xs = chart_data[0]
+            # t_idx = next(i for i, v in enumerate(r_xs) if v > 300)
             r_xs = chart_data[0]
-            t_idx = next(i for i, v in enumerate(r_xs) if v > 300)
-            r_xs = chart_data[0][:t_idx]
-            r_ys = chart_data[1][:t_idx]
-            s_ys = chart_data[2][:t_idx]
-            l_ys = chart_data[3][:t_idx]
+            r_ys = chart_data[1]
+            s_ys = chart_data[2]
+            l_ys = chart_data[3]
     else:
         data = read_timelines(path, fid)
         r_xs, r_ys, s_ys, l_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+        # gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
         with open(f"{path}/charts.json", "w") as f:
             json.dump([r_xs, r_ys, s_ys, l_ys], f)
 
@@ -266,18 +271,74 @@ def gen_sw_charts(path, fid, read_from_file=True):
         else:
             break
 
-    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
     # ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
     # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
     ax.legend()
-    plt.ylim([10e-13, 10e3])
-    plt.yscale('log')
+    # plt.xlim([0, 60])
     # plt.show()
     plt.savefig(f'{path}/{fid}.png', dpi=300)
 
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
+    ax.legend()
+    plt.ylim([10e-13, 10e3])
+    plt.yscale('log')
+    plt.savefig(f'{path}/{fid}h.png', dpi=300)
+
+
+def gen_util_chart(path):
+    fig = plt.figure()
+    ax = fig.add_subplot()
+
+    with open(f"{path}/utilization.json") as f:
+        chart_data = json.load(f)
+        t = chart_data[0]
+        ys = chart_data[1]
+
+    for i in range(1):
+        ax.step(t, [y[i] for y in ys], where='post', label=f"server-{i+1}")
+
+    ax.legend()
+
+    # plt.show()
+    plt.savefig(f'{path}/cpu_utilization.png', dpi=300)
+
+
+def gen_shape_comp_hd(paths, labels, poses, colors, dest):
+    fig = plt.figure(figsize=(6.5, 3))
+    ax = fig.add_subplot()
+    for path, label, pos, color in zip(paths, labels, poses, colors):
+        with open(f"{path}/charts.json") as f:
+            chart_data = json.load(f)
+            t = chart_data[0]
+            ys = chart_data[1]
+            while True:
+                if ys[0] == -1:
+                    ys.pop(0)
+                    t.pop(0)
+                else:
+                    break
+            ax.step(t, ys, where='post', color=color)
+            plt.text(pos[0], pos[1], label, color=color, fontweight='bold')
+
+    ax.set_ylabel('Hausdorff distance (Display cell)', loc='top', rotation=0, labelpad=-133)
+    ax.set_xlabel('Time (Second)', loc='right')
+    ax.spines['top'].set_color('white')
+    ax.spines['right'].set_color('white')
+    plt.tight_layout()
+    plt.yscale('log')
+    plt.ylim([1e-1, 149])
+    plt.xlim([0, 100])
+    y_locator = ticker.FixedLocator([1e-3, 1e-2, 1e-1, 1, 10, 100])
+    ax.yaxis.set_major_locator(y_locator)
+    y_formatter = ticker.FixedFormatter(["0.001", "0.01", "0.1", "1", "10", "100"])
+    ax.yaxis.set_major_formatter(y_formatter)
+    plt.savefig(dest, dpi=300)
+
 
 if __name__ == '__main__':
-
+    mpl.rcParams['font.family'] = 'Times New Roman'
     paths = [
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/24_Aug_17_38_36",
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/24_Aug_18_30_13",
@@ -287,13 +348,158 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/1692902499",
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/1692903856",
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/1692992188",
-        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1694542758",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1694542758",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-5-96-node/results/chess/16_Sep_22_40_46",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-5-96-node/results/chess/16_Sep_23_03_14",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-5-96-node/results/chess/16_Sep_23_09_43",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-5-96-node/results/chess/16_Sep_23_23_26"
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-5-96-node-3/results/chess/18_Sep_23_41_16",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-5-96-node-4/results/dragon/19_Sep_16_26_59",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/dragon/19_Sep_19_24_01",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_12_13",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_14_58",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_18_27",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_21_00",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_24_02",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_26_34",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_31_50",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_34_32",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_37_35",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_40_23",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_43_13",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-16-400-node-failure/results/skateboard/20_Sep_21_18_49",  # 0.001
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-16-400-node-failure/results/skateboard/20_Sep_21_41_43",  # 0.0001
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-16-400-node-failure/results/skateboard/20_Sep_21_24_39",  # 0.001
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-16-400-node-failure/results/skateboard/20_Sep_21_30_13",  # 0.0001
     ]
+    comp_labels = [
+        # "Dragon, 760 FLSs",
+        # "Hat, 1562 FLSs",
+        # "Skateboard, 1727 FLSs",
+        "Dragon",
+        "Hat",
+        "Skateboard",
+    ]
+    comp_poses = [
+        (7, 0.05),
+        (30, 0.025),
+        (50, 0.05)
+    ]
+    comp_path = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/dragon/19_Sep_19_24_01",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/hat/19_Sep_19_29_54",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/skateboard/19_Sep_18_56_55",
+    ]
+
+    loss_r_labels = [
+        # "Dragon, 760 FLSs",
+        # "Hat, 1562 FLSs",
+        # "Skateboard, 1727 FLSs",
+        "0% Packet loss",
+        "0.1% Packet loss",
+        "1% Packet loss",
+        "10% Packet loss",
+    ]
+    loss_r_poses = [
+        (43, 0.2),
+        (36, 0.035),
+        (70, 0.05),
+        (5, 0.1),
+    ]
+    loss_r_path = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/skateboard/19_Sep_18_56_55",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/skateboard/19_Sep_18_59_40",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/skateboard/19_Sep_19_02_20",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/skateboard/19_Sep_19_14_23",
+        #
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/hat/19_Sep_19_29_54",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_31_50",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_34_32",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_37_35",
+
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/dragon/19_Sep_19_24_01",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_12_13",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_18_27",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_21_00",
+    ]
+
+    loss_labels = [
+        # "Dragon, 760 FLSs",
+        # "Hat, 1562 FLSs",
+        # "Skateboard, 1727 FLSs",
+        "Asymmetric packet loss at receiver",
+        "Symmetric packet loss",
+        "Asymmetric packet loss at transmitter",
+        "No packet loss",
+    ]
+    loss_poses = [
+        (8, 0.003),
+        (30, 0.25),
+        (55, 0.06),
+        (28, 1.1),
+    ]
+
+    loss_path = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/skateboard/19_Sep_19_14_23",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/skateboard/19_Sep_19_09_00",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/skateboard/19_Sep_19_11_38",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/skateboard/19_Sep_18_56_55",
+
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_37_35",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_40_23",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/hat/20_Sep_01_43_13",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/hat/19_Sep_19_29_54",
+
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_21_00",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_24_02",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/results/dragon/20_Sep_01_26_34",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-6-12-16-400-node-3/results/dragon/19_Sep_19_24_01",
+
+    ]
+
+    fail_path = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-16-400-node-failure/results/skateboard/20_Sep_21_18_49",
+        # 0.001
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-16-400-node-failure/results/skateboard/20_Sep_21_41_43",
+    ]
+
+    fail_labels = [
+        "0.1% Failure",
+        "0.01% Failure",
+    ]
+
+    fail_poses = [
+        (50, 10),
+        (50, 0.5),
+        # (55, 0.06),
+        # (28, 1.1),
+    ]
+
+    tab_colors = [
+        'tab:blue',
+        'tab:orange',
+        'tab:purple',
+        'tab:cyan',
+    ]
+
+    cmp_colors = [
+        'tab:green',
+        'tab:olive',
+        'tab:orange',
+        'tab:red',
+    ]
+
+    dest = "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-8-16-400-node-d-h/failure_comp.png"
+    # gen_shape_comp_hd(fail_path, fail_labels, fail_poses, tab_colors, dest)
     # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1693587710", "*", False)
     for path in paths:
-        gen_sw_charts(path, "*", False)
+        json_files = glob.glob(f"{path}/timeline_*.json")
+        print(len(json_files))
+        # continue
         create_csv_from_json(path)
         combine_csvs(path, path)
+        gen_util_chart(path)
+        gen_sw_charts(path, "*", False)
 
     # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer/results/dragon/04_Aug_22_33_20", "*", False)
     # results_directory = "/Users/hamed/Desktop/60s/results/skateboard/11-Jun-14_38_12"
