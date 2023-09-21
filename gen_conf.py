@@ -2,23 +2,27 @@ import itertools
 import os
 
 def_conf = {
+    "GOSSIP_TIMEOUT": "5",
+    "GOSSIP_SWARM_COUNT_THRESHOLD": "3",
     "THAW_SWARMS": "False",
-    "INITIAL_RANGE": "5",
+    "INITIAL_RANGE": "10",
     "MAX_RANGE": "200",
     "DROP_PROB_SENDER": "0",
     "DROP_PROB_RECEIVER": "0",
-    "STATE_TIMEOUT": "0.4",
+    "STATE_TIMEOUT": "0.5",
     "SIZE_QUERY_TIMEOUT": "10",
     "DEAD_RECKONING_ANGLE": "5",
-    "CHALLENGE_PROB_DECAY": "5",
+    "CHALLENGE_PROB_DECAY": "1.25",
     "INITIAL_CHALLENGE_PROB": "1",
-    "CHALLENGE_LEASE_DURATION": "3600",
+    "CHALLENGE_LEASE_DURATION": "0.25",
+    "CHALLENGE_ACCEPT_DURATION": "0.02",
+    "CHALLENGE_INIT_DURATION": "0",
     "FAILURE_TIMEOUT": "0",
     "FAILURE_PROB": "0",
     "NUMBER_ROUND": "5",
-    "ACCELERATION": "6",
-    "DECELERATION": "6",
-    "MAX_SPEED": "6",
+    "ACCELERATION": "10",
+    "DECELERATION": "10",
+    "MAX_SPEED": "10",
     "DISPLAY_CELL_SIZE": "0.05",
     "HD_TIMOUT": "5",
     "SIZE_QUERY_PARTICIPATION_PERCENT": "1",
@@ -29,24 +33,27 @@ def_conf = {
     "BUSY_WAITING": "False",
     "MIN_ADJUSTMENT": "0",
     "SAMPLE_SIZE": "0",
-    "DURATION": "600",
+    "DURATION": "120",
     "SHAPE": "'chess'",
-    "RESULTS_PATH": "'results'",
-    "MULTICAST": "True",
+    "RESULTS_PATH": "'/proj/nova-PG0/hamed/results/swarmer'",
+    "MULTICAST": "False",
+    "THAW_MIN_NUM_SWARMS": "1",
+    "THAW_PERCENTAGE_LARGEST_SWARM": "80",
+    "THAW_INTERVAL": "1  # second",
 }
 
 props = [
-    # {
-    #     "keys": ["DROP_PROB_RECEIVER"],
-    #     "values": ["0", "0.1", "0.01", "0.001"]
-    # },
+    {
+        "keys": ["STATE_TIMEOUT"],
+        "values": ["0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"]
+    },
     # {
     #     "keys": ["ACCELERATION", "DECELERATION", "MAX_SPEED"],
     #     "values": ["1.5", "6"]
     # },
     {
         "keys": ["SHAPE"],
-        "values": ["'dragon'"]
+        "values": ["'chess'"]
     },
 ]
 
