@@ -154,12 +154,12 @@ class StateMachine:
         #     return
         # self.stop_handled = True
 
-        if np.random.random() < 0.5:
-            self.broadcast(msg)
+        # if np.random.random() < 0.5:
+        self.broadcast(msg)
         # self.metrics.set_round_times(msg.args[0])
         # fin_message = Message(MessageTypes.FIN, args=(self.metrics.get_final_report(),))
         # fin_message = Message(MessageTypes.FIN)
-        self.cancel_timers()
+        # self.cancel_timers()
         # final_report = self.metrics.get_final_report()
         _final_report = self.metrics.get_final_report_()
         file_name = self.context.fid
