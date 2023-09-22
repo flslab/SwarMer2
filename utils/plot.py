@@ -5,7 +5,8 @@ from multiprocessing import shared_memory
 import numpy as np
 
 
-def plot_point_cloud(ptcld, shm_name):
+def plot_point_cloud(ptcld):
+    mpl.use('macosx')
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     graph = ax.scatter(ptcld[:, 0], ptcld[:, 1], ptcld[:, 2])
@@ -20,3 +21,7 @@ def update(num, graph, shm_name, count):
     # print(graph._offsets3d)
     graph._offsets3d = (shared_array[:, 0], shared_array[:, 1], shared_array[:, 2])
     return graph,
+
+
+if __name__ == '__main__':
+    plot_point_cloud(np.random.uniform(0, 5, size=(30, 3)))
