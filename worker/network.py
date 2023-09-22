@@ -85,7 +85,7 @@ class NetworkThread(threading.Thread):
                     # self.event_queue.put(item)
                     self.state_machine.reenter_available_state()
                     self.last_challenge = t
-            if t - self.start_time > Config.DURATION + 5:
+            if t - self.start_time > Config.DURATION + 15:
                 break
             if Config.FAILURE_TIMEOUT and t - self.last_fail_check > Config.FAILURE_TIMEOUT:
                 self.state_machine.set_fail()

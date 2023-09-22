@@ -22,7 +22,7 @@ class HandlerThread(threading.Thread):
         self.start_time = time.time()
         self.state_machine.start()
         while True:
-            if time.time() - self.start_time > Config.DURATION + 5:
+            if time.time() - self.start_time > Config.DURATION + 15:
                 print(f"{self.context.fid}_timeout")
                 self.state_machine.handle_stop(Message(MessageTypes.STOP).from_server().to_all())
                 print(f"{self.context.fid}_stopped")
