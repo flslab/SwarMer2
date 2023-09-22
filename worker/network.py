@@ -48,6 +48,7 @@ valid_state_messages = {
     StateTypes.WAITING: waiting_state_messages,
     StateTypes.BUSY_ANCHOR: anchor_state_messages,
     StateTypes.BUSY_LOCALIZING: localizing_state_messages,
+    StateTypes.DEPLOYING: dict(),
 }
 
 
