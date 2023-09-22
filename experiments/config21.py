@@ -30,7 +30,7 @@ class Config:
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
-    DURATION = 300
+    DURATION = 120
     SHAPE = 'skateboard'
     RESULTS_PATH = 'results'
     # RESULTS_PATH = '/proj/nova-PG0/hamed/results/swarmer'
