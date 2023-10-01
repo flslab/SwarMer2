@@ -433,8 +433,8 @@ class StateMachine:
             self.start_round_timer()
         if Config.DECENTRALIZED_SWARM_SIZE:
             self.query_size()
-        if Config.FAILURE_TIMEOUT:
-            self.start_failure_timer()
+        # if Config.FAILURE_TIMEOUT:
+        #     self.start_failure_timer()
 
     def cancel_timers(self):
         if self.timer_available is not None:

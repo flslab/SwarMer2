@@ -36,8 +36,8 @@ def set_axis(ax, length, width, height, title=""):
     ax.set_xticks(range(0, length+1, ticks_gap))
     ax.set_yticks(range(0, width+1, ticks_gap))
     ax.set_zticks(range(0, height+1, ticks_gap))
-    # ax.set_title(title, y=.9)
-    ax.set_title(title)
+    ax.set_title(title, y=.9)
+    # ax.set_title(title)
 
 def set_axis_2d(ax, length, width, title):
     ax.axes.set_xlim(0, length)
@@ -59,7 +59,7 @@ def draw_figure():
     fig_width = 1920*px
     fig_height = 1080*px
     fig = plt.figure(figsize=(fig_width, fig_height))
-    spec = fig.add_gridspec(3, 6, left=0.04, right=0.96, top=0.9, bottom=0.1)
+    spec = fig.add_gridspec(3, 6, left=0.04, right=0.96, top=0.92, bottom=0.08)
     ax = fig.add_subplot(spec[0:2, 0:3], projection='3d', proj_type='ortho')
 
     ax1 = fig.add_subplot(spec[0:2, 3:6], projection='3d', proj_type='ortho')
@@ -157,7 +157,7 @@ def update(frame):
     set_axis(ax1, length, width, height, "Ground Truth")
 
     ax2.clear()
-    if name == 'skateboard':
+    if name.startswith('skateboard'):
         ln2 = ax2.scatter(ys, xs, c='purple', s=2, alpha=1)
         set_axis_2d(ax2, width, length, "Top")
 
@@ -273,14 +273,22 @@ if __name__ == '__main__':
         "/Users/hamed/Desktop/swarmer_st/21_Sep_00_58_07",  # 0.45
         "/Users/hamed/Desktop/swarmer_st/21_Sep_02_32_31",  # 1.5
 
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_54_42",  # skateboard 0.01
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_20_09_23",  # skateboard 0.1
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_47_01",  # skateboard 0.001
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_42_34",  # skateboard 0.0001
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_23_39",  # skateboard lambda 0.05
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_26_58",  # skateboard lambda 1.5
     ]
 
-    names = ['dragon', 'hat', 'skateboard', 'chess_0.1', 'chess_0.01', 'chess_0.05', 'chess_0.45', 'chess_1.50']
-    for path, name in zip(paths[5:], names[5:]):
+    names = ['dragon', 'hat', 'skateboard', 'chess_0.1', 'chess_0.01', 'chess_0.05', 'chess_0.45', 'chess_1.50',
+             'skateboard_0.01', 'skateboard_0.1',
+             'skateboard_0.001', 'skateboard_0.0001', 'skateboard_lambda_0.05', 'skateboard_lambda_1.5']
+    for path, name in zip(paths[10:], names[10:]):
 
-        filtered_events, length, width, height, gtl = read_point_cloud(path)
-        # mat = scipy.io.loadmat(f'/Users/hamed/Documents/Holodeck/SwarMerPy/assets/{name}.mat')
-        # gtl = mat['p']
+        filtered_events, length, width, height, _ = read_point_cloud(path)
+        mat = scipy.io.loadmat(f'/Users/hamed/Documents/Holodeck/SwarMerPy/assets/skateboard.mat')
+        gtl = mat['p']
 
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)
