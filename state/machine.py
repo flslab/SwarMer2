@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import time
 
 import numpy as np
@@ -12,6 +13,29 @@ from config import Config
 from utils import logger
 from worker.network import PrioritizedItem
 from .types import StateTypes
+
+
+def add_ss_error_1(v, d, x=0.1):
+    if d < 1e-9:
+        return v, d
+    new_d = d + x * d * (random.random() * 2 - 1)
+    return v / d * new_d, new_d
+
+
+def add_ss_error_2(v, d):
+    p = 0.9  # probability of being accurate
+    if random.random() <= p:
+        return v, d
+    else:
+        return add_ss_error_1(v, d)
+
+
+def add_ss_error_3(v, d):
+    p = 0.9  # probability of being accurate
+    if random.random() <= p:
+        return v, d
+    else:
+        return add_ss_error_1(v, d, x=random.random() * 2)
 
 
 class StateMachine:
@@ -208,6 +232,16 @@ class StateMachine:
             d_el = self.context.el - self.context.anchor.el
             v = d_gtl - d_el
             d = np.linalg.norm(v)
+            _d = d
+
+            if Config.SS_ERROR_MODEL == 1:
+                v, d = add_ss_error_1(v, _d)
+            elif Config.SS_ERROR_MODEL == 2:
+                v, d = add_ss_error_2(v, _d)
+            elif Config.SS_ERROR_MODEL == 3:
+                v, d = add_ss_error_3(v, _d)
+
+            # print(abs(d-_d)/d)
             if d >= Config.MIN_ADJUSTMENT:
                 follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
                     .to_swarm(self.context)

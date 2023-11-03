@@ -17,7 +17,7 @@ def_conf = {
     "CHALLENGE_LEASE_DURATION": "0.25",
     "CHALLENGE_ACCEPT_DURATION": "0.02",
     "CHALLENGE_INIT_DURATION": "0",
-    "FAILURE_TIMEOUT": "1",
+    "FAILURE_TIMEOUT": "0",
     "FAILURE_PROB": "0",
     "NUMBER_ROUND": "5",
     "ACCELERATION": "10",
@@ -40,23 +40,32 @@ def_conf = {
     "THAW_MIN_NUM_SWARMS": "1",
     "THAW_PERCENTAGE_LARGEST_SWARM": "80",
     "THAW_INTERVAL": "1  # second",
+    "SS_ERROR_MODEL": "0",
+    "SS_ERROR_PERCENTAGE": "0.1",
+    "SS_ACCURACY_PROBABILITY": "0.9",
 }
 
 props = [
     {
-        "keys": ["STATE_TIMEOUT"],
-        "values": ["0.5"]
-        # "values": ["0.05", "0.1", "0.15", "0.20", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55",
-        #            "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1", "1.05",
-        #            "1.1", "1.15", "1.2", "1.25", "1.3", "1.35", "1.4", "1.45", "1.5"]
-    },
-    {
-        "keys": ["FAILURE_PROB"],
-        "values": ["0.001", "0.0001"]
-    },
-    {
-        "keys": ["SHAPE"],
-        "values": ["'chess'"]
+        "keys": ["SS_ERROR_MODEL", "SS_ERROR_PERCENTAGE", "SS_ACCURACY_PROBABILITY"],
+        "values": [
+            {"SS_ERROR_MODEL": "0", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.9"},
+            {"SS_ERROR_MODEL": "1", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.9"},
+            {"SS_ERROR_MODEL": "1", "SS_ERROR_PERCENTAGE": "0.5", "SS_ACCURACY_PROBABILITY": "0.9"},
+            {"SS_ERROR_MODEL": "1", "SS_ERROR_PERCENTAGE": "0.9", "SS_ACCURACY_PROBABILITY": "0.9"},
+            {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.9"},
+            {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.5"},
+            {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.1"},
+            {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.5", "SS_ACCURACY_PROBABILITY": "0.9"},
+            {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.5", "SS_ACCURACY_PROBABILITY": "0.5"},
+            {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.5", "SS_ACCURACY_PROBABILITY": "0.1"},
+            {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.9", "SS_ACCURACY_PROBABILITY": "0.9"},
+            {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.9", "SS_ACCURACY_PROBABILITY": "0.5"},
+            {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.9", "SS_ACCURACY_PROBABILITY": "0.1"},
+            {"SS_ERROR_MODEL": "3", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.9"},
+            {"SS_ERROR_MODEL": "3", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.5"},
+            {"SS_ERROR_MODEL": "3", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.1"},
+        ]
     },
 ]
 
