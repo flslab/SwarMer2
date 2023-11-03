@@ -33,7 +33,7 @@ def_conf = {
     "BUSY_WAITING": "False",
     "MIN_ADJUSTMENT": "0",
     "SAMPLE_SIZE": "200",
-    "DURATION": "300",
+    "DURATION": "120",
     "SHAPE": "'chess'",
     "RESULTS_PATH": "'/proj/nova-PG0/hamed/results/swarmer'",
     "MULTICAST": "False",
