@@ -69,8 +69,10 @@ props = [
     },
 ]
 
-
 if __name__ == '__main__':
+    file_name = "config"
+    class_name = "Config"
+
     props_values = [p["values"] for p in props]
     print(props_values)
     combinations = list(itertools.product(*props_values))
@@ -84,9 +86,11 @@ if __name__ == '__main__':
         conf = def_conf.copy()
         for i in range(len(c)):
             for k in props[i]["keys"]:
-                conf[k] = c[i]
-        with open(f'experiments/config{j}.py', 'w') as f:
-            f.write('class Config:\n')
+                if isinstance(c[i], dict):
+                    conf[k] = c[i][k]
+                else:
+                    conf[k] = c[i]
+        with open(f'experiments/{file_name}{j}.py', 'w') as f:
+            f.write(f'class {class_name}:\n')
             for key, val in conf.items():
                 f.write(f'    {key} = {val}\n')
-
