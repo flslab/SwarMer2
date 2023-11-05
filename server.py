@@ -18,12 +18,18 @@ import glob
 import sys
 from stop import stop_all
 import psutil
-
+from datetime import datetime
 
 hd_timer = None
 hd_round = []
 hd_time = []
 should_stop = False
+
+
+def join_config_properties(conf, props):
+    return "_".join(
+        f"{k[1] if isinstance(k, tuple) else k}{getattr(conf, k[0] if isinstance(k, tuple) else k)}" for k in
+        props)
 
 
 def query_swarm_client(connection):
@@ -137,8 +143,25 @@ if __name__ == '__main__':
                 continue
             break
 
-    results_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE, experiment_name)
-    shape_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE)
+    dir_name = None
+    current_date_time = datetime.now().strftime("%H%M%S_%m%d%Y")
+    if len(Config.FILE_NAME_KEYS):
+        keys = join_config_properties(Config, Config.FILE_NAME_KEYS)
+    else:
+        keys = current_date_time
+    file_name = f"{Config.SHAPE}_{keys}_{experiment_name}"
+
+    if len(Config.DIR_KEYS):
+        dir_name = join_config_properties(Config, Config.DIR_KEYS)
+
+    main_dir = Config.RESULTS_PATH if dir_name is None else os.path.join(Config.RESULTS_PATH, Config.SHAPE, dir_name)
+    results_directory = os.path.join(main_dir, experiment_name)
+    shape_directory = main_dir
+    print(main_dir)
+    # exit()
+
+    # results_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE, experiment_name)
+    # shape_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE)
     if not os.path.exists(results_directory):
         os.makedirs(os.path.join(results_directory, 'json'), exist_ok=True)
     mat = scipy.io.loadmat(f'assets/{Config.SHAPE}.mat')

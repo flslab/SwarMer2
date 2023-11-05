@@ -40,3 +40,5 @@ class Config:
     SS_ERROR_MODEL = 3
     SS_ERROR_PERCENTAGE = 0.1
     SS_ACCURACY_PROBABILITY = 0.9
+    FILE_NAME_KEYS = []
+    DIR_KEYS = [('SS_ERROR_MODEL', 'EM')]
