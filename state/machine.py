@@ -15,7 +15,7 @@ from worker.network import PrioritizedItem
 from .types import StateTypes
 
 
-def add_ss_error_1(v, d, x=0.1):
+def add_ss_error_1(v, d, x=Config.SS_ERROR_PERCENTAGE):
     if d < 1e-9:
         return v, d
     new_d = d + x * d * (random.random() * 2 - 1)
@@ -23,7 +23,7 @@ def add_ss_error_1(v, d, x=0.1):
 
 
 def add_ss_error_2(v, d):
-    p = 0.9  # probability of being accurate
+    p = Config.SS_ACCURACY_PROBABILITY  # probability of being accurate
     if random.random() <= p:
         return v, d
     else:
@@ -31,7 +31,7 @@ def add_ss_error_2(v, d):
 
 
 def add_ss_error_3(v, d):
-    p = 0.9  # probability of being accurate
+    p = Config.SS_ACCURACY_PROBABILITY  # probability of being accurate
     if random.random() <= p:
         return v, d
     else:

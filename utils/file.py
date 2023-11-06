@@ -244,7 +244,7 @@ def merge_timelines(timelines):
     return merged
 
 
-def gen_sw_charts(path, fid, read_from_file=True):
+def gen_sw_charts(path, fid, name, read_from_file=True):
     fig = plt.figure(layout='constrained')
     ax = fig.add_subplot()
 
@@ -281,7 +281,7 @@ def gen_sw_charts(path, fid, read_from_file=True):
     ax.legend()
     # plt.xlim([0, 60])
     # plt.show()
-    plt.savefig(f'{path}/{fid}.png', dpi=300)
+    plt.savefig(f'{path}/{name}_{fid}.png', dpi=300)
 
     fig = plt.figure()
     ax = fig.add_subplot()
@@ -289,7 +289,7 @@ def gen_sw_charts(path, fid, read_from_file=True):
     ax.legend()
     plt.ylim([10e-13, 10e3])
     plt.yscale('log')
-    plt.savefig(f'{path}/{fid}h.png', dpi=300)
+    plt.savefig(f'{path}/{name}_{fid}h.png', dpi=300)
 
 
 def gen_util_chart(path):
