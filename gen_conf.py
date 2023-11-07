@@ -44,6 +44,8 @@ def_conf = {
     "SS_ERROR_PERCENTAGE": "0.1",
     "SS_ACCURACY_PROBABILITY": "0.9",
     "FILE_NAME_KEYS": "[]",
+    "SS_NUM_SAMPLES": "10",
+    "SS_SAMPLE_DELAY": "0",
     "DIR_KEYS": "[('SS_ERROR_MODEL', 'EM')]",
 }
 

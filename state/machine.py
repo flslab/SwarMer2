@@ -38,6 +38,29 @@ def add_ss_error_3(v, d):
         return add_ss_error_1(v, d, x=random.random() * 2)
 
 
+def sample_distance(_v, _d):
+    vs = []
+    ds = []
+
+    for i in range(Config.SS_NUM_SAMPLES):
+        if Config.SS_ERROR_MODEL == 1:
+            v, d = add_ss_error_1(_v, _d)
+        elif Config.SS_ERROR_MODEL == 2:
+            v, d = add_ss_error_2(_v, _d)
+        elif Config.SS_ERROR_MODEL == 3:
+            v, d = add_ss_error_3(_v, _d)
+        else:
+            v, d = _v, _d
+
+        vs.append(v)
+        ds.append(d)
+
+    if Config.SS_SAMPLE_DELAY:
+        time.sleep(Config.SS_SAMPLE_DELAY * Config.SS_NUM_SAMPLES)
+
+    return np.average(vs, axis=0), np.average(ds)
+
+
 class StateMachine:
     def __init__(self, context, sock, metrics, event_queue):
         self.last_challenge_init = 0
@@ -234,12 +257,7 @@ class StateMachine:
             d = np.linalg.norm(v)
             _d = d
 
-            if Config.SS_ERROR_MODEL == 1:
-                v, d = add_ss_error_1(v, _d)
-            elif Config.SS_ERROR_MODEL == 2:
-                v, d = add_ss_error_2(v, _d)
-            elif Config.SS_ERROR_MODEL == 3:
-                v, d = add_ss_error_3(v, _d)
+            v, d = sample_distance(v, _d)
 
             # print(abs(d-_d)/d)
             if d >= Config.MIN_ADJUSTMENT:
@@ -486,3 +504,10 @@ class StateMachine:
         if self.timer_round is not None:
             self.timer_round.cancel()
             self.timer_round = None
+
+
+if __name__ == '__main__':
+    v = np.array([1, 0, 1])
+    d = np.linalg.norm(v)
+
+    print(sample_distance(v, d))
