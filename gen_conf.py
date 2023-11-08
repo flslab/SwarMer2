@@ -52,7 +52,7 @@ def_conf = {
 props = [
     {
         "keys": ["SS_NUM_SAMPLES"],
-        "vales": ["1", "10"]
+        "values": ["1", "10"]
     },
     {
         "keys": ["SS_ERROR_MODEL", "SS_ERROR_PERCENTAGE", "SS_ACCURACY_PROBABILITY", "FILE_NAME_KEYS"],
