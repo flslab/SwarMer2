@@ -46,10 +46,14 @@ def_conf = {
     "FILE_NAME_KEYS": "[]",
     "SS_NUM_SAMPLES": "10",
     "SS_SAMPLE_DELAY": "0",
-    "DIR_KEYS": "[('SS_ERROR_MODEL', 'EM')]",
+    "DIR_KEYS": "[('SS_ERROR_MODEL', 'EM'), ('SS_NUM_SAMPLES', 'NS')]",
 }
 
 props = [
+    {
+        "keys": ["SS_NUM_SAMPLES"],
+        "vales": ["1", "10"]
+    },
     {
         "keys": ["SS_ERROR_MODEL", "SS_ERROR_PERCENTAGE", "SS_ACCURACY_PROBABILITY", "FILE_NAME_KEYS"],
         "values": [

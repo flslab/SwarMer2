@@ -253,11 +253,14 @@ class StateMachine:
         if self.context.anchor is not None:
             d_gtl = self.context.gtl - self.context.anchor.gtl
             d_el = self.context.el - self.context.anchor.el
+
+            d_el, _ = sample_distance(d_el, np.linalg.norm(d_el))
+
             v = d_gtl - d_el
             d = np.linalg.norm(v)
-            _d = d
+            # _d = d
 
-            v, d = sample_distance(v, _d)
+            # v, d = sample_distance(v, _d)
 
             # print(abs(d-_d)/d)
             if d >= Config.MIN_ADJUSTMENT:
