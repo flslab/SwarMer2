@@ -155,7 +155,7 @@ if __name__ == '__main__':
         dir_name = join_config_properties(Config, Config.DIR_KEYS)
 
     main_dir = Config.RESULTS_PATH if dir_name is None else os.path.join(Config.RESULTS_PATH, Config.SHAPE, dir_name)
-    results_directory = os.path.join(main_dir, experiment_name)
+    results_directory = os.path.join(main_dir, file_name)
     shape_directory = main_dir
     print(main_dir)
     # exit()
