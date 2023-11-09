@@ -63,7 +63,8 @@ def sample_distance(_v, _d):
     # return _v * median_d / _d, median_d
 
     # average
-    return np.average(vs, axis=0), np.average(ds)
+    avg_d = np.average(ds)
+    return _v * avg_d / _d, avg_d
 
 
 class StateMachine:
