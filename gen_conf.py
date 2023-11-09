@@ -52,12 +52,12 @@ def_conf = {
 props = [
     {
         "keys": ["SS_NUM_SAMPLES"],
-        "values": ["1", "10"]
+        "values": ["10", "20"]
     },
     {
         "keys": ["SS_ERROR_MODEL", "SS_ERROR_PERCENTAGE", "SS_ACCURACY_PROBABILITY", "FILE_NAME_KEYS"],
         "values": [
-            {"SS_ERROR_MODEL": "0", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.9", "FILE_NAME_KEYS": "[]"},
+            # {"SS_ERROR_MODEL": "0", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.9", "FILE_NAME_KEYS": "[]"},
             {"SS_ERROR_MODEL": "1", "SS_ERROR_PERCENTAGE": "0.01", "SS_ACCURACY_PROBABILITY": "0.99", "FILE_NAME_KEYS": "[('SS_ERROR_PERCENTAGE', 'X')]"},
             {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.01", "SS_ACCURACY_PROBABILITY": "0.99", "FILE_NAME_KEYS": "[('SS_ERROR_PERCENTAGE', 'X'), ('SS_ACCURACY_PROBABILITY', 'P')]"},
             {"SS_ERROR_MODEL": "3", "SS_ERROR_PERCENTAGE": "0.01", "SS_ACCURACY_PROBABILITY": "0.99", "FILE_NAME_KEYS": "[('SS_ACCURACY_PROBABILITY', 'P')]"},

@@ -12,7 +12,7 @@ from message import Message, MessageTypes
 from config import Config
 from utils import logger
 from worker.network import PrioritizedItem
-from .types import StateTypes
+# from .types import StateTypes
 
 
 def add_ss_error_1(v, d, x=Config.SS_ERROR_PERCENTAGE):
@@ -58,9 +58,12 @@ def sample_distance(_v, _d):
     if Config.SS_SAMPLE_DELAY:
         time.sleep(Config.SS_SAMPLE_DELAY * Config.SS_NUM_SAMPLES)
 
-    median_d = np.median(ds)
+    # median
+    # median_d = np.median(ds)
+    # return _v * median_d / _d, median_d
 
-    return _v * median_d / _d, median_d
+    # average
+    return np.average(vs, axis=0), np.average(ds)
 
 
 class StateMachine:
