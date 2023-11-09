@@ -58,7 +58,9 @@ def sample_distance(_v, _d):
     if Config.SS_SAMPLE_DELAY:
         time.sleep(Config.SS_SAMPLE_DELAY * Config.SS_NUM_SAMPLES)
 
-    return np.average(vs, axis=0), np.average(ds)
+    median_d = np.median(ds)
+
+    return _v * median_d / _d, median_d
 
 
 class StateMachine:
