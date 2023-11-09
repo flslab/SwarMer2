@@ -12,7 +12,7 @@ from message import Message, MessageTypes
 from config import Config
 from utils import logger
 from worker.network import PrioritizedItem
-# from .types import StateTypes
+from .types import StateTypes
 
 
 def add_ss_error_1(v, d, x=Config.SS_ERROR_PERCENTAGE):
