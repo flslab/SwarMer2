@@ -178,15 +178,15 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
     gtl_points = {}
     total_failures = 0
 
-    # for event in timeline:
-    #     e_type = event[1]
-    #     t = event[0] - start_time
-    #     if t > 100:
-    #         break
-    #     if e_type == TimelineEvents.FAIL:
-    #         total_failures += 1
-    # print(total_failures)
-    # return
+    for event in timeline:
+        e_type = event[1]
+        t = event[0] - start_time
+        if t > 100:
+            break
+        if e_type == TimelineEvents.FAIL:
+            total_failures += 1
+    print(total_failures)
+    return
     i = 0
     while i < len(timeline):
         event = timeline[i]
@@ -259,9 +259,9 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
             l_ys = chart_data[3]
     else:
         data = read_timelines(path, fid)
-        r_xs, r_ys, s_ys, l_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
-        # gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
-        # return
+        # r_xs, r_ys, s_ys, l_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+        gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+        return
         with open(f"{path}/charts.json", "w") as f:
             json.dump([r_xs, r_ys, s_ys, l_ys], f)
 
@@ -317,7 +317,7 @@ def gen_shape_comp_hd(paths, labels, poses, colors, dest):
     ax = fig.add_subplot()
     # ax2 = fig.add_axes([0.57, 0.48, 0.38, 0.42])
     ax2 = fig.add_axes([0.57, 0.58, 0.38, 0.32])
-    max_y = 0
+    max_y = 80
     t_e2s = []
     for path, label, pos, color, ls in zip(paths, labels, poses, colors, lss):
         with open(f"{path}/charts.json") as f:
@@ -905,6 +905,39 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min_avg/EM3_NS20/chess_P0.99_09_Nov_12_52_40",  #20
     ]
 
+    sk_no_standby = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/SFalse/skateboard_F0.1_16_Nov_13_24_02",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/SFalse/skateboard_F0.01_16_Nov_13_28_22",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/SFalse/skateboard_F0.001_16_Nov_13_32_47",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/SFalse/skateboard_F0.0001_16_Nov_13_37_19",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/SFalse/skateboard_F0_16_Nov_13_00_54",  # no failure
+    ]
+
+    sk_standby = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/STrue/skateboard_F0.1_16_Nov_13_05_20",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/STrue/skateboard_F0.01_16_Nov_13_09_48",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/STrue/skateboard_F0.001_16_Nov_13_14_14",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/STrue/skateboard_F0.0001_16_Nov_13_18_44",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard/SFalse/skateboard_F0_16_Nov_13_00_54",
+        # no failure
+    ]
+
+    sk_no_standby_labels = [
+        "10% failure, 938 failures",
+        "1% failure, 65 failures",
+        "0.1% failure, 1 failure",
+        "0.01% failure, 0 failure",
+        "No failures"
+    ]
+
+    sk_standby_labels = [
+        "10% failure, 771 failures",
+        "1% failure, 61 failures",
+        "0.1% failure, 2 failures",
+        "0.01% failure, 1 failure",
+        "No failures"
+    ]
+
     chess_ss_err_plain_labels_m1 = [
         "No error",
         "M1, x=1%",
@@ -999,9 +1032,12 @@ if __name__ == '__main__':
 
     # gen_shape_comp_hd_2(chess_ss_err_plain_path_m1, chess_ss_err_plain_labels_m1, tab_colors, dest + "chess_100_ss_m1_2.png")
     time_to_e2 = []
+    time_to_e2 += gen_shape_comp_hd(sk_standby, sk_standby_labels, fail_poses, tab_colors, dest + "skateboard_100_with_standby.png")
+    time_to_e2 += gen_shape_comp_hd(sk_no_standby, sk_no_standby_labels, fail_poses, tab_colors, dest + "skateboard_100_without_standby.png")[1:]
+
     # time_to_e2 += gen_shape_comp_hd(m1_avg, chess_ss_err_plain_labels_m1, fail_poses, tab_colors, dest + "chess_100_ss_m1_avg.png")
-    time_to_e2 += gen_shape_comp_hd(m2_avg, chess_ss_err_plain_labels_m2_x10, fail_poses, tab_colors, dest + "v2_m2_min_cmp.png")[1:]
-    time_to_e2 += gen_shape_comp_hd(m3_avg, chess_ss_err_plain_labels_m3, fail_poses, tab_colors, dest + "v2_m3_min_cmp.png")[1:]
+    # time_to_e2 += gen_shape_comp_hd(m2_avg, chess_ss_err_plain_labels_m2_x10, fail_poses, tab_colors, dest + "v2_m2_min_cmp.png")[1:]
+    # time_to_e2 += gen_shape_comp_hd(m3_avg, chess_ss_err_plain_labels_m3, fail_poses, tab_colors, dest + "v2_m3_min_cmp.png")[1:]
     # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m1, chess_ss_err_plain_labels_m1, fail_poses, tab_colors, dest + "chess_100_ss_m1.png")
     # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m2_x10, chess_ss_err_plain_labels_m2_x10, fail_poses, tab_colors, dest + "chess_100_ss_m2_x10.png")[1:]
     # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m2_x50, chess_ss_err_plain_labels_m2_x50, fail_poses, tab_colors, dest + "chess_100_ss_m2_x50.png")[1:]
@@ -1022,37 +1058,37 @@ if __name__ == '__main__':
     print(time_to_e2)
     exit()
 
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
+    #
+    # labels = chess_ss_err_plain_labels_m1 + \
+    #          chess_ss_err_plain_labels_m2_x10[1:] + \
+    #          chess_ss_err_plain_labels_m2_x50[1:] + \
+    #          chess_ss_err_plain_labels_m2_x90[1:] + \
+    #          chess_ss_err_plain_labels_m3[1:]
+    # counts = time_to_e2
+    # # bar_labels = ['red', 'blue', '_red', 'orange']
+    # # bar_colors = ['tab:red', 'tab:blue', 'tab:red', 'tab:orange']
+    #
+    # ax.bar(labels, counts)
+    #
+    # # ax.set_ylabel('Error Moded')
+    # ax.set_title('Time to reach HD<=1e-2')
+    # # ax.legend(title='Fruit color')
+    #
+    # fig.autofmt_xdate()
+    #
+    # plt.savefig(dest + "chess_time_to_e_2_sampling", dpi=300)
 
-    labels = chess_ss_err_plain_labels_m1 + \
-             chess_ss_err_plain_labels_m2_x10[1:] + \
-             chess_ss_err_plain_labels_m2_x50[1:] + \
-             chess_ss_err_plain_labels_m2_x90[1:] + \
-             chess_ss_err_plain_labels_m3[1:]
-    counts = time_to_e2
-    # bar_labels = ['red', 'blue', '_red', 'orange']
-    # bar_colors = ['tab:red', 'tab:blue', 'tab:red', 'tab:orange']
+    # exit()
 
-    ax.bar(labels, counts)
-
-    # ax.set_ylabel('Error Moded')
-    ax.set_title('Time to reach HD<=1e-2')
-    # ax.legend(title='Fruit color')
-
-    fig.autofmt_xdate()
-
-    plt.savefig(dest + "chess_time_to_e_2_sampling", dpi=300)
-
-    exit()
-
-    for path in sk_fail_path:
-        json_files = glob.glob(f"{path}/timeline_*.json")
+    for path in sk_no_standby:
+        # json_files = glob.glob(f"{path}/timeline_*.json")
         # print(len(json_files))
         # # continue
         # create_csv_from_json(path)
         # combine_csvs(path, path)
         # gen_util_chart(path)
-        gen_sw_charts(path, "*", False)
+        gen_sw_charts(path, "*", "", False)
 
     exit()
 
