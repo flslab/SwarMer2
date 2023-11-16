@@ -257,8 +257,8 @@ if __name__ == '__main__':
                                                  results_directory, stand_by_coord)
                         p.start()
                         processes.append(p)
-                        if count == Config.SAMPLE_SIZE:
-                            break
+                    if pid == Config.SAMPLE_SIZE:
+                        break
                     pid += 1
 
         else:
