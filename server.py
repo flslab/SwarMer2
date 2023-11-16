@@ -230,6 +230,7 @@ if __name__ == '__main__':
             groups = read_groups(Config.RESULTS_PATH, 'skateboard_K3')
             pid = 0
             count = 0
+            stop_dispatcher = False
             for i in range(len(groups)):
                 group = groups[i]
                 member_count = group.shape[0]
@@ -244,7 +245,8 @@ if __name__ == '__main__':
 
                 # deploy group members
                 for member_coord in group:
-                    if pid % N == nid:
+                    pid += 1
+                    if (pid-1) % N == nid:
                         count += 1
                         shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
                         shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
@@ -258,8 +260,10 @@ if __name__ == '__main__':
                         p.start()
                         processes.append(p)
                     if pid == Config.SAMPLE_SIZE:
+                        stop_dispatcher = True
                         break
-                    pid += 1
+                if stop_dispatcher:
+                    break
 
         else:
             for i in node_point_idx:
