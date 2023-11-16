@@ -217,7 +217,6 @@ if __name__ == '__main__':
             gtl_point_cloud[i] = np.array([point_cloud[i][0], point_cloud[i][1], point_cloud[i][2]])
 
     count = len(node_point_idx)
-    print(count)
 
     processes = []
     shared_arrays = []
@@ -230,6 +229,7 @@ if __name__ == '__main__':
         if Config.GROUP:
             groups = read_groups(Config.RESULTS_PATH, 'skateboard_K3')
             pid = 0
+            count = 0
             for i in range(len(groups)):
                 group = groups[i]
                 member_count = group.shape[0]
@@ -245,7 +245,7 @@ if __name__ == '__main__':
                 # deploy group members
                 for member_coord in group:
                     if pid % N == nid:
-                        pid += 1
+                        count += 1
                         shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
                         shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
                         shared_array[:] = sample[:]
@@ -257,8 +257,10 @@ if __name__ == '__main__':
                                                  results_directory, stand_by_coord)
                         p.start()
                         processes.append(p)
-                        if pid == Config.SAMPLE_SIZE:
+                        if count == Config.SAMPLE_SIZE:
                             break
+                    pid += 1
+
         else:
             for i in node_point_idx:
                 shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
@@ -281,6 +283,7 @@ if __name__ == '__main__':
             s.unlink()
         exit()
 
+    print(count)
     gtl_point_cloud = local_gtl_point_cloud
 
     if nid == 0:
