@@ -105,11 +105,11 @@ def compute_swarm_size(sh_arrays):
 
 def read_cliques_xlsx(path):
     df = pd.read_excel(path, sheet_name='cliques')
-    return [np.array(eval(c)) for c in df["7 coordinates"]], [max(eval(d))+1 for d in df["6 dist between each pair"]]
+    return [np.array(eval(c)) for c in df["7 coordinates"]]
 
 
 def read_groups(dir_experiment, file_name):
-    groups, radio_ranges = read_cliques_xlsx(os.path.join(dir_experiment, f'{file_name}.xlsx'))
+    groups = read_cliques_xlsx(os.path.join(dir_experiment, f'{file_name}.xlsx'))
 
     single_members = []
     single_indexes = []
@@ -125,14 +125,14 @@ def read_groups(dir_experiment, file_name):
     # remove single nodes from groups
     for k in reversed(single_indexes):
         groups.pop(k)
-        radio_ranges.pop(k)
+        # radio_ranges.pop(k)
 
     # add single nodes as one group to the groups
     if len(single_members):
         groups.append(np.stack(single_members))
-        radio_ranges.append(max_dist_singles)
+        # radio_ranges.append(max_dist_singles)
 
-    return groups, radio_ranges
+    return groups
 
 
 if __name__ == '__main__':
@@ -228,7 +228,7 @@ if __name__ == '__main__':
 
     try:
         if Config.GROUP:
-            groups, _ = read_groups(Config.RESULTS_PATH, 'skateboard_K3')
+            groups = read_groups(Config.RESULTS_PATH, 'skateboard_K3')
             pid = 0
             for i in range(len(groups)):
                 group = groups[i]

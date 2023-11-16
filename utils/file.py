@@ -287,8 +287,8 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
     ax = fig.add_subplot()
     ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
     ax.legend()
-    plt.ylim([10e-13, 10e3])
-    plt.yscale('log')
+    # plt.ylim([10e-13, 10e3])
+    # plt.yscale('log')
     plt.savefig(f'{path}/{name}_{fid}h.png', dpi=300)
 
 
@@ -312,25 +312,43 @@ def gen_util_chart(path):
 
 def gen_shape_comp_hd(paths, labels, poses, colors, dest):
     lss = ['solid', 'dashdot', 'dashed', 'dotted']
+    lss += lss
     fig = plt.figure(figsize=(5, 2.4))
     ax = fig.add_subplot()
-    ax2 = fig.add_axes([0.57, 0.48, 0.38, 0.42])
-    # ax2 = fig.add_axes([0.57, 0.58, 0.38, 0.32])
+    # ax2 = fig.add_axes([0.57, 0.48, 0.38, 0.42])
+    ax2 = fig.add_axes([0.57, 0.58, 0.38, 0.32])
     max_y = 0
+    t_e2s = []
     for path, label, pos, color, ls in zip(paths, labels, poses, colors, lss):
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)
             t = chart_data[0]
             ys = chart_data[1]
+            t_100 = 0
+            t_e2 = 0
+            while True:
+                t_100 += 1
+                if t[t_100] >= 100:
+                    break
+
             while True:
                 if ys[0] == -1:
                     ys.pop(0)
                     t.pop(0)
                 else:
                     break
+            while True:
+                t_e2 += 1
+                if ys[t_e2] < 1e-2:
+                    break
             ax.plot(t, ys, linestyle=ls, linewidth=1.4, color=color, label=label)
             ax2.plot(t, ys, linestyle=ls, linewidth=1.4, color=color, label=label)
-            max_y = max(max_y, max(ys))
+            max_y = max(max_y, max(ys[:t_100]))
+            if ys[t_e2] < 1e-2 and ys[t_e2] != -1:
+                print(ys[t_e2])
+                t_e2s.append(t[t_e2])
+            else:
+                t_e2s.append(-1)
             # plt.text(pos[0], pos[1], label, color=color, fontweight='bold')
 
     ax.set_ylabel('Hausdorff distance (Display cell)', loc='top', rotation=0, labelpad=-133)
@@ -338,8 +356,8 @@ def gen_shape_comp_hd(paths, labels, poses, colors, dest):
     ax.spines['top'].set_color('white')
     ax.spines['right'].set_color('white')
     ax.set_ylim(0, max_y + 10)
-    y_locator = ticker.FixedLocator(list(range(0, int(max_y), 10)) + [math.floor(max_y)])
-    # y_locator = ticker.FixedLocator(list(range(0, int(max_y), 10)))
+    # y_locator = ticker.FixedLocator(list(range(0, int(max_y), 10)) + [math.floor(max_y)])
+    y_locator = ticker.FixedLocator(list(range(0, int(max_y), 10)))
     ax.yaxis.set_major_locator(y_locator)
     ax.set_xlim(0, 100)
     plt.tight_layout()
@@ -370,13 +388,14 @@ def gen_shape_comp_hd(paths, labels, poses, colors, dest):
     ax2.yaxis.set_major_formatter(y_formatter)
     ax2.yaxis.grid(True, which='minor')
     # ax2.legend(loc="upper right", fontsize="small")
-    # ax.legend(loc="upper left", fontsize="small", bbox_to_anchor=(0.05, .88))
-    ax.legend(loc="upper left", fontsize="small", bbox_to_anchor=(0.08, .8))
+    ax.legend(loc="upper left", fontsize="small", bbox_to_anchor=(0.05, .88))
+    # ax.legend(loc="upper left", fontsize="small", bbox_to_anchor=(0.08, .8))
 
     plt.savefig(dest, dpi=300)
+    return t_e2s
 
 
-def gen_shape_comp_hd_2(paths, labels, colors, dest, ylim=30):
+def gen_shape_comp_hd_2(paths, labels, colors, dest, ylim=100):
     lss = ['solid', 'dashdot', 'dashed', 'dotted']
     fig = plt.figure(figsize=(5, 2.4))
     ax = fig.add_subplot()
@@ -400,8 +419,8 @@ def gen_shape_comp_hd_2(paths, labels, colors, dest, ylim=30):
     ax.set_xlabel('Time (Second)', loc='right')
     ax.spines['top'].set_color('white')
     ax.spines['right'].set_color('white')
-    ax.set_yscale('log')
-    ax.set_ylim([1e-3, 200])
+    # ax.set_yscale('log')
+    # ax.set_ylim([1e-3, 200])
     ax.set_xlim([0, ylim])
     plt.tight_layout()
     y_locator = ticker.FixedLocator([1e-3, 1e-2, 1e-1, 1, 10, 100])
@@ -454,6 +473,23 @@ def find_time_by_hd(path):
             print(i, t[i], y)
         elif 0.0009 < y <= 0.0019:
             print(i, t[i], y)
+
+
+def find_time_to_reach_hd(path, hd=1e-2):
+    with open(f"{path}/charts.json") as f:
+        chart_data = json.load(f)
+        t = chart_data[0]
+        ys = chart_data[1]
+
+    t_i = 0
+    while True:
+        t_i += 1
+        if t_i >= len(ys):
+            break
+        if ys[t_i] != -1 and ys[t_i] < hd:
+            return t[t_i], ys[t_i]
+
+    return -1, -1
 
 
 def gen_shape_fig_by_time(path, target, sw=0.01):
@@ -574,6 +610,10 @@ def get_table_vals(st_path):
 if __name__ == '__main__':
     mpl.rcParams['font.family'] = 'Times New Roman'
     plt.rcParams.update({'font.size': 10})
+
+    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_ss_err_plain/EM1/07_Nov_11_29_51", "*", "_", False)
+    # exit()
+
     paths = [
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/24_Aug_17_38_36",
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/24_Aug_18_30_13",
@@ -756,13 +796,167 @@ if __name__ == '__main__':
         "10% failure, 17752 failures",
         "1% failure, 1765 failures",
         "0.1% failure, 219 failures",
-        "0.01% failure, 12 failure",
+        "0.01% failure, 12 failures",
+    ]
+
+    chess_ss_err_plain_path_m1 = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM0_NS1/chess_111636_11092023_09_Nov_11_16_25",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM1_NS1/chess_X0.01_09_Nov_11_19_37",  # no sampling
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM1_NS10/chess_X0.01_09_Nov_11_32_34",  # sampling
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS1/08_Nov_13_38_46",  # no error
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM1_NS1/08_Nov_14_11_09",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM1_NS1/08_Nov_14_43_31",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM1_NS1/08_Nov_15_15_57",
+    ]
+
+    chess_ss_err_plain_path_m2_x10 = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM0_NS1/chess_111636_11092023_09_Nov_11_16_25",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM2_NS1/chess_X0.01_P0.99_09_Nov_11_22_54",  # no sampling
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM2_NS10/chess_X0.01_P0.99_09_Nov_11_35_46",  # sampling
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS1/08_Nov_13_38_46",  # no error
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS1/08_Nov_15_48_18",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS1/08_Nov_16_20_36",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS1/08_Nov_16_53_02",
+    ]
+
+    chess_ss_err_plain_path_m2_x50 = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM0_NS1/chess_111636_11092023_09_Nov_11_16_25",  # no error
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS1/08_Nov_13_38_46",  # no error
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS1/08_Nov_17_25_24",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS1/08_Nov_17_57_56",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS1/08_Nov_18_30_19",
+    ]
+
+    chess_ss_err_plain_path_m2_x90 = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM0_NS1/chess_111636_11092023_09_Nov_11_16_25",  # no error
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS1/08_Nov_13_38_46",  # no error
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS1/08_Nov_19_02_45",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS1/08_Nov_19_35_18",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS1/08_Nov_20_07_51",
+    ]
+
+    chess_ss_err_plain_path_m3 = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM0_NS1/chess_111636_11092023_09_Nov_11_16_25",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM3_NS1/chess_P0.99_09_Nov_11_26_09",  # no sampling
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM3_NS10/chess_P0.99_09_Nov_11_38_59",  # sampling
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS1/08_Nov_13_38_46",  # no error
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM3_NS1/08_Nov_20_40_25",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM3_NS1/08_Nov_21_45_22",
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM3_NS1/08_Nov_21_12_53",
+    ]
+
+    chess_ss_err_plain_path_m1_sampling = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS10/08_Nov_22_21_13",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM1_NS10/08_Nov_22_50_16",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM1_NS10/08_Nov_23_22_37",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM1_NS10/08_Nov_23_55_03",
+    ]
+
+    chess_ss_err_plain_path_m2_x10_sampling = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS10/08_Nov_22_21_13",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS10/09_Nov_00_27_38",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS10/09_Nov_01_00_00",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS10/09_Nov_01_32_21",
+    ]
+
+    chess_ss_err_plain_path_m2_x50_sampling = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS10/08_Nov_22_21_13",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS10/09_Nov_02_04_40",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS10/09_Nov_02_37_07",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS10/09_Nov_03_09_28",
+    ]
+
+    chess_ss_err_plain_path_m2_x90_sampling = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS10/08_Nov_22_21_13",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS10/09_Nov_03_41_51",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS10/09_Nov_04_14_19",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM2_NS10/09_Nov_04_46_41",
+    ]
+
+    chess_ss_err_plain_path_m3_sampling = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM0_NS10/08_Nov_22_21_13",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM3_NS10/09_Nov_05_18_59",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM3_NS10/09_Nov_05_51_29",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/EM3_NS10/09_Nov_06_23_49",
+    ]
+
+    m1_avg = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM0_NS1/chess_111636_11092023_09_Nov_11_16_25",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM1_NS1/chess_X0.01_09_Nov_11_19_37",  # no sampling
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_avg/EM1_NS10/chess_X0.01_09_Nov_13_38_32",  # 10
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_avg/EM1_NS20/chess_X0.01_09_Nov_13_41_44",  # 20
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_avg/EM1_NS100/chess_X0.01_09_Nov_13_44_56",  # 100
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_avg/EM1_NS1000/chess_X0.01_09_Nov_13_48_09",  # 1000
+    ]
+
+    m2_avg = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM0_NS1/chess_111636_11092023_09_Nov_11_16_25",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM2_NS1/chess_X0.01_P0.99_09_Nov_11_22_54",  # no sampling
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM2_NS10/chess_X0.01_P0.99_09_Nov_11_35_46",  # sampling median
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min_avg/EM2_NS10/chess_X0.01_P0.99_09_Nov_12_39_42",  # 10
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min_avg/EM2_NS20/chess_X0.01_P0.99_09_Nov_12_49_23",  # 20
+    ]
+
+    m3_avg = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM0_NS1/chess_111636_11092023_09_Nov_11_16_25",  # no error
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM3_NS1/chess_P0.99_09_Nov_11_26_09",  # no sampling
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min/EM3_NS10/chess_P0.99_09_Nov_11_38_59",  # sampling median
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min_avg/EM3_NS10/chess_P0.99_09_Nov_12_42_55",  # 10
+        # "/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_min_avg/EM3_NS20/chess_P0.99_09_Nov_12_52_40",  #20
+    ]
+
+    chess_ss_err_plain_labels_m1 = [
+        "No error",
+        "M1, x=1%",
+        "M1, x=1% w/ 10 samples",
+        "M1, x=1% w/ 20 samples",
+        "M1, x=1% w/ 100 samples",
+        "M1, x=1% w/ 1000 samples",
+        # "M1, x=10%",
+        # "M1, x=50%",
+        # "M1, x=90%",
+    ]
+
+    chess_ss_err_plain_labels_m2_x10 = [
+        "No error",
+        "M2, x=1%, p=99%",
+        "M2, x=1%, p=99% w/ median of samples",
+        "M2, x=1%, p=99% w/ mean of samples",
+        # "M2, x=10%, p=90%",
+        # "M2, x=10%, p=50%",
+        # "M2, x=10%, p=10%",
+    ]
+
+    chess_ss_err_plain_labels_m2_x50 = [
+        "No error",
+        "M2, x=50%, p=90%",
+        "M2, x=50%, p=50%",
+        "M2, x=50%, p=10%",
+    ]
+
+    chess_ss_err_plain_labels_m2_x90 = [
+        "No error",
+        "M2, x=90%, p=90%",
+        "M2, x=90%, p=50%",
+        "M2, x=90%, p=10%",
+    ]
+
+    chess_ss_err_plain_labels_m3 = [
+        "No error",
+        "M3, p=99%",
+        "M3, p=99% w/ median of samples",
+        "M3, p=99% w/ mean of samples",
+        # "M3, p=90%",
+        # "M3, p=50%",
+        # "M3, p=10%",
     ]
 
     fail_poses = [
         (50, 10),
         (50, 0.5),
         (55, 0.06),
+        (28, 1.1),
+        (28, 1.1),
         (28, 1.1),
     ]
 
@@ -793,15 +987,62 @@ if __name__ == '__main__':
     # exit()
         
         
-    dest = "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/"
+    dest = "/Users/hamed/Documents/Holodeck/SwarMerPy/results/"
     # gen_shape_comp_hd(comp_path, comp_labels, comp_poses, tab_colors, dest + "hd_comp.png")
     # gen_shape_comp_hd(loss_r_path, loss_r_labels, loss_r_poses, tab_colors, dest + "skateboard_receiver_packet_loss_comp.png")
     # gen_shape_comp_hd(loss_path, loss_labels, loss_poses, tab_colors, dest + "skateboard_packet_loss_comp.png")
-    gen_shape_comp_hd(sk_fail_path, sk_fail_labels, fail_poses, tab_colors, dest + "skateboard_failure_comp.png")
+    # gen_shape_comp_hd(sk_fail_path, sk_fail_labels, fail_poses, tab_colors, dest + "skateboard_failure_comp.png")
     # gen_shape_comp_hd(fail_path, fail_labels, fail_poses, tab_colors, dest + "200_failure_comp.png")
     # gen_shape_comp_hd_2(st_path, st_labels, tab_colors, dest + "challenge_interval_comp.png")
     # gen_shape_comp_hd_2(sk_st_path, sk_st_labels, tab_colors, dest + "skateboard_challenge_interval_comp.png")
     # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1693587710", "*", False)
+
+    # gen_shape_comp_hd_2(chess_ss_err_plain_path_m1, chess_ss_err_plain_labels_m1, tab_colors, dest + "chess_100_ss_m1_2.png")
+    time_to_e2 = []
+    # time_to_e2 += gen_shape_comp_hd(m1_avg, chess_ss_err_plain_labels_m1, fail_poses, tab_colors, dest + "chess_100_ss_m1_avg.png")
+    time_to_e2 += gen_shape_comp_hd(m2_avg, chess_ss_err_plain_labels_m2_x10, fail_poses, tab_colors, dest + "v2_m2_min_cmp.png")[1:]
+    time_to_e2 += gen_shape_comp_hd(m3_avg, chess_ss_err_plain_labels_m3, fail_poses, tab_colors, dest + "v2_m3_min_cmp.png")[1:]
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m1, chess_ss_err_plain_labels_m1, fail_poses, tab_colors, dest + "chess_100_ss_m1.png")
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m2_x10, chess_ss_err_plain_labels_m2_x10, fail_poses, tab_colors, dest + "chess_100_ss_m2_x10.png")[1:]
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m2_x50, chess_ss_err_plain_labels_m2_x50, fail_poses, tab_colors, dest + "chess_100_ss_m2_x50.png")[1:]
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m2_x90, chess_ss_err_plain_labels_m2_x90, fail_poses, tab_colors, dest + "chess_100_ss_m2_x90.png")[1:]
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m3, chess_ss_err_plain_labels_m3, fail_poses, tab_colors, dest + "chess_100_ss_m3.png")[1:]
+
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m1_sampling, chess_ss_err_plain_labels_m1, fail_poses, tab_colors,
+    #                                 dest + "chess_100_ss_m1_sampling.png")
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m2_x10_sampling, chess_ss_err_plain_labels_m2_x10, fail_poses,
+    #                                 tab_colors, dest + "chess_100_ss_m2_x10_sampling.png")[1:]
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m2_x50_sampling, chess_ss_err_plain_labels_m2_x50, fail_poses,
+    #                                 tab_colors, dest + "chess_100_ss_m2_x50_sampling.png")[1:]
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m2_x90_sampling, chess_ss_err_plain_labels_m2_x90, fail_poses,
+    #                                 tab_colors, dest + "chess_100_ss_m2_x90_sampling.png")[1:]
+    # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m3_sampling, chess_ss_err_plain_labels_m3, fail_poses, tab_colors,
+    #                                 dest + "chess_100_ss_m3_sampling.png")[1:]
+
+    print(time_to_e2)
+    exit()
+
+    fig, ax = plt.subplots()
+
+    labels = chess_ss_err_plain_labels_m1 + \
+             chess_ss_err_plain_labels_m2_x10[1:] + \
+             chess_ss_err_plain_labels_m2_x50[1:] + \
+             chess_ss_err_plain_labels_m2_x90[1:] + \
+             chess_ss_err_plain_labels_m3[1:]
+    counts = time_to_e2
+    # bar_labels = ['red', 'blue', '_red', 'orange']
+    # bar_colors = ['tab:red', 'tab:blue', 'tab:red', 'tab:orange']
+
+    ax.bar(labels, counts)
+
+    # ax.set_ylabel('Error Moded')
+    ax.set_title('Time to reach HD<=1e-2')
+    # ax.legend(title='Fruit color')
+
+    fig.autofmt_xdate()
+
+    plt.savefig(dest + "chess_time_to_e_2_sampling", dpi=300)
+
     exit()
 
     for path in sk_fail_path:
