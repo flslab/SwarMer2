@@ -59,11 +59,11 @@ props = [
     {
         "keys": ["STANDBY", "FAILURE_TIMEOUT", "FAILURE_PROB"],
         "values": [
-            {"STANDBY": "False", "FAILURE_TIMEOUT": "0", "FAILURE_PROB": "0"},
-            {"STANDBY": "True", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.1"},
-            {"STANDBY": "True", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.01"},
-            {"STANDBY": "True", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.001"},
-            {"STANDBY": "True", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.0001"},
+            # {"STANDBY": "False", "FAILURE_TIMEOUT": "0", "FAILURE_PROB": "0"},
+            {"STANDBY": "False", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.1"},
+            {"STANDBY": "False", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.01"},
+            {"STANDBY": "False", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.001"},
+            {"STANDBY": "False", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.0001"},
             # {"SS_ERROR_MODEL": "0", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.9", "FILE_NAME_KEYS": "[]"},
             # {"SS_ERROR_MODEL": "1", "SS_ERROR_PERCENTAGE": "0.01", "SS_ACCURACY_PROBABILITY": "0.99", "FILE_NAME_KEYS": "[('SS_ERROR_PERCENTAGE', 'X')]"},
             # {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.01", "SS_ACCURACY_PROBABILITY": "0.99", "FILE_NAME_KEYS": "[('SS_ERROR_PERCENTAGE', 'X'), ('SS_ACCURACY_PROBABILITY', 'P')]"},
