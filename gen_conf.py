@@ -52,10 +52,10 @@ def_conf = {
 }
 
 props = [
-    {
-        "keys": ["STANDBY"],
-        "values": ["False", "True"]
-    },
+    # {
+    #     "keys": ["STANDBY"],
+    #     "values": ["False", "True"]
+    # },
     {
         "keys": ["STANDBY", "FAILURE_TIMEOUT", "FAILURE_PROB"],
         "values": [
