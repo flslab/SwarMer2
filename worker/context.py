@@ -10,7 +10,7 @@ from .metrics import MetricTypes
 
 
 class WorkerContext:
-    def __init__(self, count, fid, gtl, el, shm_name, metrics):
+    def __init__(self, count, fid, gtl, el, shm_name, metrics, stand_by_coord):
         self.count = count
         self.fid = fid
         self.gtl = gtl
@@ -29,6 +29,7 @@ class WorkerContext:
         self.metrics = metrics
         self.set_swarm_id(self.fid)
         self.last_expanded = 0
+        self.stand_by_coord = stand_by_coord
 
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
@@ -81,7 +82,10 @@ class WorkerContext:
         #     shared_array[4] = 2
         #     shared_mem.close()
         self.reset_swarm()
-        self.set_el(np.array([.0, .0, .0]))
+        if Config.STANDBY:
+            self.set_el(self.stand_by_coord)
+        else:
+            self.set_el(np.array([.0, .0, .0]))
         self.radio_range = Config.INITIAL_RANGE
         self.anchor = None
         self.query_id = None

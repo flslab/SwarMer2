@@ -43,22 +43,29 @@ def_conf = {
     "SS_ERROR_MODEL": "0",
     "SS_ERROR_PERCENTAGE": "0.1",
     "SS_ACCURACY_PROBABILITY": "0.9",
-    "FILE_NAME_KEYS": "[]",
+    "FILE_NAME_KEYS": "[('FAILURE_PROB', 'F')]",
     "SS_NUM_SAMPLES": "10",
     "SS_SAMPLE_DELAY": "0",
-    "DIR_KEYS": "[('SS_ERROR_MODEL', 'EM'), ('SS_NUM_SAMPLES', 'NS')]",
+    "STANDBY": "True",
+    "GROUP": "True",
+    "DIR_KEYS": "[('STANDBY', 'S')]",
 }
 
 props = [
     {
-        "keys": ["SS_NUM_SAMPLES"],
-        "values": ["10", "20", "100", "1000"]
+        "keys": ["STANDBY"],
+        "values": ["False", "True"]
     },
     {
-        "keys": ["SS_ERROR_MODEL", "SS_ERROR_PERCENTAGE", "SS_ACCURACY_PROBABILITY", "FILE_NAME_KEYS"],
+        "keys": ["STANDBY", "FAILURE_TIMEOUT", "FAILURE_PROB"],
         "values": [
+            {"STANDBY": "False", "FAILURE_TIMEOUT": "0", "FAILURE_PROB": "0"},
+            {"STANDBY": "True", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.1"},
+            {"STANDBY": "True", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.01"},
+            {"STANDBY": "True", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.001"},
+            {"STANDBY": "True", "FAILURE_TIMEOUT": "1", "FAILURE_PROB": "0.0001"},
             # {"SS_ERROR_MODEL": "0", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.9", "FILE_NAME_KEYS": "[]"},
-            {"SS_ERROR_MODEL": "1", "SS_ERROR_PERCENTAGE": "0.01", "SS_ACCURACY_PROBABILITY": "0.99", "FILE_NAME_KEYS": "[('SS_ERROR_PERCENTAGE', 'X')]"},
+            # {"SS_ERROR_MODEL": "1", "SS_ERROR_PERCENTAGE": "0.01", "SS_ACCURACY_PROBABILITY": "0.99", "FILE_NAME_KEYS": "[('SS_ERROR_PERCENTAGE', 'X')]"},
             # {"SS_ERROR_MODEL": "2", "SS_ERROR_PERCENTAGE": "0.01", "SS_ACCURACY_PROBABILITY": "0.99", "FILE_NAME_KEYS": "[('SS_ERROR_PERCENTAGE', 'X'), ('SS_ACCURACY_PROBABILITY', 'P')]"},
             # {"SS_ERROR_MODEL": "3", "SS_ERROR_PERCENTAGE": "0.01", "SS_ACCURACY_PROBABILITY": "0.99", "FILE_NAME_KEYS": "[('SS_ACCURACY_PROBABILITY', 'P')]"},
             # {"SS_ERROR_MODEL": "1", "SS_ERROR_PERCENTAGE": "0.1", "SS_ACCURACY_PROBABILITY": "0.9", "FILE_NAME_KEYS": "[('SS_ERROR_PERCENTAGE', 'X')]"},

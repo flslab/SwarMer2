@@ -14,11 +14,11 @@ from constants import Constants
 from message import Message, MessageTypes
 import worker
 import utils
-import glob
 import sys
 from stop import stop_all
 import psutil
 from datetime import datetime
+import pandas as pd
 
 hd_timer = None
 hd_round = []
@@ -101,6 +101,38 @@ def compute_swarm_size(sh_arrays):
         else:
             swarm_counts[swarm_id] = 1
     return swarm_counts
+
+
+def read_cliques_xlsx(path):
+    df = pd.read_excel(path, sheet_name='cliques')
+    return [np.array(eval(c)) for c in df["7 coordinates"]], [max(eval(d))+1 for d in df["6 dist between each pair"]]
+
+
+def read_groups(dir_experiment, file_name):
+    groups, radio_ranges = read_cliques_xlsx(os.path.join(dir_experiment, f'{file_name}.xlsx'))
+
+    single_members = []
+    single_indexes = []
+    max_dist_singles = 0
+    for k in range(len(groups)):
+        if groups[k].shape[0] == 1:
+            if len(single_indexes):
+                max_dist_n = np.max(np.linalg.norm(np.stack(single_members) - groups[k][0], axis=1))
+                max_dist_singles = max(max_dist_singles, max_dist_n)
+            single_members.append(groups[k][0])
+            single_indexes.append(k)
+
+    # remove single nodes from groups
+    for k in reversed(single_indexes):
+        groups.pop(k)
+        radio_ranges.pop(k)
+
+    # add single nodes as one group to the groups
+    if len(single_members):
+        groups.append(np.stack(single_members))
+        radio_ranges.append(max_dist_singles)
+
+    return groups, radio_ranges
 
 
 if __name__ == '__main__':
@@ -192,19 +224,53 @@ if __name__ == '__main__':
     shared_memories = []
 
     local_gtl_point_cloud = []
-    try:
-        for i in node_point_idx:
-            shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
-            shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
-            shared_array[:] = sample[:]
 
-            shared_arrays.append(shared_array)
-            shared_memories.append(shm)
-            local_gtl_point_cloud.append(gtl_point_cloud[i])
-            p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]), shm.name, results_directory)
-            p.start()
-            processes.append(p)
-            # time.sleep(0.1)
+
+    try:
+        if Config.GROUP:
+            groups, _ = read_groups(Config.RESULTS_PATH, 'skateboard_K3')
+            pid = 0
+            for i in range(len(groups)):
+                group = groups[i]
+                member_count = group.shape[0]
+                sum_x = np.sum(group[:, 0])
+                sum_y = np.sum(group[:, 1])
+                sum_z = np.sum(group[:, 2])
+                stand_by_coord = np.array([
+                    float(round(sum_x / member_count)),
+                    float(round(sum_y / member_count)),
+                    float(round(sum_z / member_count))
+                ])
+
+                # deploy group members
+                for member_coord in group:
+                    pid += 1
+                    shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
+                    shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
+                    shared_array[:] = sample[:]
+
+                    shared_arrays.append(shared_array)
+                    shared_memories.append(shm)
+                    local_gtl_point_cloud.append(member_coord)
+                    p = worker.WorkerProcess(count, pid, member_coord, np.array([0, 0, 0]), shm.name,
+                                             results_directory, stand_by_coord)
+                    p.start()
+                    processes.append(p)
+                    if pid == Config.SAMPLE_SIZE:
+                        break
+        else:
+            for i in node_point_idx:
+                shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
+                shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
+                shared_array[:] = sample[:]
+
+                shared_arrays.append(shared_array)
+                shared_memories.append(shm)
+                local_gtl_point_cloud.append(gtl_point_cloud[i])
+                p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]),
+                                         shm.name, results_directory, None)
+                p.start()
+                processes.append(p)
     except OSError as e:
         print(e)
         for p in processes:
