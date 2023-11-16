@@ -244,20 +244,21 @@ if __name__ == '__main__':
 
                 # deploy group members
                 for member_coord in group:
-                    pid += 1
-                    shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
-                    shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
-                    shared_array[:] = sample[:]
+                    if pid % N == nid:
+                        pid += 1
+                        shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
+                        shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
+                        shared_array[:] = sample[:]
 
-                    shared_arrays.append(shared_array)
-                    shared_memories.append(shm)
-                    local_gtl_point_cloud.append(member_coord)
-                    p = worker.WorkerProcess(count, pid, member_coord, np.array([0, 0, 0]), shm.name,
-                                             results_directory, stand_by_coord)
-                    p.start()
-                    processes.append(p)
-                    if pid == Config.SAMPLE_SIZE:
-                        break
+                        shared_arrays.append(shared_array)
+                        shared_memories.append(shm)
+                        local_gtl_point_cloud.append(member_coord)
+                        p = worker.WorkerProcess(count, pid, member_coord, np.array([0, 0, 0]), shm.name,
+                                                 results_directory, stand_by_coord)
+                        p.start()
+                        processes.append(p)
+                        if pid == Config.SAMPLE_SIZE:
+                            break
         else:
             for i in node_point_idx:
                 shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
