@@ -178,15 +178,15 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
     gtl_points = {}
     total_failures = 0
 
-    for event in timeline:
-        e_type = event[1]
-        t = event[0] - start_time
-        if t > 100:
-            break
-        if e_type == TimelineEvents.FAIL:
-            total_failures += 1
-    print(total_failures)
-    return
+    # for event in timeline:
+    #     e_type = event[1]
+    #     t = event[0] - start_time
+    #     if t > 200:
+    #         break
+    #     if e_type == TimelineEvents.FAIL:
+    #         total_failures += 1
+    # print(total_failures)
+    # return
     i = 0
     while i < len(timeline):
         event = timeline[i]
@@ -245,7 +245,7 @@ def merge_timelines(timelines):
 
 
 def gen_sw_charts(path, fid, name, read_from_file=True):
-    fig = plt.figure(layout='constrained')
+    fig = plt.figure(figsize=(5, 2))
     ax = fig.add_subplot()
 
     if read_from_file:
@@ -259,16 +259,16 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
             l_ys = chart_data[3]
     else:
         data = read_timelines(path, fid)
-        # r_xs, r_ys, s_ys, l_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
-        gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
-        return
+        r_xs, r_ys, s_ys, l_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+        # gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+        # return
         with open(f"{path}/charts.json", "w") as f:
             json.dump([r_xs, r_ys, s_ys, l_ys], f)
 
     # s_xs, s_ys = gen_sliding_window_chart_data(data['sent_bytes'], data['start_time'], lambda x: x[2])
     # h_xs, h_ys = gen_sliding_window_chart_data(data['heuristic'], data['start_time'], lambda x: 1)
-    ax.step(r_xs, s_ys, where='post', label="Number of swarms", color="#ee2010")
-    ax.step(r_xs, l_ys, where='post', label="Number of expired leases")
+    ax.step(r_xs, s_ys, where='post', label="Number of swarms", color="tab:purple")
+    # ax.step(r_xs, l_ys, where='post', label="Number of expired leases")
     while True:
         if r_ys[0] == -1:
             r_ys.pop(0)
@@ -278,15 +278,28 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
 
     # ax.step(s_xs, s_ys, where='post', label="Sent bytes", color="black")
     # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
-    ax.legend()
-    # plt.xlim([0, 60])
+    # ax.legend()
+    # ax.legend()
+    ax.set_ylabel('Number of swarms', loc='top', rotation=0, labelpad=-90)
+    ax.set_xlabel('Time (Second)', loc='right')
+    ax.spines['top'].set_color('white')
+    ax.spines['right'].set_color('white')
+    plt.xlim([0, 60])
     # plt.show()
     plt.savefig(f'{path}/{name}_{fid}.png', dpi=300)
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(5, 2))
     ax = fig.add_subplot()
-    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="#00d5ff")
-    ax.legend()
+    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="tab:blue")
+    # ax.legend()
+    ax.set_ylabel('Hausdorff distance (Display cell)', loc='top', rotation=0, labelpad=-133)
+    ax.set_xlabel('Time (Second)', loc='right')
+    ax.spines['top'].set_color('white')
+    ax.spines['right'].set_color('white')
+    # y_locator = ticker.FixedLocator(list(range(0, int(max_y), 10)) + [math.floor(max_y)])
+
+    ax.set_xlim(0, 60)
+    # plt.tight_layout()
     # plt.ylim([10e-13, 10e3])
     # plt.yscale('log')
     plt.savefig(f'{path}/{name}_{fid}h.png', dpi=300)
@@ -359,7 +372,7 @@ def gen_shape_comp_hd(paths, labels, poses, colors, dest):
     # y_locator = ticker.FixedLocator(list(range(0, int(max_y), 10)) + [math.floor(max_y)])
     y_locator = ticker.FixedLocator(list(range(0, int(max_y), 10)))
     ax.yaxis.set_major_locator(y_locator)
-    ax.set_xlim(0, 100)
+    ax.set_xlim(0, 200)
     plt.tight_layout()
 
 
@@ -938,6 +951,26 @@ if __name__ == '__main__':
         "No failures"
     ]
 
+    sk_10 = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard_2/STrue/skateboard_F0.1_16_Nov_18_28_16",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard_2/SFalse/skateboard_F0.1_16_Nov_18_24_22",
+    ]
+
+    sk_1 = [
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard_2/STrue/skateboard_F0.01_16_Nov_18_36_03",
+        "/Users/hamed/Documents/Holodeck/SwarMerPy/results/skateboard_2/SFalse/skateboard_F0.01_16_Nov_18_32_10",
+    ]
+
+    sk_10_labels = [
+        "10%, 1660 failures, w/ standby",
+        "10%, 1855 failures, no standby"
+    ]
+
+    sk_1_labels = [
+        "1%, 82 failures, w/ standby",
+        "1%, 82 failures, no standby"
+    ]
+
     chess_ss_err_plain_labels_m1 = [
         "No error",
         "M1, x=1%",
@@ -1031,9 +1064,12 @@ if __name__ == '__main__':
     # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess/1693587710", "*", False)
 
     # gen_shape_comp_hd_2(chess_ss_err_plain_path_m1, chess_ss_err_plain_labels_m1, tab_colors, dest + "chess_100_ss_m1_2.png")
-    time_to_e2 = []
-    time_to_e2 += gen_shape_comp_hd(sk_standby, sk_standby_labels, fail_poses, tab_colors, dest + "skateboard_100_with_standby.png")
-    time_to_e2 += gen_shape_comp_hd(sk_no_standby, sk_no_standby_labels, fail_poses, tab_colors, dest + "skateboard_100_without_standby.png")[1:]
+    # time_to_e2 = []
+    # time_to_e2 += gen_shape_comp_hd(sk_10, sk_10_labels, fail_poses, tab_colors, dest + "skateboard_10_percent.png")
+    # time_to_e2 += gen_shape_comp_hd(sk_1, sk_1_labels, fail_poses, tab_colors, dest + "skateboard_1_percent.png")
+
+   # time_to_e2 += gen_shape_comp_hd(sk_standby, sk_standby_labels, fail_poses, tab_colors, dest + "skateboard_100_with_standby.png")
+    # time_to_e2 += gen_shape_comp_hd(sk_no_standby, sk_no_standby_labels, fail_poses, tab_colors, dest + "skateboard_100_without_standby.png")[1:]
 
     # time_to_e2 += gen_shape_comp_hd(m1_avg, chess_ss_err_plain_labels_m1, fail_poses, tab_colors, dest + "chess_100_ss_m1_avg.png")
     # time_to_e2 += gen_shape_comp_hd(m2_avg, chess_ss_err_plain_labels_m2_x10, fail_poses, tab_colors, dest + "v2_m2_min_cmp.png")[1:]
@@ -1055,8 +1091,8 @@ if __name__ == '__main__':
     # time_to_e2 += gen_shape_comp_hd(chess_ss_err_plain_path_m3_sampling, chess_ss_err_plain_labels_m3, fail_poses, tab_colors,
     #                                 dest + "chess_100_ss_m3_sampling.png")[1:]
 
-    print(time_to_e2)
-    exit()
+    # print(time_to_e2)
+    # exit()
 
     # fig, ax = plt.subplots()
     #
@@ -1081,14 +1117,15 @@ if __name__ == '__main__':
 
     # exit()
 
-    for path in sk_no_standby:
+    for i in range(1):
+        path = comp_path[0]
         # json_files = glob.glob(f"{path}/timeline_*.json")
         # print(len(json_files))
         # # continue
         # create_csv_from_json(path)
         # combine_csvs(path, path)
         # gen_util_chart(path)
-        gen_sw_charts(path, "*", "", False)
+        gen_sw_charts(path, "*", "", True)
 
     exit()
 
