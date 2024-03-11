@@ -13,41 +13,11 @@ from state import StateTypes
 
 general_messages = {
     MessageTypes.STOP,
-    MessageTypes.THAW_SWARM,
-}
-
-available_state_messages = {
-    MessageTypes.CHALLENGE_INIT,
-    MessageTypes.CHALLENGE_ACCEPT,
-    MessageTypes.CHALLENGE_ACK,
-    MessageTypes.SET_WAITING,
-}
-
-anchor_state_messages = {
-    MessageTypes.LEASE_RENEW,
-    MessageTypes.MERGE,
-    MessageTypes.CHALLENGE_FIN,
-    MessageTypes.LEASE_CANCEL,
-    MessageTypes.CHALLENGE_ACK,
-}
-
-localizing_state_messages = {
-    MessageTypes.CHALLENGE_ACK,
-}
-
-waiting_state_messages = {
-    MessageTypes.FOLLOW,
-    MessageTypes.MERGE,
-    MessageTypes.FOLLOW_MERGE,
-    MessageTypes.SET_AVAILABLE,
-    MessageTypes.CHALLENGE_ACK,
+    MessageTypes.GOSSIP,
 }
 
 valid_state_messages = {
-    StateTypes.AVAILABLE: available_state_messages,
-    StateTypes.WAITING: waiting_state_messages,
-    StateTypes.BUSY_ANCHOR: anchor_state_messages,
-    StateTypes.BUSY_LOCALIZING: localizing_state_messages,
+    StateTypes.AVAILABLE: general_messages,
     StateTypes.DEPLOYING: dict(),
 }
 
@@ -102,29 +72,13 @@ class NetworkThread(threading.Thread):
                 continue
             # self.context.log_received_message(msg.type, length)
             if self.is_message_valid(msg):
-                # if msg.type == message.MessageTypes.THAW_SWARM:
-                #     print(self.context.fid, msg)
                 self.context.log_received_message(msg.type, length)
                 self.latest_message_id[msg.fid] = msg.id
                 self.handle_immediately(msg)
                 if msg is not None and msg.type == message.MessageTypes.STOP:
-                    # print(f"network_stopped_{self.context.fid}")
                     break
 
     def handle_immediately(self, msg):
-        if self.state_machine.state == StateTypes.BUSY_ANCHOR:
-            if msg.type == MessageTypes.CHALLENGE_ACK:
-                self.state_machine.handle_challenge_ack_anchor(msg)
-                return
-        elif self.state_machine.state == StateTypes.WAITING:
-            if msg.type == MessageTypes.CHALLENGE_ACK:
-                self.state_machine.handle_challenge_ack_anchor(msg)
-                return
-        elif self.state_machine.state == StateTypes.BUSY_LOCALIZING:
-            if msg.type == MessageTypes.CHALLENGE_ACK:
-                self.state_machine.handle_challenge_ack_anchor(msg)
-                return
-
         self.event_queue.put(NetworkThread.prioritize_message(msg))
 
     def is_message_valid(self, msg):
@@ -139,9 +93,16 @@ class NetworkThread(threading.Thread):
                 return False
         if msg.fid == self.context.fid:
             return False
+        if msg.mod and self.context.fid % msg.mod[0] != msg.mod[1]:
+            return False
+        if msg.div and (self.context.fid - 1) // msg.div[0] != msg.div[1]:
+            return False
         if msg.dest_fid != self.context.fid and msg.dest_fid != '*':
             return False
-        if msg.dest_swarm_id != self.context.swarm_id and msg.dest_swarm_id != '*':
+        if isinstance(self.context.swarm_id, list):
+            if msg.dest_swarm_id not in self.context.swarm_id:
+                return False
+        elif msg.dest_swarm_id != self.context.swarm_id and msg.dest_swarm_id != '*':
             return False
         if msg.fid in self.latest_message_id and msg.id < self.latest_message_id[msg.fid]:
             return False

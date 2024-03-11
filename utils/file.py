@@ -213,7 +213,7 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
                 lease_exp_ys[-1] += 1
             i += 1
         else:
-            swarm_ys[-1] = len(set(current_swarms.values()))
+            # swarm_ys[-1] = len(set(current_swarms.values()))
             # print(len(current_swarms))
             if len(current_points) > 1 and len(gtl_points):
                 ys[-1] = hausdorff_distance(np.stack(list(current_points.values())), np.stack(list(gtl_points.values())))
@@ -245,8 +245,8 @@ def merge_timelines(timelines):
 
 
 def gen_sw_charts(path, fid, name, read_from_file=True):
-    fig = plt.figure(figsize=(5, 2))
-    ax = fig.add_subplot()
+    # fig = plt.figure(figsize=(5, 2.5))
+    # ax = fig.add_subplot()
 
     if read_from_file:
         with open(f"{path}/charts.json") as f:
@@ -267,7 +267,7 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
 
     # s_xs, s_ys = gen_sliding_window_chart_data(data['sent_bytes'], data['start_time'], lambda x: x[2])
     # h_xs, h_ys = gen_sliding_window_chart_data(data['heuristic'], data['start_time'], lambda x: 1)
-    ax.step(r_xs, s_ys, where='post', label="Number of swarms", color="tab:purple")
+    # ax.step(r_xs, s_ys, where='post', label="Number of swarms", color="tab:purple")
     # ax.step(r_xs, l_ys, where='post', label="Number of expired leases")
     while True:
         if r_ys[0] == -1:
@@ -280,19 +280,19 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
     # ax.step(h_xs, h_ys, where='post', label="Heuristic invoked")
     # ax.legend()
     # ax.legend()
-    ax.set_ylabel('Number of swarms', loc='top', rotation=0, labelpad=-90)
-    ax.set_xlabel('Time (Second)', loc='right')
-    ax.spines['top'].set_color('white')
-    ax.spines['right'].set_color('white')
-    plt.xlim([0, 60])
+    # ax.set_ylabel('Number of swarms', loc='top', rotation=0, labelpad=-90)
+    # ax.set_xlabel('Time (Second)', loc='right')
+    # ax.spines['top'].set_color('white')
+    # ax.spines['right'].set_color('white')
+    # plt.xlim([0, 60])
     # plt.show()
-    plt.savefig(f'{path}/{name}_{fid}.png', dpi=300)
+    # plt.savefig(f'{path}/{name}_{fid}.png', dpi=300)
 
-    fig = plt.figure(figsize=(5, 2))
-    ax = fig.add_subplot()
+    fig, ax = plt.subplots(figsize=(5, 2.5), layout="constrained")
     ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="tab:blue")
     # ax.legend()
-    ax.set_ylabel('Hausdorff distance (Display cell)', loc='top', rotation=0, labelpad=-133)
+    # ax.set_ylabel(f'HD, {name}', loc='top', rotation=0, labelpad=-133)
+    ax.set_title(f'HD, {name}', fontsize=10, loc="left")
     ax.set_xlabel('Time (Second)', loc='right')
     ax.spines['top'].set_color('white')
     ax.spines['right'].set_color('white')
@@ -301,7 +301,7 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
     ax.set_xlim(0, 60)
     # plt.tight_layout()
     # plt.ylim([10e-13, 10e3])
-    # plt.yscale('log')
+    plt.yscale('log')
     plt.savefig(f'{path}/{name}_{fid}h.png', dpi=300)
 
 

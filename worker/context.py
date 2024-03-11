@@ -10,12 +10,13 @@ from .metrics import MetricTypes
 
 
 class WorkerContext:
-    def __init__(self, count, fid, gtl, el, shm_name, metrics, stand_by_coord):
+    def __init__(self, count, fid, sid, gtl, el, shm_name, metrics, stand_by_coord):
         self.count = count
         self.fid = fid
         self.gtl = gtl
         self.el = el
-        self.swarm_id = self.fid
+        self.yaw = 0
+        self.swarm_id = sid
         self.neighbors = dict()
         self.radio_range = Config.INITIAL_RANGE
         self.size = 1
@@ -27,7 +28,7 @@ class WorkerContext:
         self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
         self.lease = dict()
         self.metrics = metrics
-        self.set_swarm_id(self.fid)
+        self.set_swarm_id(sid)
         self.last_expanded = 0
         self.stand_by_coord = stand_by_coord
 
@@ -140,7 +141,8 @@ class WorkerContext:
         return norm_v * erred_v / np.linalg.norm(erred_v)
 
     def update_neighbor(self, ctx):
-        self.neighbors[ctx.fid] = ctx.swarm_id
+        if ctx.fid != 0:
+            self.neighbors[ctx.fid] = ctx
 
     def increment_range(self):
         if time.time() - self.last_expanded > 0.05:

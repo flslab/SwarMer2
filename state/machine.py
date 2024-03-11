@@ -13,9 +13,17 @@ from config import Config
 from utils import logger
 from worker.network import PrioritizedItem
 from .types import StateTypes
+from scipy.spatial.transform import Rotation
 
 
 def add_ss_error_1(v, d, x=Config.SS_ERROR_PERCENTAGE):
+    if d < 1e-9:
+        return v, d
+    new_d = d + x * d * (random.random())
+    return v / d * new_d, new_d
+
+
+def add_ss_error_1_1(v, d, x=Config.SS_ERROR_PERCENTAGE):
     if d < 1e-9:
         return v, d
     new_d = d + x * d * (random.random() * 2 - 1)
@@ -92,115 +100,12 @@ class StateMachine:
     def start(self):
         self.context.deploy()
         self.enter(StateTypes.AVAILABLE)
-        self.start_timers()
-
-    def handle_size_query(self, msg):
-        resp = Message(MessageTypes.SIZE_REPLY, args=msg.args).to_fls(msg)
-        self.broadcast(resp)
-
-    def handle_size_reply(self, msg):
-        if msg.args[0] == self.context.query_id:
-            self.context.size += 1
-            logger.critical(f"swarm {self.context.swarm_id} size {self.context.size}")
-        if self.context.size == self.context.count:
-            print("__swarm__ all merged into one swarm")
-            if Config.THAW_SWARMS:
-                thaw_message = Message(MessageTypes.THAW_SWARM).to_all()
-                self.broadcast(thaw_message)
-                print(f"thaw {self.context.fid}")
-                self.handle_thaw_swarm(None)
-            else:
-                fin_message = Message(MessageTypes.FIN)
-                self.send_to_server(fin_message)
-
-    def handle_challenge_init(self, msg):
-        if time.time() - self.last_challenge_accept < Config.CHALLENGE_ACCEPT_DURATION:
-            return
-        if msg.swarm_id != self.context.swarm_id:
-            self.last_challenge_accept = time.time()
-            challenge_accept_message = Message(MessageTypes.CHALLENGE_ACCEPT, args=msg.args).to_fls(msg)
-            self.broadcast(challenge_accept_message)
-            self.potential_anchors.append(msg)
-
-    def handle_challenge_accept(self, msg):
-        if msg.args[0] == self.context.challenge_id:
-            self.challenge_ack = True
-            self.context.set_challenge_id(None)
-            challenge_ack_message = Message(MessageTypes.CHALLENGE_ACK).to_fls(msg)
-            self.broadcast(challenge_ack_message)
-            self.cancel_lease_of_potential_anchors(msg)
-            if msg.swarm_id < self.context.swarm_id:
-                # if msg.fid == 1:
-                self.enter(StateTypes.BUSY_LOCALIZING, msg)
-            else:
-                # if self.context.fid == 1:
-                self.context.grant_lease(msg.fid)
-                self.enter(StateTypes.BUSY_ANCHOR)
-
-    def handle_challenge_ack(self, msg):
-        self.cancel_lease_of_potential_anchors(msg)
-        if msg.swarm_id < self.context.swarm_id:
-            # if msg.fid == 1:
-            self.enter(StateTypes.BUSY_LOCALIZING, msg)
-        else:
-            self.broadcast(Message(MessageTypes.LEASE_CANCEL).to_fls(msg))
-            # if self.context.fid == 1:
-            self.context.grant_lease(msg.fid)
-            self.enter(StateTypes.BUSY_ANCHOR)
-
-    def handle_challenge_ack_anchor(self, msg):
-        self.broadcast(Message(MessageTypes.LEASE_CANCEL).to_fls(msg))
-
-    def cancel_lease_of_potential_anchors(self, msg):
-        # print([p.fid for p in self.potential_anchors])
-        for pa in self.potential_anchors:
-            if pa.fid != msg.fid:
-                self.broadcast(Message(MessageTypes.LEASE_CANCEL).to_fls(pa))
-        self.potential_anchors = []
-
-    def handle_cancel_lease(self, msg):
-        # print(f"cancel {msg.fid}")
-        self.context.cancel_lease(msg.fid)
-        if self.context.is_lease_empty():
-            self.enter(StateTypes.AVAILABLE)
-
-    def handle_challenge_fin(self, msg):
-        self.context.release_lease(msg.fid)
-        if self.context.is_lease_empty():
-            self.enter(StateTypes.AVAILABLE)
-
-    def handle_merge(self, msg):
-        self.context.set_swarm_id(msg.swarm_id)
-        self.enter(StateTypes.AVAILABLE)
+        # self.start_timers()
 
     def handle_follow(self, msg):
         self.context.move(msg.args[0])
-        self.enter(StateTypes.AVAILABLE)
-
-    def handle_follow_merge(self, msg):
-        self.context.move(msg.args[0])
-        self.context.set_swarm_id(msg.args[1])
-        self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
-        self.enter(StateTypes.AVAILABLE)
-
-    def handle_thaw_swarm(self, msg):
-        t = msg.args[0]
-        if t in self.thaw_ids:
-            return
-
-        self.thaw_ids[t] = True
-        if np.random.random() < 0.5:
-            self.broadcast(msg)
-        self.context.clear_lease_table()
-        self.enter(StateTypes.DEPLOYING)
-        # print(f"{self.context.fid} thawed")
-        self.challenge_ack = False
-        self.cancel_timers()
-        self.context.thaw_swarm()
-        self.challenge_probability = 1
-        # time.sleep(1)
-        self.enter(StateTypes.AVAILABLE)
-        self.start_timers()
+        # print(f"{self.context.fid} followed {msg.fid}")
+        # self.enter(StateTypes.AVAILABLE)
 
     def handle_stop(self, msg):
         # if self.stop_handled:
@@ -225,141 +130,75 @@ class StateMachine:
         # write_json(1000+file_name, _final_report, self.metrics.results_directory)
         # self.send_to_server(fin_message)
 
-    def handle_lease_renew(self, msg):
-        self.context.grant_lease(msg.fid)
+    def compute_v(self, anchor):
+        d_gtl = self.context.gtl - anchor.gtl
+        d_el = self.context.el - anchor.el
+        d_yaw = self.context.yaw - anchor.yaw
+        # d_el_r = Rotation.from_euler('z', d_yaw, degrees=True).apply(d_el)
+        # d_gtl_r = Rotation.from_euler('z', d_yaw, degrees=True).apply(d_gtl)
 
-    def handle_set_waiting(self, msg):
-        self.waiting_for = msg.args[0]
-        self.enter(StateTypes.WAITING)
+        # add error to position
+        d_el, _ = sample_distance(d_el, np.linalg.norm(d_el))
+
+        v = d_gtl - d_el
+        d = np.linalg.norm(v)
+
+        return v
+
+    def localize_overlapping(self):
+        for gid in self.context.swarm_id:
+            # print(gid, self.context.neighbors.values())
+            n1 = list(filter(lambda x: gid in x.swarm_id, self.context.neighbors.values()))
+            adjustments = np.array([[.0, .0, .0]])
+            if len(n1):
+                adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n1]))
+            v = np.mean(adjustments, axis=0)
+            self.context.move(v)
+
+            # if np.random.random() > self.challenge_probability:
+            #     return
+
+            self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(gid))
 
     def enter_available_state(self):
-        # if self.context.fid % 2:
+        # print(self.context.neighbors.values())
+        # if self.context.fid % 5 == 1:
+        #     n2 = list(filter(lambda x: x.fid % 5 == 1, self.context.neighbors.values()))
+        #     adjustments = np.array([[.0, .0, .0]])
+        #     if len(n2) == 4:
+        #         adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n2]))
+        #
+        #     v = np.mean(adjustments, axis=0)
+        #     self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_div(5, (self.context.fid - 1) // 5))
+        #     self.context.move(v)
+        #     self.broadcast(Message(MessageTypes.GOSSIP).to_mod(5, 1))
+
+        # overlapping
+        n2 = list(filter(lambda x: (x.fid + 1) // 5 == (self.context.fid + 1) // 5, self.context.neighbors.values()))
+        adjustments = np.array([[.0, .0, .0]])
+        if len(n2) == 4:
+            adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n2]))
+
+        v = np.mean(adjustments, axis=0)
+        # self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_div(5, (self.context.fid + 1) // 5))
+        self.context.move(v)
+        self.broadcast(Message(MessageTypes.GOSSIP).to_div(5, (self.context.fid + 1) // 5))
+
+        n1 = list(filter(lambda x: (x.fid - 1) // 5 == (self.context.fid - 1) // 5, self.context.neighbors.values()))
+        adjustments = np.array([[.0, .0, .0]])
+        if len(n1) == 4:
+            adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n1]))
+
+        v = np.mean(adjustments, axis=0)
+        # print(v)
+
+        self.context.move(v)
+
+        # if np.random.random() > self.challenge_probability:
         #     return
-        if time.time() - self.last_challenge_init < Config.CHALLENGE_INIT_DURATION:
-            return
-        if np.random.random() > self.challenge_probability:
-            return
 
-        if not self.challenge_ack:
-            self.context.increment_range()
-
-        self.last_challenge_init = time.time()
-        self.challenge_ack = False
-        self.context.set_challenge_id(str(uuid.uuid4())[:8])
-        challenge_msg = Message(MessageTypes.CHALLENGE_INIT, args=(self.context.challenge_id,)).to_all()
+        challenge_msg = Message(MessageTypes.GOSSIP).to_div(5, (self.context.fid - 1) // 5)
         self.broadcast(challenge_msg)
-
-    def enter_busy_localizing_state(self, msg):
-        self.context.set_anchor(msg)
-        self.renew_lease()
-        self.context.log_localize()
-        waiting_message = Message(MessageTypes.SET_WAITING, args=(StateTypes.BUSY_LOCALIZING,)).to_swarm(self.context)
-        self.broadcast(waiting_message)
-
-        if self.context.anchor is not None:
-            d_gtl = self.context.gtl - self.context.anchor.gtl
-            d_el = self.context.el - self.context.anchor.el
-
-            d_el, _ = sample_distance(d_el, np.linalg.norm(d_el))
-
-            v = d_gtl - d_el
-            d = np.linalg.norm(v)
-            # _d = d
-
-            # v, d = sample_distance(v, _d)
-
-            # print(abs(d-_d)/d)
-            if d >= Config.MIN_ADJUSTMENT:
-                follow_merge_message = Message(MessageTypes.FOLLOW_MERGE, args=(v, self.context.anchor.swarm_id))\
-                    .to_swarm(self.context)
-                self.broadcast(follow_merge_message)
-
-            if d >= Config.MIN_ADJUSTMENT:
-                self.context.move(v)
-
-            if self.context.anchor is not None:
-                self.context.set_swarm_id(self.context.anchor.swarm_id)
-
-                challenge_fin_message = Message(MessageTypes.CHALLENGE_FIN).to_fls(self.context.anchor)
-                self.broadcast(challenge_fin_message)
-                self.challenge_probability /= Config.CHALLENGE_PROB_DECAY
-
-        self.enter(StateTypes.AVAILABLE)
-
-    def enter_busy_anchor_state(self):
-        self.context.log_anchor()
-        waiting_message = Message(MessageTypes.SET_WAITING, args=(StateTypes.BUSY_ANCHOR,)).to_swarm(self.context)
-        self.broadcast(waiting_message)
-
-    def enter_waiting_state(self):
-        pass
-
-    def leave_busy_anchor_state(self):
-        self.context.clear_lease_table()
-        available_message = Message(MessageTypes.SET_AVAILABLE).to_swarm(self.context)
-        self.broadcast(available_message)
-
-    def leave_busy_localizing(self):
-        if self.context.anchor:
-            cancel_message = Message(MessageTypes.LEASE_CANCEL,
-                                     args=(self.context.query_id,)).to_fls(self.context.anchor)
-            self.broadcast(cancel_message)
-        if self.timer_lease is not None:
-            self.timer_lease.cancel()
-            self.timer_lease = None
-        self.context.set_challenge_id(None)
-        self.context.set_anchor(None)
-
-    def start_round_timer(self):
-        if self.timer_round is not None:
-            self.timer_round.cancel()
-            self.timer_round = None
-
-        h = np.log2(self.context.count)
-        t = np.random.uniform(h, 1.5 * h)
-        self.timer_round = threading.Timer(t, self.put_state_in_q, args=(MessageTypes.THAW_SWARM_INTERNAL,))
-        self.timer_round.start()
-
-    def start_failure_timer(self):
-        if self.timer_failure is not None:
-            self.timer_failure.cancel()
-            self.timer_failure = None
-        self.timer_failure = threading.Timer(Config.FAILURE_TIMEOUT, self.put_state_in_q, args=(MessageTypes.FAIL_INTERNAL,))
-        self.timer_failure.start()
-
-    def set_fail(self):
-        if Config.FAILURE_PROB and np.random.random() <= Config.FAILURE_PROB:
-            self.should_fail = True
-
-    def query_size(self):
-        if self.timer_size is not None:
-            self.timer_size.cancel()
-            self.timer_size = None
-
-        self.timer_size = threading.Timer(Config.SIZE_QUERY_TIMEOUT, self.query_size)
-        self.timer_size.start()
-
-        if self.context.fid % int(100 / Config.SIZE_QUERY_PARTICIPATION_PERCENT) == 1:
-            self.context.size = 1
-            self.context.set_query_id(str(uuid.uuid4())[:8])
-            size_query = Message(MessageTypes.SIZE_QUERY, args=(self.context.query_id,)).to_swarm(self.context)
-            self.broadcast(size_query)
-
-    def set_lease_timer(self):
-        if self.timer_lease is not None:
-            self.timer_lease.cancel()
-            self.timer_lease = None
-
-        # self.timer_lease = threading.Timer(Config.CHALLENGE_LEASE_DURATION * 0.7, self.put_state_in_q, args=(MessageTypes.RENEW_LEASE_INTERNAL,))
-        self.renew_lease()
-        # self.timer_lease = threading.Timer(0.75 * Config.CHALLENGE_LEASE_DURATION, self.renew_lease)
-        # self.timer_lease.start()
-
-    def renew_lease(self):
-        if self.state == StateTypes.BUSY_LOCALIZING and self.context.anchor:
-            renew_message = Message(MessageTypes.LEASE_RENEW, args=(self.context.query_id,)).to_fls(self.context.anchor)
-            self.broadcast(renew_message)
-            # self.set_lease_timer()
 
     def fail(self):
         # print("failed")
@@ -379,38 +218,13 @@ class StateMachine:
             self.timer_available.cancel()
             self.timer_available = None
 
-        self.leave(self.state)
         self.state = state
 
         if self.state == StateTypes.AVAILABLE:
-            self.enter_available_state()
-        elif self.state == StateTypes.BUSY_LOCALIZING:
-            self.enter_busy_localizing_state(arg)
-        elif self.state == StateTypes.BUSY_ANCHOR:
-            self.enter_busy_anchor_state()
-        elif self.state == StateTypes.WAITING:
-            self.enter_waiting_state()
-
-        if self.state != StateTypes.BUSY_ANCHOR \
-                and self.state != StateTypes.BUSY_LOCALIZING \
-                and self.state != StateTypes.DEPLOYING:
-            pass
-            # self.timer_available = \
-            #     threading.Timer(0.1 + np.random.random() * Config.STATE_TIMEOUT, self.put_state_in_q, args=(MessageTypes.SET_AVAILABLE_INTERNAL,))
-            # self.timer_available.start()
-            # self.put_state_in_q(MessageTypes.SET_AVAILABLE_INTERNAL)
+            self.localize_overlapping()
 
     def reenter_available_state(self):
-        if self.state != StateTypes.BUSY_ANCHOR\
-                and self.state != StateTypes.BUSY_LOCALIZING\
-                and self.state != StateTypes.DEPLOYING:
-            self.enter(StateTypes.AVAILABLE)
-
-    def leave(self, state):
-        if state == StateTypes.BUSY_ANCHOR:
-            self.leave_busy_anchor_state()
-        elif state == StateTypes.BUSY_LOCALIZING:
-            self.leave_busy_localizing()
+        self.enter(StateTypes.AVAILABLE)
 
     def drive(self, msg):
         if self.should_fail:
@@ -419,66 +233,14 @@ class StateMachine:
         event = msg.type
         self.context.update_neighbor(msg)
 
-        if self.state == StateTypes.AVAILABLE:
-            if event == MessageTypes.CHALLENGE_INIT:
-                self.handle_challenge_init(msg)
-            elif event == MessageTypes.CHALLENGE_ACCEPT:
-                self.handle_challenge_accept(msg)
-            elif event == MessageTypes.CHALLENGE_ACK:
-                self.handle_challenge_ack(msg)
-            elif event == MessageTypes.SET_WAITING:
-                self.handle_set_waiting(msg)
-
-        elif self.state == StateTypes.BUSY_ANCHOR:
-            if event == MessageTypes.LEASE_RENEW:
-                self.handle_lease_renew(msg)
-            elif event == MessageTypes.MERGE:
-                self.handle_merge(msg)
-            elif event == MessageTypes.CHALLENGE_FIN:
-                self.handle_challenge_fin(msg)
-            elif event == MessageTypes.LEASE_CANCEL:
-                self.handle_cancel_lease(msg)
-            elif event == MessageTypes.CHALLENGE_ACK:
-                self.handle_challenge_ack_anchor(msg)
-
-            self.context.refresh_lease_table()
-            if self.context.is_lease_empty():
-                self.enter(StateTypes.AVAILABLE)
-
-        elif self.state == StateTypes.WAITING:
-            if event == MessageTypes.FOLLOW:
-                self.handle_follow(msg)
-            elif event == MessageTypes.MERGE:
-                self.handle_merge(msg)
-            elif event == MessageTypes.FOLLOW_MERGE:
-                self.handle_follow_merge(msg)
-            elif event == MessageTypes.SET_AVAILABLE:
-                self.enter(StateTypes.AVAILABLE)
-            elif event == MessageTypes.CHALLENGE_ACK:
-                self.handle_challenge_ack_anchor(msg)
-
-            # if self.waiting_for == StateTypes.BUSY_ANCHOR:
-            #     if event == MessageTypes.CHALLENGE_INIT:
-            #         self.handle_challenge_init(msg)
-            #     elif event == MessageTypes.CHALLENGE_ACK:
-            #         self.handle_challenge_ack(msg)
-
         if event == MessageTypes.STOP:
             self.handle_stop(msg)
-        elif event == MessageTypes.SIZE_QUERY:
-            self.handle_size_query(msg)
-        elif event == MessageTypes.SIZE_REPLY:
-            self.handle_size_reply(msg)
-        elif event == MessageTypes.THAW_SWARM:
-            self.handle_thaw_swarm(msg)
-        elif event == MessageTypes.RENEW_LEASE_INTERNAL:
-            self.renew_lease()
-        elif event == MessageTypes.SET_AVAILABLE_INTERNAL:
-            self.reenter_available_state()
-        elif event == MessageTypes.FAIL_INTERNAL:
-            self.set_fail()
-        elif event == MessageTypes.THAW_SWARM_INTERNAL:
-            self.handle_thaw_swarm(Message(MessageTypes.THAW_SWARM, args=(time.time(),)).from_fls(self.context).to_all())
+        else:
+            if event == MessageTypes.FOLLOW:
+                self.handle_follow(msg)
+            self.enter(StateTypes.AVAILABLE)
+        # elif event == MessageTypes.SET_AVAILABLE_INTERNAL:
+        #     self.reenter_available_state()
 
     def broadcast(self, msg):
         msg.from_fls(self.context)
@@ -488,14 +250,6 @@ class StateMachine:
     def send_to_server(self, msg):
         msg.from_fls(self.context).to_server()
         self.sock.send_to_server(msg)
-
-    def start_timers(self):
-        if Config.PROBABILISTIC_ROUND:
-            self.start_round_timer()
-        if Config.DECENTRALIZED_SWARM_SIZE:
-            self.query_size()
-        # if Config.FAILURE_TIMEOUT:
-        #     self.start_failure_timer()
 
     def cancel_timers(self):
         if self.timer_available is not None:

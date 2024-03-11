@@ -196,8 +196,7 @@ if __name__ == '__main__':
     # shape_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE)
     if not os.path.exists(results_directory):
         os.makedirs(os.path.join(results_directory, 'json'), exist_ok=True)
-    mat = scipy.io.loadmat(f'assets/{Config.SHAPE}.mat')
-    point_cloud = mat['p']
+    point_cloud = np.loadtxt(f'assets/{Config.SHAPE}.txt', delimiter=',')
 
     if Config.SAMPLE_SIZE != 0:
         # np.random.shuffle(point_cloud)
@@ -205,6 +204,7 @@ if __name__ == '__main__':
 
     total_count = point_cloud.shape[0]
     h = np.log2(total_count)
+    # print(h)
 
     gtl_point_cloud = np.random.uniform(0, 5, size=(total_count, 3))
     # x y z swarm_id is_failed
@@ -255,7 +255,7 @@ if __name__ == '__main__':
                         shared_arrays.append(shared_array)
                         shared_memories.append(shm)
                         local_gtl_point_cloud.append(member_coord)
-                        p = worker.WorkerProcess(count, pid, member_coord, np.array([0, 0, 0]), shm.name,
+                        p = worker.WorkerProcess(count, pid, 1, member_coord, np.array([0, 0, 0]), shm.name,
                                                  results_directory, stand_by_coord)
                         p.start()
                         processes.append(p)
@@ -267,15 +267,22 @@ if __name__ == '__main__':
 
         else:
             for i in node_point_idx:
-                shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
-                shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
-                shared_array[:] = sample[:]
+                # shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
+                # shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
+                # shared_array[:] = sample[:]
 
-                shared_arrays.append(shared_array)
-                shared_memories.append(shm)
+                # shared_arrays.append(shared_array)
+                # shared_memories.append(shm)
                 local_gtl_point_cloud.append(gtl_point_cloud[i])
-                p = worker.WorkerProcess(count, i + 1, gtl_point_cloud[i], np.array([0, 0, 0]),
-                                         shm.name, results_directory, None)
+                p = worker.WorkerProcess(
+                    count,
+                    i + 1,
+                    [int(g) for g in point_cloud[i, 3:].tolist()],
+                    gtl_point_cloud[i],
+                    np.array([0, 0, 0]),
+                    None,
+                    results_directory,
+                    None)
                 p.start()
                 processes.append(p)
     except OSError as e:
@@ -296,6 +303,7 @@ if __name__ == '__main__':
     print('waiting for processes ...')
 
     ser_sock = worker.WorkerSocket()
+    old_swarmer = False
 
     if IS_CLUSTER_CLIENT:
         while True:
@@ -309,61 +317,64 @@ if __name__ == '__main__':
             elif server_msg.type == MessageTypes.STOP:
                 break
     else:
-        reset = True
-        last_thaw_time = time.time()
-        round_duration = 0
-        last_merged_flss = 0
-        no_change_counter = 0
-        server_cpu = []
-        server_time = []
-        while True:
-            time.sleep(0.2)
-            t = time.time()
+        if old_swarmer:
+            reset = True
+            last_thaw_time = time.time()
+            round_duration = 0
+            last_merged_flss = 0
+            no_change_counter = 0
+            server_cpu = []
+            server_time = []
+            while True:
+                time.sleep(0.2)
+                t = time.time()
 
-            swarms = compute_swarm_size(shared_arrays)
-            server_cpu.append([psutil.cpu_percent()])
-            server_time.append(time.time())
+                swarms = compute_swarm_size(shared_arrays)
+                server_cpu.append([psutil.cpu_percent()])
+                server_time.append(time.time())
 
-            if IS_CLUSTER_SERVER:
-                for i in range(N - 1):
-                    query_swarm_client(clients[i])
+                if IS_CLUSTER_SERVER:
+                    for i in range(N - 1):
+                        query_swarm_client(clients[i])
 
-                for i in range(N - 1):
-                    client_swarms, client_cpu = pull_swarm_client(clients[i])
-                    server_cpu[-1].append(client_cpu)
-                    for sid in client_swarms:
-                        if sid in swarms:
-                            swarms[sid] += client_swarms[sid]
-                        else:
-                            swarms[sid] = client_swarms[sid]
+                    for i in range(N - 1):
+                        client_swarms, client_cpu = pull_swarm_client(clients[i])
+                        server_cpu[-1].append(client_cpu)
+                        for sid in client_swarms:
+                            if sid in swarms:
+                                swarms[sid] += client_swarms[sid]
+                            else:
+                                swarms[sid] = client_swarms[sid]
 
-            largest_swarm = max(swarms.values())
-            num_swarms = len(swarms)
-            thaw_condition = False
+                largest_swarm = max(swarms.values())
+                num_swarms = len(swarms)
+                thaw_condition = False
 
-            # if Config.THAW_INTERVAL:
-            #     thaw_condition |= t - last_thaw_time > Config.THAW_INTERVAL
-            # if Config.THAW_MIN_NUM_SWARMS:
-            #     thaw_condition |= num_swarms == Config.THAW_MIN_NUM_SWARMS
-            # if Config.THAW_PERCENTAGE_LARGEST_SWARM:
-            #     thaw_condition |= merged_flss / total_count >= Config.THAW_PERCENTAGE_LARGEST_SWARM
-            if (largest_swarm == total_count or num_swarms == 1 or
-                # (round_duration != 0 and t - last_thaw_time >= round_duration) or
-                    (t - last_thaw_time >= h)):
-                if reset:
+                # print(largest_swarm)
+                # if Config.THAW_INTERVAL:
+                #     thaw_condition |= t - last_thaw_time > Config.THAW_INTERVAL
+                # if Config.THAW_MIN_NUM_SWARMS:
+                #     thaw_condition |= num_swarms == Config.THAW_MIN_NUM_SWARMS
+                # if Config.THAW_PERCENTAGE_LARGEST_SWARM:
+                #     thaw_condition |= merged_flss / total_count >= Config.THAW_PERCENTAGE_LARGEST_SWARM
+                if largest_swarm == total_count or num_swarms == 1 or (t - last_thaw_time >= h):
+                    # if reset:
                     print(largest_swarm, num_swarms)
                     thaw_message = Message(MessageTypes.THAW_SWARM, args=(t,)).from_server().to_all()
                     ser_sock.broadcast(thaw_message)
                     if round_duration == 0 and largest_swarm == total_count:
                         round_duration = t - last_thaw_time
                     last_thaw_time = t
-                    reset = False
-            if largest_swarm != count:
-                reset = True
+                        # reset = False
+                # if largest_swarm != count:
+                #     reset = True
 
-            if should_stop:
-                stop_all()
-                break
+                if should_stop:
+                    stop_all()
+                    break
+        else:
+            time.sleep(Config.DURATION)
+            stop_all()
 
     if IS_CLUSTER_SERVER:
         for i in range(N - 1):
@@ -411,8 +422,8 @@ if __name__ == '__main__':
         client_socket.close()
 
     if nid == 0:
-        with open(f"{results_directory}/utilization.json", "w") as f:
-            json.dump([server_time, server_cpu], f)
+        # with open(f"{results_directory}/utilization.json", "w") as f:
+        #     json.dump([server_time, server_cpu], f)
         # print("wait a fixed time for other nodes")
         # time.sleep(90)
 
