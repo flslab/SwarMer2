@@ -54,13 +54,14 @@ def_conf = {
 props = [
     {
         "keys": ["SHAPE"],
-        "values": ["'points'"]
+        "values": ["'points'", "'grid_400_overlapping'", "'chess_overlapping'"]
     },
     {
         "keys": ["DEAD_RECKONING_ANGLE", "SS_ERROR_PERCENTAGE"],
         "values": [
             {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.0"},
-            # {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.1"},
+            {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.01"},
+            {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.1"},
 
             # {"DEAD_RECKONING_ANGLE": "0", "SS_ERROR_PERCENTAGE": "0", "SHAPE": "'2'"},
             # {"DEAD_RECKONING_ANGLE": "0", "SS_ERROR_PERCENTAGE": "0", "SHAPE": "'10'"},
