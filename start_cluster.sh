@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source cloudlab_vars.sh
+
 now=$(date +%d_%b_%H_%M_%S)
 port="6000"
 
