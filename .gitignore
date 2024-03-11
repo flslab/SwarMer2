@@ -199,3 +199,4 @@ pip-selfcheck.json
 results/
 experiments/
 decentralized.sh
+download.sh
