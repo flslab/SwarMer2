@@ -145,6 +145,28 @@ class StateMachine:
 
         return v
 
+    def localize_hierarchical(self):
+        n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
+        adjustments = np.array([[.0, .0, .0]])
+        if len(n1):
+            adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n1]))
+        v = np.mean(adjustments, axis=0)
+        self.context.move(v)
+
+        # if np.random.random() > self.challenge_probability:
+        #     return
+
+        self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
+
+        # print(self.context.fid, self.context.swarm_id, self.context.localizer)
+        for fid, gid in self.context.localizer:
+            self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid + 1, "*"))
+            if fid + 1 in self.context.neighbors:
+                # print(f"{self.context.fid} localizing to {fid + 1} in group {gid}")
+                v = self.compute_v(self.context.neighbors[fid + 1])
+                self.context.move(v)
+                self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
+
     def localize_overlapping(self):
         for gid in self.context.swarm_id:
             # print(gid, self.context.neighbors.values())
@@ -221,7 +243,10 @@ class StateMachine:
         self.state = state
 
         if self.state == StateTypes.AVAILABLE:
-            self.localize_overlapping()
+            if Config.GROUP_TYPE == 'hierarchical':
+                self.localize_hierarchical()
+            else:
+                self.localize_overlapping()
 
     def reenter_available_state(self):
         self.enter(StateTypes.AVAILABLE)

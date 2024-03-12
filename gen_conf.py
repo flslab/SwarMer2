@@ -47,6 +47,7 @@ def_conf = {
     "SS_SAMPLE_DELAY": "0",
     "STANDBY": "False",
     "GROUP": "False",
+    "GROUP_TYPE": "'hierarchical'",
     "FILE_NAME_KEYS": "[('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('SHAPE', 'S')]",
     "DIR_KEYS": "[('SHAPE', 'S')]",
 }
@@ -54,7 +55,7 @@ def_conf = {
 props = [
     {
         "keys": ["SHAPE"],
-        "values": ["'points'", "'grid_400_overlapping'", "'chess_overlapping'"]
+        "values": ["'grid_25_hierarchical'", "'grid_400_hierarchical'", "'chess_hierarchical'"]
     },
     {
         "keys": ["DEAD_RECKONING_ANGLE", "SS_ERROR_PERCENTAGE"],

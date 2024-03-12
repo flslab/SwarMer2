@@ -100,7 +100,7 @@ class NetworkThread(threading.Thread):
         if msg.dest_fid != self.context.fid and msg.dest_fid != '*':
             return False
         if isinstance(self.context.swarm_id, list):
-            if msg.dest_swarm_id not in self.context.swarm_id:
+            if msg.dest_swarm_id not in self.context.swarm_id and msg.dest_swarm_id != '*':
                 return False
         elif msg.dest_swarm_id != self.context.swarm_id and msg.dest_swarm_id != '*':
             return False

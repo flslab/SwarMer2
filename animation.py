@@ -14,7 +14,7 @@ from worker.metrics import TimelineEvents
 
 
 
-ticks_gap = 20
+ticks_gap = 5
 
 start_time = 0
 duration = 30
@@ -279,11 +279,11 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_42_34",  # skateboard 0.0001
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_23_39",  # skateboard lambda 0.05
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_26_58",  # skateboard lambda 1.5
-        "/Users/hamed/Documents/Holodeck/SwarMer2/results/points/Rpoints/points_D5_X0.0_Rpoints_1710178815"
+        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_25_hierarchical/Rgrid_25_hierarchical/grid_25_hierarchical_D5_X0.0_Rgrid_25_hierarchical_1710269002",
     ]
 
     names = [
-        "20_grid",
+        "25_grid",
         # 'dragon', 'hat', 'skateboard', 'chess_0.1', 'chess_0.01', 'chess_0.05', 'chess_0.45', 'chess_1.50',
         #  'skateboard_0.01', 'skateboard_0.1',
         #  'skateboard_0.001', 'skateboard_0.0001', 'skateboard_lambda_0.05', 'skateboard_lambda_1.5'
@@ -293,7 +293,7 @@ if __name__ == '__main__':
         filtered_events, length, width, height, _ = read_point_cloud(path)
         # mat = scipy.io.loadmat(f'/Users/hamed/Documents/Holodeck/SwarMerPy/assets/skateboard.mat')
         # gtl = mat['p']
-        gtl = np.loadtxt(f'assets/points.txt', delimiter=',')
+        gtl = np.loadtxt(f'assets/grid_25_hierarchical.txt', delimiter=',')
 
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)

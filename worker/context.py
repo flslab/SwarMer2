@@ -10,7 +10,7 @@ from .metrics import MetricTypes
 
 
 class WorkerContext:
-    def __init__(self, count, fid, sid, gtl, el, shm_name, metrics, stand_by_coord):
+    def __init__(self, count, fid, sid, gtl, el, shm_name, metrics, stand_by_coord, localizer):
         self.count = count
         self.fid = fid
         self.gtl = gtl
@@ -31,6 +31,8 @@ class WorkerContext:
         self.set_swarm_id(sid)
         self.last_expanded = 0
         self.stand_by_coord = stand_by_coord
+        self.localizer = localizer
+        self.min_gid = np.min(sid)
 
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")

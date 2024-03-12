@@ -266,25 +266,47 @@ if __name__ == '__main__':
                     break
 
         else:
-            for i in node_point_idx:
-                # shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
-                # shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
-                # shared_array[:] = sample[:]
+            if Config.GROUP_TYPE == 'hierarchical':
+                with open(f"assets/{Config.SHAPE}_localizer.json") as f:
+                    localizer = json.load(f)
+                # print(localizer)
+                for i in node_point_idx:
+                    local_gtl_point_cloud.append(gtl_point_cloud[i])
+                    p = worker.WorkerProcess(
+                        count,
+                        i + 1,
+                        [int(g) for g in point_cloud[i, 3:].tolist()],
+                        gtl_point_cloud[i],
+                        np.array([0, 0, 0]),
+                        None,
+                        results_directory,
+                        None,
+                        localizer[str(i)] if str(i) in localizer else [],
+                    )
+                    p.start()
+                    processes.append(p)
+            else:
+                for i in node_point_idx:
+                    # shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
+                    # shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
+                    # shared_array[:] = sample[:]
 
-                # shared_arrays.append(shared_array)
-                # shared_memories.append(shm)
-                local_gtl_point_cloud.append(gtl_point_cloud[i])
-                p = worker.WorkerProcess(
-                    count,
-                    i + 1,
-                    [int(g) for g in point_cloud[i, 3:].tolist()],
-                    gtl_point_cloud[i],
-                    np.array([0, 0, 0]),
-                    None,
-                    results_directory,
-                    None)
-                p.start()
-                processes.append(p)
+                    # shared_arrays.append(shared_array)
+                    # shared_memories.append(shm)
+                    local_gtl_point_cloud.append(gtl_point_cloud[i])
+                    p = worker.WorkerProcess(
+                        count,
+                        i + 1,
+                        [int(g) for g in point_cloud[i, 3:].tolist()],
+                        gtl_point_cloud[i],
+                        np.array([0, 0, 0]),
+                        None,
+                        results_directory,
+                        None,
+                        None,
+                    )
+                    p.start()
+                    processes.append(p)
     except OSError as e:
         print(e)
         for p in processes:
