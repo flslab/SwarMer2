@@ -83,29 +83,15 @@ class StateMachine:
         self.context = context
         self.metrics = metrics
         self.sock = sock
-        self.timer_available = None
-        self.timer_size = None
-        self.timer_lease = None
-        self.timer_failure = None
-        self.timer_round = None
-        self.challenge_ack = False
-        self.challenge_probability = Config.INITIAL_CHALLENGE_PROB
-        self.stop_handled = False
-        self.waiting_for = None
         self.should_fail = False
         self.event_queue = event_queue
-        self.thaw_ids = dict()
-        self.potential_anchors = []
 
     def start(self):
         self.context.deploy()
         self.enter(StateTypes.AVAILABLE)
-        # self.start_timers()
 
     def handle_follow(self, msg):
         self.context.move(msg.args[0])
-        # print(f"{self.context.fid} followed {msg.fid}")
-        # self.enter(StateTypes.AVAILABLE)
 
     def handle_stop(self, msg):
         # if self.stop_handled:
@@ -145,6 +131,15 @@ class StateMachine:
 
         return v
 
+    def localize_sequential_hierarchical(self):
+        for fid, gid in self.context.localizer:
+            self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid + 1, "*"))
+            if self.context.hirerachy == gid:
+                if fid + 1 in self.context.neighbors:
+                    v = self.compute_v(self.context.neighbors[fid + 1])
+                    self.context.move(v)
+                    self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
+
     def localize_hierarchical(self):
         n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
         adjustments = np.array([[.0, .0, .0]])
@@ -163,7 +158,7 @@ class StateMachine:
             self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid + 1, "*"))
             if fid + 1 in self.context.neighbors:
                 # print(f"{self.context.fid} localizing to {fid + 1} in group {gid}")
-                v = self.compute_v(self.context.neighbors[fid + 1])
+                v = self.compute_v(self.context.neighbors[fid + 1])/2
                 self.context.move(v)
                 self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
 
@@ -225,7 +220,6 @@ class StateMachine:
     def fail(self):
         # print("failed")
         self.should_fail = False
-        self.cancel_timers()
         self.enter(StateTypes.DEPLOYING)
         self.context.fail()
         self.start()
@@ -236,10 +230,6 @@ class StateMachine:
         self.event_queue.put(item)
 
     def enter(self, state, arg={}):
-        if self.timer_available is not None:
-            self.timer_available.cancel()
-            self.timer_available = None
-
         self.state = state
 
         if self.state == StateTypes.AVAILABLE:
@@ -275,23 +265,6 @@ class StateMachine:
     def send_to_server(self, msg):
         msg.from_fls(self.context).to_server()
         self.sock.send_to_server(msg)
-
-    def cancel_timers(self):
-        if self.timer_available is not None:
-            self.timer_available.cancel()
-            self.timer_available = None
-        if self.timer_size is not None:
-            self.timer_size.cancel()
-            self.timer_size = None
-        if self.timer_lease is not None:
-            self.timer_lease.cancel()
-            self.timer_lease = None
-        if self.timer_failure is not None:
-            self.timer_failure.cancel()
-            self.timer_failure = None
-        if self.timer_round is not None:
-            self.timer_round.cancel()
-            self.timer_round = None
 
 
 if __name__ == '__main__':

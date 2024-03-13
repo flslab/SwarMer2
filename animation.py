@@ -17,7 +17,7 @@ from worker.metrics import TimelineEvents
 ticks_gap = 5
 
 start_time = 0
-duration = 30
+duration = 60
 fps = 30
 frame_rate = 1/fps
 total_points = 11888
@@ -279,11 +279,11 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_42_34",  # skateboard 0.0001
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_23_39",  # skateboard lambda 0.05
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_26_58",  # skateboard lambda 1.5
-        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_25_hierarchical/Rgrid_25_hierarchical/grid_25_hierarchical_D5_X0.0_Rgrid_25_hierarchical_1710269002",
+        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_25_hierarchical/Rgrid_25_hierarchical/grid_25_hierarchical_D5_X0.0_Rgrid_25_hierarchical_1710346876",
     ]
 
     names = [
-        "25_grid",
+        "grid_25_hire",
         # 'dragon', 'hat', 'skateboard', 'chess_0.1', 'chess_0.01', 'chess_0.05', 'chess_0.45', 'chess_1.50',
         #  'skateboard_0.01', 'skateboard_0.1',
         #  'skateboard_0.001', 'skateboard_0.0001', 'skateboard_lambda_0.05', 'skateboard_lambda_1.5'

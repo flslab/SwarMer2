@@ -115,18 +115,18 @@ def sr_matching(points):
 
 if __name__ == "__main__":
     hierarchical = True
-    # A = np.random.rand(25, 3)
-    # for i in range(5):
-    #     for j in range(5):
-    #         A[i * 5 + j] = [i, j, 1]
+    A = np.random.rand(400, 3)
+    for i in range(20):
+        for j in range(20):
+            A[i * 20 + j] = [i, j, 1]
 
-    shape = "chess"
+    shape = "grid_400"
     visualize = True
 
     if visualize:
         mpl.use('macosx')
 
-    A = np.loadtxt(f'../assets/{shape}.txt', delimiter=',')
+    # A = np.loadtxt(f'../assets/{shape}.txt', delimiter=',')
     G = 5
     k = int(2 ** np.ceil(np.log2(A.shape[0] / G)))
     assignments, centroids = k_means(A, k=k)
@@ -196,7 +196,7 @@ if __name__ == "__main__":
         ax2 = fig.add_subplot(1, 2, 2)
         ax.hist(max_dist_1)
         ax2.hist(dists)
-        plt.savefig(f"../assets/{shape}_hierarchical_hist.svg")
+        plt.savefig(f"../assets/{shape}_hierarchical_hist.png")
 
         np.savetxt(f"../assets/{shape}_hierarchical.txt", np.hstack((A, point_groups)), delimiter=',')
 

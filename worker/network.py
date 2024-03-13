@@ -40,35 +40,21 @@ class NetworkThread(threading.Thread):
         self.last_fail_check = self.start_time + 1
         while True:
             t = time.time()
-            if t - self.last_lease_renew > 0.5 * Config.CHALLENGE_LEASE_DURATION:
-                if self.state_machine.state == StateTypes.BUSY_LOCALIZING:
-                    # msg = Message(MessageTypes.RENEW_LEASE_INTERNAL).to_fls(self.context)
-                    # item = PrioritizedItem(1, time.time(), msg, False)
-                    # self.event_queue.put(item)
-                    self.state_machine.renew_lease()
-                    self.last_lease_renew = t
-            if t - self.last_challenge > Config.STATE_TIMEOUT:
-                if self.state_machine.state != StateTypes.BUSY_ANCHOR \
-                        and self.state_machine.state != StateTypes.BUSY_LOCALIZING \
-                        and self.state_machine.state != StateTypes.DEPLOYING:
-                    # msg = Message(MessageTypes.SET_AVAILABLE_INTERNAL).to_fls(self.context)
-                    # item = PrioritizedItem(1, time.time(), msg, False)
-                    # self.event_queue.put(item)
-                    self.state_machine.reenter_available_state()
-                    self.last_challenge = t
-            if t - self.start_time > Config.DURATION + 15:
+
+            if t - self.start_time > Config.DURATION * 1.5:
                 break
-            if Config.FAILURE_TIMEOUT and t - self.last_fail_check > Config.FAILURE_TIMEOUT:
-                self.state_machine.set_fail()
-                self.last_fail_check = t
-            if random.random() < 0.001:
-                time.sleep(0.005)
+            # if Config.FAILURE_TIMEOUT and t - self.last_fail_check > Config.FAILURE_TIMEOUT:
+            #     self.state_machine.set_fail()
+            #     self.last_fail_check = t
+            # if random.random() < 0.001:
+            #     time.sleep(0.005)
             # if self.sock.is_ready():
             try:
                 msg, length = self.sock.receive()
-            except BlockingIOError:
+            except BlockingIOError as e:
                 continue
-            except Exception:
+            except Exception as e:
+                print(e)
                 continue
             # self.context.log_received_message(msg.type, length)
             if self.is_message_valid(msg):
