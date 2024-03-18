@@ -55,7 +55,7 @@ def_conf = {
 props = [
     {
         "keys": ["SHAPE"],
-        "values": ["'grid_49_hierarchical'", "'grid_100_hierarchical'"]
+        "values": ["'grid_49_hierarchical'", "'grid_100_hierarchical'", "'grid_196_hierarchical'"]
     },
     {
         "keys": ["DEAD_RECKONING_ANGLE", "SS_ERROR_PERCENTAGE"],
