@@ -44,6 +44,6 @@ class Config:
     SS_SAMPLE_DELAY = 0
     STANDBY = False
     GROUP = False
-    GROUP_TYPE = 'hierarchical'
+    GROUP_TYPE = 'sequential'  # hierarchical, overlapping, sequential
     FILE_NAME_KEYS = [('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('SHAPE', 'R')]
     DIR_KEYS = [('SHAPE', 'R')]

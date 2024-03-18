@@ -92,6 +92,16 @@ class StateMachine:
 
     def handle_follow(self, msg):
         self.context.move(msg.args[0])
+        self.context.go_to_next_hierarchy()
+        self.context.neighbors = {}
+        # print(f"({msg.fid}) -> {self.context.fid} followed, new h: {self.context.hierarchy}")
+
+    def handle_merge(self, msg):
+        if msg.dest_swarm_id == "*":
+            self.broadcast(Message(MessageTypes.MERGE).to_swarm_id(self.context.hierarchy))
+
+        self.context.go_to_next_hierarchy()
+        # print(f"({msg.fid}) -> {self.context.fid} merged, new h: {self.context.hierarchy}")
 
     def handle_stop(self, msg):
         # if self.stop_handled:
@@ -132,13 +142,37 @@ class StateMachine:
         return v
 
     def localize_sequential_hierarchical(self):
+        # if self.context.hierarchy == self.context.min_gid:
+        n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
+        adjustments = np.array([[.0, .0, .0]])
+        if len(n1):
+            adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n1]))
+        v = np.mean(adjustments, axis=0)
+        self.context.move(v)
+
+        # if np.random.random() > self.challenge_probability:
+        #     return
+
+        self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
+
         for fid, gid in self.context.localizer:
+            if self.context.fid > fid + 1:
+
+                # localize relative to it
+                # print(self.context.fid, self.context.hierarchy)
+
+                if self.context.hierarchy == gid:
+
+                    if fid + 1 in self.context.neighbors:
+                        # print(self.context.fid, fid+1, gid)
+                        v = self.compute_v(self.context.neighbors[fid + 1])
+                        self.context.move(v)
+                        self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
+                        self.broadcast(Message(MessageTypes.MERGE).to_fls_id(fid + 1, "*"))
+                        self.context.go_to_next_hierarchy()
+                        break
+            # send your location
             self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid + 1, "*"))
-            if self.context.hirerachy == gid:
-                if fid + 1 in self.context.neighbors:
-                    v = self.compute_v(self.context.neighbors[fid + 1])
-                    self.context.move(v)
-                    self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
 
     def localize_hierarchical(self):
         n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
@@ -232,11 +266,13 @@ class StateMachine:
     def enter(self, state, arg={}):
         self.state = state
 
-        if self.state == StateTypes.AVAILABLE:
-            if Config.GROUP_TYPE == 'hierarchical':
-                self.localize_hierarchical()
-            else:
-                self.localize_overlapping()
+        # if self.state == StateTypes.AVAILABLE:
+        if Config.GROUP_TYPE == 'hierarchical':
+            self.localize_hierarchical()
+        elif Config.GROUP_TYPE == 'overlapping':
+            self.localize_overlapping()
+        else:
+            self.localize_sequential_hierarchical()
 
     def reenter_available_state(self):
         self.enter(StateTypes.AVAILABLE)
@@ -253,7 +289,11 @@ class StateMachine:
         else:
             if event == MessageTypes.FOLLOW:
                 self.handle_follow(msg)
-            self.enter(StateTypes.AVAILABLE)
+                self.enter(StateTypes.AVAILABLE)
+
+            elif event == MessageTypes.MERGE:
+                self.handle_merge(msg)
+                self.enter(StateTypes.AVAILABLE)
         # elif event == MessageTypes.SET_AVAILABLE_INTERNAL:
         #     self.reenter_available_state()
 
@@ -268,7 +308,7 @@ class StateMachine:
 
 
 if __name__ == '__main__':
-    v = np.array([1, 0, 1])
-    d = np.linalg.norm(v)
+    vec = np.array([1, 0, 1])
+    d = np.linalg.norm(vec)
 
-    print(sample_distance(v, d))
+    print(sample_distance(vec, d))

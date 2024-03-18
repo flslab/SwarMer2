@@ -14,6 +14,8 @@ from state import StateTypes
 general_messages = {
     MessageTypes.STOP,
     MessageTypes.GOSSIP,
+    MessageTypes.FOLLOW,
+    MessageTypes.MERGE,
 }
 
 valid_state_messages = {
@@ -92,27 +94,23 @@ class NetworkThread(threading.Thread):
             return False
         if msg.fid in self.latest_message_id and msg.id < self.latest_message_id[msg.fid]:
             return False
-        if msg.type == message.MessageTypes.CHALLENGE_INIT or msg.type == message.MessageTypes.GOSSIP:
-            dist = np.linalg.norm(msg.el - self.context.el)
-            if dist > msg.range:
-                return False
-        if self.state_machine in valid_state_messages:
-            if msg.type not in valid_state_messages[self.state_machine.state] or msg.type not in general_messages:
-                return False
+        # if msg.type == message.MessageTypes.CHALLENGE_INIT or msg.type == message.MessageTypes.GOSSIP:
+        #     dist = np.linalg.norm(msg.el - self.context.el)
+        #     if dist > msg.range:
+        #         return False
+        # if self.state_machine.state in valid_state_messages:
+        #     if msg.type not in valid_state_messages[self.state_machine.state] or msg.type not in general_messages:
+        #         return False
         return True
 
     @staticmethod
     def prioritize_message(msg):
         t = time.time()
-        if msg.type == message.MessageTypes.STOP or msg.type == message.MessageTypes.THAW_SWARM:
+        if msg.type == message.MessageTypes.STOP:
             return PrioritizedItem(0, t, msg, False)
-        if msg.type == message.MessageTypes.SIZE_QUERY or msg.type == message.MessageTypes.SIZE_REPLY:
-            return PrioritizedItem(2, t, msg, False)
-        if msg.type == message.MessageTypes.SET_WAITING or msg.type == message.MessageTypes.FOLLOW_MERGE\
-                or msg.type == message.MessageTypes.FOLLOW or msg.type == message.MessageTypes.MERGE\
-                or msg.type == message.MessageTypes.CHALLENGE_FIN:
+        if msg.type == message.MessageTypes.FOLLOW or msg.type == message.MessageTypes.MERGE:
             return PrioritizedItem(1, t, msg, False)
-        return PrioritizedItem(3, t, msg, False)
+        return PrioritizedItem(2, t, msg, False)
 
 
 @dataclass(order=True)

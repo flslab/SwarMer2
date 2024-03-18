@@ -45,7 +45,7 @@ class HandlerThread(threading.Thread):
             if event.type == MessageTypes.STOP:
                 break
 
-            self.flush_queue()
+            # self.flush_queue()
 
     def flush_queue(self):
         with self.event_queue.mutex:

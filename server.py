@@ -266,7 +266,7 @@ if __name__ == '__main__':
                     break
 
         else:
-            if Config.GROUP_TYPE == 'hierarchical':
+            if Config.GROUP_TYPE == 'hierarchical' or Config.GROUP_TYPE == 'sequential':
                 with open(f"assets/{Config.SHAPE}_localizer.json") as f:
                     localizer = json.load(f)
                 # print(localizer)

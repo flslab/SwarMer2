@@ -19,7 +19,7 @@ class WorkerProcess(multiprocessing.Process):
         self.sock = WorkerSocket()
 
     def run(self):
-        event_queue = queue.Queue()
+        event_queue = queue.PriorityQueue()
         state_machine = state.StateMachine(self.context, self.sock, self.metrics, event_queue)
 
         network_thread = NetworkThread(event_queue, state_machine, self.context, self.sock)

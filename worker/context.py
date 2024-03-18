@@ -28,11 +28,13 @@ class WorkerContext:
         self.alpha = Config.DEAD_RECKONING_ANGLE / 180 * np.pi
         self.lease = dict()
         self.metrics = metrics
-        self.set_swarm_id(sid)
         self.last_expanded = 0
         self.stand_by_coord = stand_by_coord
         self.localizer = localizer
+        self.hierarchy = None
+        self.hid = 0
         self.min_gid = np.min(sid)
+        self.set_swarm_id(sid)
 
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
@@ -44,7 +46,14 @@ class WorkerContext:
             shared_mem.close()
 
         self.metrics.log_swarm_change(swarm_id)
+
+        if isinstance(swarm_id, list):
+            self.hierarchy = swarm_id[self.hid]
         # self.history.log(MetricTypes.SWARM_ID, self.swarm_id)
+
+    def go_to_next_hierarchy(self):
+        self.hid = (self.hid + 1) % len(self.swarm_id)
+        self.hierarchy = self.swarm_id[self.hid]
 
     def set_el(self, el):
         self.el = el
