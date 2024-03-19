@@ -287,13 +287,13 @@ def create_overlapping_groups(A, G, shape, visualize=True):
 
 
 if __name__ == "__main__":
-    shape = "grid_100"
+    shape = "grid_196"
     visualize = True
 
-    A = np.random.rand(100, 3)
-    for i in range(10):
-        for j in range(10):
-            A[i * 10 + j] = [i, j, 1]
+    A = np.random.rand(196, 3)
+    for i in range(14):
+        for j in range(14):
+            A[i * 14 + j] = [i, j, 1]
 
     # A = np.loadtxt(f'../assets/{shape}.txt', delimiter=',')
 
