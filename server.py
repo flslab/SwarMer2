@@ -266,22 +266,49 @@ if __name__ == '__main__':
                     break
 
         else:
-            if Config.GROUP_TYPE == 'hierarchical' or Config.GROUP_TYPE == 'sequential':
+            if Config.GROUP_TYPE == 'hierarchical' \
+                    or Config.GROUP_TYPE == 'sequential' \
+                    or Config.GROUP_TYPE == 'spanning':
                 with open(f"assets/{Config.SHAPE}_localizer.json") as f:
                     localizer = json.load(f)
                 # print(localizer)
+
                 for i in node_point_idx:
+                    if Config.GROUP_TYPE == 'spanning':
+                        gid = int(point_cloud[i, 3])
+                    else:
+                        gid = [int(g) for g in point_cloud[i, 3:].tolist()]
+
                     local_gtl_point_cloud.append(gtl_point_cloud[i])
                     p = worker.WorkerProcess(
                         count,
                         i + 1,
-                        [int(g) for g in point_cloud[i, 3:].tolist()],
+                        gid,
                         gtl_point_cloud[i],
                         np.array([0, 0, 0]),
                         None,
                         results_directory,
                         None,
                         localizer[str(i)] if str(i) in localizer else [],
+                    )
+                    p.start()
+                    processes.append(p)
+            elif Config.GROUP_TYPE == 'bin_overlapping':
+                with open(f"assets/{Config.SHAPE}_bin_overlapping.json") as f:
+                    bin_groups = json.load(f)
+                # print(localizer)
+                for i in node_point_idx:
+                    local_gtl_point_cloud.append(gtl_point_cloud[i])
+                    p = worker.WorkerProcess(
+                        count,
+                        i + 1,
+                        bin_groups[i],
+                        gtl_point_cloud[i],
+                        np.array([0, 0, 0]),
+                        None,
+                        results_directory,
+                        None,
+                        None,
                     )
                     p.start()
                     processes.append(p)

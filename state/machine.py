@@ -92,7 +92,8 @@ class StateMachine:
 
     def handle_follow(self, msg):
         self.context.move(msg.args[0])
-        self.context.go_to_next_hierarchy()
+        if Config.GROUP_TYPE == 'sequential':
+            self.context.go_to_next_hierarchy()
         self.context.neighbors = {}
         # print(f"({msg.fid}) -> {self.context.fid} followed, new h: {self.context.hierarchy}")
 
@@ -170,7 +171,33 @@ class StateMachine:
                         self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
                         self.broadcast(Message(MessageTypes.MERGE).to_fls_id(fid + 1, "*"))
                         self.context.go_to_next_hierarchy()
-                        break
+                        # break
+            # send your location
+            self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid + 1, "*"))
+
+    def localize_spanning(self):
+        n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
+        adjustments = np.array([[.0, .0, .0]])
+        if len(n1):
+            adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n1]))
+        v = np.mean(adjustments, axis=0)
+        self.context.move(v)
+
+        # if np.random.random() > self.challenge_probability:
+        #     return
+
+        self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
+
+        for fid, gid in self.context.localizer:
+            if self.context.fid > fid + 1:
+
+                # localize relative to it
+                # print(self.context.fid, self.context.hierarchy)
+                if fid + 1 in self.context.neighbors:
+                    # print(self.context.fid, fid+1, gid)
+                    v = self.compute_v(self.context.neighbors[fid + 1])
+                    self.context.move(v)
+                    self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
             # send your location
             self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid + 1, "*"))
 
@@ -198,7 +225,7 @@ class StateMachine:
 
     def localize_overlapping(self):
         for gid in self.context.swarm_id:
-            # print(gid, self.context.neighbors.values())
+            # print(self.context.fid, gid, self.context.neighbors.values())
             n1 = list(filter(lambda x: gid in x.swarm_id, self.context.neighbors.values()))
             adjustments = np.array([[.0, .0, .0]])
             if len(n1):
@@ -269,8 +296,10 @@ class StateMachine:
         # if self.state == StateTypes.AVAILABLE:
         if Config.GROUP_TYPE == 'hierarchical':
             self.localize_hierarchical()
-        elif Config.GROUP_TYPE == 'overlapping':
+        elif Config.GROUP_TYPE == 'overlapping' or Config.GROUP_TYPE == 'bin_overlapping':
             self.localize_overlapping()
+        elif Config.GROUP_TYPE == 'spanning':
+            self.localize_spanning()
         else:
             self.localize_sequential_hierarchical()
 

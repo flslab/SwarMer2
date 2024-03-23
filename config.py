@@ -31,7 +31,7 @@ class Config:
     MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
     DURATION = 60
-    SHAPE = 'grid_25_hierarchical'
+    SHAPE = 'grid_16_spanning'
     RESULTS_PATH = 'results'
     MULTICAST = True
     THAW_MIN_NUM_SWARMS = 1
@@ -44,6 +44,6 @@ class Config:
     SS_SAMPLE_DELAY = 0
     STANDBY = False
     GROUP = False
-    GROUP_TYPE = 'sequential'  # hierarchical, overlapping, sequential
+    GROUP_TYPE = 'spanning'  # hierarchical, overlapping, bin_overlapping, sequential
     FILE_NAME_KEYS = [('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('SHAPE', 'R')]
     DIR_KEYS = [('SHAPE', 'R')]

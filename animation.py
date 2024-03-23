@@ -17,7 +17,6 @@ from worker.metrics import TimelineEvents
 ticks_gap = 5
 
 start_time = 0
-duration = 60
 fps = 30
 frame_rate = 1/fps
 total_points = 11888
@@ -157,7 +156,7 @@ def update(frame):
     set_axis(ax1, length, width, height, "Ground Truth")
 
     ax2.clear()
-    if name.startswith('skateboard'):
+    if name[0].startswith('skateboard'):
         ln2 = ax2.scatter(ys, xs, c='purple', s=2, alpha=1)
         set_axis_2d(ax2, width, length, "Top")
 
@@ -279,21 +278,21 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_42_34",  # skateboard 0.0001
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_23_39",  # skateboard lambda 0.05
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_26_58",  # skateboard lambda 1.5
-        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_25_hierarchical/Rgrid_25_hierarchical/grid_25_hierarchical_D5_X0.0_Rgrid_25_hierarchical_1710789444"
+        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_16_spanning/Rgrid_16_spanning/grid_16_spanning_D5_X0.0_Rgrid_16_spanning_1711160611",
     ]
 
+    duration = 60
+
     names = [
-        "grid_25_seq_hire",
-        # 'dragon', 'hat', 'skateboard', 'chess_0.1', 'chess_0.01', 'chess_0.05', 'chess_0.45', 'chess_1.50',
-        #  'skateboard_0.01', 'skateboard_0.1',
-        #  'skateboard_0.001', 'skateboard_0.0001', 'skateboard_lambda_0.05', 'skateboard_lambda_1.5'
+        ("grid_16", "_0_spanning_all_views"),
     ]
+
     for path, name in zip(paths, names):
 
         filtered_events, length, width, height, _ = read_point_cloud(path)
         # mat = scipy.io.loadmat(f'/Users/hamed/Documents/Holodeck/SwarMerPy/assets/skateboard.mat')
         # gtl = mat['p']
-        gtl = np.loadtxt(f'assets/grid_25_hierarchical.txt', delimiter=',')
+        gtl = np.loadtxt(f'assets/{name[0]}.txt', delimiter=',')
 
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)
@@ -314,4 +313,4 @@ if __name__ == '__main__':
         #
         # plt.show()
         writer = FFMpegWriter(fps=fps)
-        ani.save(f"results/{name}_all_views.mp4", writer=writer)
+        ani.save(f"results/{name[0]}_{name[1]}.mp4", writer=writer)

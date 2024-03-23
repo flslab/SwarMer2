@@ -133,9 +133,6 @@ def get_kmeans_groups(A, k):
 
 
 def create_hierarchical_groups(A, G, shape, visualize=True):
-    if visualize:
-        mpl.use('macosx')
-
     k = int(2 ** np.ceil(np.log2(A.shape[0] / G)))
 
     h_groups, max_dist_1, _, h_centroids = get_kmeans_groups(A, k)
@@ -200,9 +197,6 @@ def create_hierarchical_groups(A, G, shape, visualize=True):
 
 
 def create_overlapping_groups(A, G, shape, visualize=True):
-    if visualize:
-        mpl.use('macosx')
-
     k = int(2 ** np.ceil(np.log2(A.shape[0] / G)))
     groups, max_dist_1, assignments, centroids = get_kmeans_groups(A, k)
 
@@ -286,16 +280,111 @@ def create_overlapping_groups(A, G, shape, visualize=True):
         plt.savefig(f"../assets/{shape}_groups.svg")
 
 
+def create_binary_overlapping_groups(A, shape, visualize=True):
+    G = construct_graph(A)
+    T = nx.minimum_spanning_tree(G)
+
+    assignments = []
+    for i in range(A.shape[0]):
+        assignments.append([])
+
+    for i, e in enumerate(T.edges):
+        assignments[e[0]].append(i)
+        assignments[e[1]].append(i)
+
+    np.savetxt(f"../assets/{shape}.txt", A, delimiter=',')
+
+    with open(f"../assets/{shape}_bin_overlapping.json", "w") as f:
+        json.dump(assignments, f)
+
+    if visualize:
+        fig = plt.figure(figsize=(15, 5))
+        ax = fig.add_subplot(1, 3, 1, projection='3d')
+        # ax.scatter3D(A[:, 0], A[:, 1], A[:, 2], depthshade=False)
+        for e in T.edges:
+            print(e)
+            ax.plot3D(A[e, 0], A[e, 1], A[e, 2], '-o')
+        # ax.plot3D(A[T, 0], A[T, 1], A[T, 2] + 1, '-o')
+        plt.show()
+
+
+def create_spanning_tree_groups(A, G, shape, visualize):
+    k = int(2 ** np.ceil(np.log2(A.shape[0] / G)))
+    groups, max_dist_1, assignments, centroids = get_kmeans_groups(A, k)
+
+    T = nx.minimum_spanning_tree(construct_graph(centroids))
+
+    localizer = {}
+    dists = []
+    for i, j in T.edges:
+        l_gid = i
+        r_gid = j
+        l_group = groups[l_gid]
+        r_group = groups[r_gid]
+
+        xdist = cdist(A[l_group], A[r_group])
+        am = np.argmin(xdist)
+        dists.append(xdist[am // len(r_group), am % len(r_group)])
+        l_idx = l_group[am // len(r_group)]
+        r_idx = r_group[am % len(r_group)]
+        if l_idx in localizer:
+            localizer[l_idx].append((r_idx, l_gid))
+        else:
+            localizer[l_idx] = [(r_idx, l_gid)]
+        if r_idx in localizer:
+            localizer[r_idx].append((l_idx, r_gid))
+        else:
+            localizer[r_idx] = [(l_idx, r_gid)]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 2, 1)
+    ax2 = fig.add_subplot(1, 2, 2)
+    ax.hist(max_dist_1)
+    ax2.hist(dists)
+    plt.savefig(f"../assets/{shape}_spanning_hist.png")
+
+    np.savetxt(f"../assets/{shape}_spanning.txt", np.hstack((A, assignments.reshape(-1, 1))), delimiter=',')
+
+    with open(f"../assets/{shape}_spanning_localizer.json", "w") as f:
+        json.dump(localizer, f)
+
+    if visualize:
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter3D(A[:, 0], A[:, 1], A[:, 2], depthshade=False)
+        for g in groups.values():
+            xs = [A[p][0] for p in g]
+            ys = [A[p][1] for p in g]
+            zs = [A[p][2] for p in g]
+            ax.plot3D(xs, ys, zs, '-bo')
+
+        for i, l in localizer.items():
+            for p in l:
+                ax.plot3D(A[[i, p[0]], 0], A[[i, p[0]], 1], A[[i, p[0]], 2], '-ro')
+
+        # ax.plot3D(A[T, 0], A[T, 1], A[T, 2] + 1, '-o')
+        plt.show()
+
+
 if __name__ == "__main__":
-    shape = "grid_196"
-    visualize = True
+    # n = 4
+    visualize = False
 
-    A = np.random.rand(196, 3)
-    for i in range(14):
-        for j in range(14):
-            A[i * 14 + j] = [i, j, 1]
+    # for n in [4]:
+    for n in [4, 8, 10, 14, 20]:
+        shape = f"grid_{n*n}"
 
-    # A = np.loadtxt(f'../assets/{shape}.txt', delimiter=',')
+        if visualize:
+            mpl.use('macosx')
 
-    # create_overlapping_groups(A, 5, shape, visualize)
-    create_hierarchical_groups(A, 5, shape, visualize)
+        A = np.random.rand(n*n, 3)
+        for i in range(n):
+            for j in range(n):
+                A[i * n + j] = [i, j, 1]
+
+        # A = np.loadtxt(f'../assets/{shape}.txt', delimiter=',')
+
+        # create_overlapping_groups(A, 5, shape, visualize)
+        # create_hierarchical_groups(A, 5, shape, visualize)
+        # create_binary_overlapping_groups(A, shape, visualize)
+        create_spanning_tree_groups(A, 5, shape, visualize)
