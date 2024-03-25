@@ -325,6 +325,8 @@ def create_spanning_tree_groups(A, G, shape, visualize):
     for i, j in T.edges:
         l_gid = i
         r_gid = j
+        l_b_gid = bfs_order_gid[l_gid]
+        r_b_gid = bfs_order_gid[r_gid]
         l_group = groups[l_gid]
         r_group = groups[r_gid]
 
@@ -334,13 +336,13 @@ def create_spanning_tree_groups(A, G, shape, visualize):
         l_idx = l_group[am // len(r_group)]
         r_idx = r_group[am % len(r_group)]
         if l_idx in localizer:
-            localizer[l_idx].append((r_idx, l_gid))
+            localizer[l_idx].append((r_idx, l_b_gid))
         else:
-            localizer[l_idx] = [(r_idx, l_gid)]
+            localizer[l_idx] = [(r_idx, l_b_gid)]
         if r_idx in localizer:
-            localizer[r_idx].append((l_idx, r_gid))
+            localizer[r_idx].append((l_idx, r_b_gid))
         else:
-            localizer[r_idx] = [(l_idx, r_gid)]
+            localizer[r_idx] = [(l_idx, r_b_gid)]
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 2, 1)
