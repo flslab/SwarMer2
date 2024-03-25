@@ -47,7 +47,7 @@ def_conf = {
     "SS_SAMPLE_DELAY": "0",
     "STANDBY": "False",
     "GROUP": "False",
-    "GROUP_TYPE": "'spanning'",
+    "GROUP_TYPE": "'bin_overlapping'",
     "FILE_NAME_KEYS": "[('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('SHAPE', 'S')]",
     "DIR_KEYS": "[]",
 }
@@ -55,12 +55,12 @@ def_conf = {
 props = [
     {
         "keys": ["SHAPE"],
-        "values": ["'grid_36_spanning'", "'grid_64_spanning'", "'grid_100_spanning'", "'grid_196_spanning'"]
+        "values": ["'grid_36'", "'grid_64'", "'grid_100'", "'grid_196'"]
     },
     {
         "keys": ["DEAD_RECKONING_ANGLE", "SS_ERROR_PERCENTAGE"],
         "values": [
-            # {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.0"},
+            {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.0"},
             {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.01"},
             {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.1"},
 
