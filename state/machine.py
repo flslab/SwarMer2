@@ -189,11 +189,10 @@ class StateMachine:
         self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
 
         for fid, gid in self.context.localizer:
-            if self.context.fid > fid + 1:
-
-                # localize relative to it
-                # print(self.context.fid, self.context.hierarchy)
-                if fid + 1 in self.context.neighbors:
+            # localize relative to it
+            # print(self.context.fid, self.context.hierarchy)
+            if fid + 1 in self.context.neighbors:
+                if self.context.swarm_id > self.context.neighbors[fid+1].swarm_id:
                     # print(self.context.fid, fid+1, gid)
                     v = self.compute_v(self.context.neighbors[fid + 1])
                     self.context.move(v)

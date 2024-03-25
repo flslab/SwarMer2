@@ -314,6 +314,12 @@ def create_spanning_tree_groups(A, G, shape, visualize):
 
     T = nx.minimum_spanning_tree(construct_graph(centroids))
 
+    degrees = dict(T.degree())
+    max_degree_node = max(degrees, key=degrees.get)
+    bfs_order = list(nx.bfs_tree(T, source=max_degree_node))
+
+    bfs_order_gid = {bfs_order[i]: i for i in range(len(bfs_order))}
+
     localizer = {}
     dists = []
     for i, j in T.edges:
@@ -342,8 +348,8 @@ def create_spanning_tree_groups(A, G, shape, visualize):
     ax.hist(max_dist_1)
     ax2.hist(dists)
     plt.savefig(f"../assets/{shape}_spanning_hist.png")
-
-    np.savetxt(f"../assets/{shape}_spanning.txt", np.hstack((A, assignments.reshape(-1, 1))), delimiter=',')
+    new_gid = [bfs_order_gid[a] for a in assignments]
+    np.savetxt(f"../assets/{shape}_spanning.txt", np.hstack((A, np.array(new_gid).reshape(-1, 1))), delimiter=',')
 
     with open(f"../assets/{shape}_spanning_localizer.json", "w") as f:
         json.dump(localizer, f)
@@ -371,7 +377,7 @@ if __name__ == "__main__":
     visualize = False
 
     # for n in [4]:
-    for n in [4, 8, 10, 14, 20]:
+    for n in [4, 6, 8, 10, 14, 20]:
         shape = f"grid_{n*n}"
 
         if visualize:
