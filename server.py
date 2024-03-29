@@ -268,28 +268,41 @@ if __name__ == '__main__':
         else:
             if Config.GROUP_TYPE == 'hierarchical' \
                     or Config.GROUP_TYPE == 'sequential' \
-                    or Config.GROUP_TYPE == 'spanning':
+                    or Config.GROUP_TYPE == 'spanning' \
+                    or Config.GROUP_TYPE == 'spanning_2':
                 with open(f"assets/{Config.SHAPE}_localizer.json") as f:
                     localizer = json.load(f)
                 # print(localizer)
 
+                if Config.GROUP_TYPE == 'spanning_2':
+                    with open(f"assets/{Config.SHAPE}_intra_localizer.json") as f:
+                        intra_localizer = json.load(f)
+                else:
+                    intra_localizer = {}
+
                 for i in node_point_idx:
-                    if Config.GROUP_TYPE == 'spanning':
+                    if Config.GROUP_TYPE == 'spanning' or Config.GROUP_TYPE == 'spanning_2':
                         gid = int(point_cloud[i, 3])
                     else:
                         gid = [int(g) for g in point_cloud[i, 3:].tolist()]
 
+                    if Config.GROUP_TYPE == 'spanning_2':
+                        pid = int(point_cloud[i, 4])
+                    else:
+                        pid = i + 1
+
                     local_gtl_point_cloud.append(gtl_point_cloud[i])
                     p = worker.WorkerProcess(
                         count,
-                        i + 1,
+                        pid,
                         gid,
                         gtl_point_cloud[i],
                         np.array([0, 0, 0]),
                         None,
                         results_directory,
                         None,
-                        localizer[str(i)] if str(i) in localizer else [],
+                        localizer[str(pid)] if str(pid) in localizer else [],
+                        intra_localizer=intra_localizer[str(pid)] if str(pid) in intra_localizer else None
                     )
                     p.start()
                     processes.append(p)

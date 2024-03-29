@@ -316,7 +316,11 @@ def create_spanning_tree_groups(A, G, shape, visualize):
 
     degrees = dict(T.degree())
     max_degree_node = max(degrees, key=degrees.get)
-    bfs_order = list(nx.bfs_tree(T, source=max_degree_node))
+    bfs_tree = nx.bfs_tree(T, source=max_degree_node)
+    bfs_tree_out_degree = bfs_tree.out_degree()
+    print(f"grid{shape}BF = {{{','.join(map(lambda x:str(x),list(dict(bfs_tree_out_degree).values())))}}}")
+    print(f"grid{shape}KS = {{{','.join(list(map(lambda x: str(len(x)), groups.values())))}}}")
+    bfs_order = list(bfs_tree)
 
     bfs_order_gid = {bfs_order[i]: i for i in range(len(bfs_order))}
 
@@ -374,25 +378,144 @@ def create_spanning_tree_groups(A, G, shape, visualize):
         plt.show()
 
 
+def create_spanning_tree_groups_2(A, G, shape, visualize):
+    k = int(1.5 * A.shape[0]) // G
+    groups, max_dist_1, assignments, centroids = get_kmeans_groups(A, k)
+
+    T = nx.minimum_spanning_tree(construct_graph(centroids))
+
+    degrees = dict(T.degree())
+    max_degree_node = max(degrees, key=degrees.get)
+    bfs_tree = nx.bfs_tree(T, source=max_degree_node)
+    bfs_tree_out_degree = bfs_tree.out_degree()
+    # print(f"grid{shape}BF = {{{','.join(map(lambda x:str(x),list(dict(bfs_tree_out_degree).values())))}}}")
+    # print(f"grid{shape}KS = {{{','.join(list(map(lambda x: str(len(x)), groups.values())))}}}")
+    bfs_order = list(bfs_tree)
+
+    bfs_order_gid = {bfs_order[i]: i for i in range(len(bfs_order))}
+
+    localizer = {}
+    gid_to_localizer = {}
+    dists = []
+    for i, j in T.edges:
+        l_gid = i
+        r_gid = j
+        l_b_gid = bfs_order_gid[l_gid]
+        r_b_gid = bfs_order_gid[r_gid]
+        l_group = groups[l_gid]
+        r_group = groups[r_gid]
+
+        xdist = cdist(A[l_group], A[r_group])
+        am = np.argmin(xdist)
+        dists.append(xdist[am // len(r_group), am % len(r_group)])
+        l_idx = l_group[am // len(r_group)]
+        r_idx = r_group[am % len(r_group)]
+        # l_pid = bfs_order_pid[l_idx]
+        # r_pid = bfs_order_pid[r_idx]
+        if l_b_gid > r_b_gid:
+            gid_to_localizer[l_b_gid] = (l_idx, r_idx)
+        else:
+            gid_to_localizer[r_b_gid] = (r_idx, l_idx)
+
+        # if l_idx in localizer:
+        #     localizer[l_idx].append((r_idx, l_b_gid))
+        # else:
+        #     localizer[l_idx] = [(r_idx, l_b_gid)]
+        # if r_idx in localizer:
+        #     localizer[r_idx].append((l_idx, r_b_gid))
+        # else:
+        #     localizer[r_idx] = [(l_idx, r_b_gid)]
+
+    bfs_order_pid = {}
+    intra_localizer = {}
+    for gid, pids in groups.items():
+        g_points = A[pids]
+        g_T = nx.minimum_spanning_tree(construct_graph(g_points))
+        b_gid = bfs_order_gid[gid]
+        if b_gid in gid_to_localizer:
+            source_node = pids.index(gid_to_localizer[b_gid][0])
+        else:
+            source_node = 0
+        bfs_tree = nx.bfs_tree(g_T, source=source_node)
+        bfs_order = list(bfs_tree)
+        for i in range(len(bfs_order)):
+            bfs_order_pid[pids[bfs_order[i]]] = pids[i]
+        # print(gid, pids, bfs_order)
+        for i, j in g_T.edges:
+            l_pid = bfs_order_pid[pids[i]]
+            r_pid = bfs_order_pid[pids[j]]
+            if l_pid > r_pid:
+                intra_localizer[l_pid] = r_pid
+            else:
+                intra_localizer[r_pid] = l_pid
+    # print(bfs_order_pid)
+    for gid, link in gid_to_localizer.items():
+        if bfs_order_pid[link[0]] in localizer:
+            localizer[bfs_order_pid[link[0]]].append((bfs_order_pid[link[1]], gid))
+        else:
+            localizer[bfs_order_pid[link[0]]] = [(bfs_order_pid[link[1]], gid)]
+        if bfs_order_pid[link[1]] in localizer:
+            localizer[bfs_order_pid[link[1]]].append((bfs_order_pid[link[0]], None))
+        else:
+            localizer[bfs_order_pid[link[1]]] = [(bfs_order_pid[link[0]], None)]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 2, 1)
+    ax2 = fig.add_subplot(1, 2, 2)
+    ax.hist(max_dist_1)
+    ax2.hist(dists)
+    plt.savefig(f"../assets/{shape}_spanning_2_hist.png")
+    new_gid = [bfs_order_gid[a] for a in assignments]
+    new_pid = [bfs_order_pid[i] for i in range(A.shape[0])]
+    np.savetxt(f"../assets/{shape}_spanning_2.txt",
+               np.hstack((A, np.array(new_gid).reshape(-1, 1), np.array(new_pid).reshape(-1, 1))), delimiter=',')
+
+    with open(f"../assets/{shape}_spanning_2_localizer.json", "w") as f:
+        json.dump(localizer, f)
+    with open(f"../assets/{shape}_spanning_2_intra_localizer.json", "w") as f:
+        json.dump(intra_localizer, f)
+
+    if visualize:
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter3D(A[:, 0], A[:, 1], A[:, 2], depthshade=False)
+        for g in groups.values():
+            xs = [A[p][0] for p in g]
+            ys = [A[p][1] for p in g]
+            zs = [A[p][2] for p in g]
+            ax.plot3D(xs, ys, zs, '-bo')
+
+        for i, l in localizer.items():
+            for p in l:
+                ax.plot3D(A[[i, p[0]], 0], A[[i, p[0]], 1], A[[i, p[0]], 2], '-ro')
+
+        # ax.plot3D(A[T, 0], A[T, 1], A[T, 2] + 1, '-o')
+        plt.show()
+
+
 if __name__ == "__main__":
     # n = 4
     visualize = False
 
-    # for n in [4]:
-    for n in [4, 6, 8, 10, 14, 20]:
-        shape = f"grid_{n*n}"
+    # for n in [6]:
+    # for n in [4, 6, 8, 10, 14, 20]:
+    # for shape in ["chess_544"]:
+    # for shape in ["chess_544", "skateboard_1912", "dragon_1020"]:
+    for shape in ["racecar_3826"]:
+        # shape = f"grid_{n*n}"
 
         if visualize:
             mpl.use('macosx')
 
-        A = np.random.rand(n*n, 3)
-        for i in range(n):
-            for j in range(n):
-                A[i * n + j] = [i, j, 1]
+        # A = np.random.rand(n*n, 3)
+        # for i in range(n):
+        #     for j in range(n):
+        #         A[i * n + j] = [i, j, 1]
 
-        # A = np.loadtxt(f'../assets/{shape}.txt', delimiter=',')
+        A = np.loadtxt(f'../assets/{shape}.xyz', delimiter=',')*100
+        A[:, [0, 2, 1]] = A[:, [0, 1, 2]]
 
         # create_overlapping_groups(A, 5, shape, visualize)
         # create_hierarchical_groups(A, 5, shape, visualize)
         # create_binary_overlapping_groups(A, shape, visualize)
-        create_spanning_tree_groups(A, 5, shape, visualize)
+        create_spanning_tree_groups_2(A, 5, shape, visualize)

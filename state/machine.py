@@ -200,6 +200,33 @@ class StateMachine:
             # send your location
             self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid + 1, "*"))
 
+    def localize_spanning_2(self):
+        # if self.context.intra_localizer in self.context.neighbors:
+        #     # print(self.context.fid, self.context.intra_localizer)
+        #     v = self.compute_v(self.context.neighbors[self.context.intra_localizer])
+        #     self.context.move(v)
+
+        n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
+        adjustments = np.array([[.0, .0, .0]])
+        if len(n1):
+            adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n1]))
+        v = np.mean(adjustments, axis=0)
+        self.context.move(v)
+
+        self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
+
+        for fid, gid in self.context.localizer:
+            # localize relative to it
+            # print(self.context.fid, self.context.hierarchy)
+            if fid in self.context.neighbors:
+                if self.context.swarm_id > self.context.neighbors[fid].swarm_id:
+                    # print(self.context.fid, fid, gid)
+                    v = self.compute_v(self.context.neighbors[fid])
+                    self.context.move(v)
+                    self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
+            # send your location
+            self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
+
     def localize_hierarchical(self):
         n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
         adjustments = np.array([[.0, .0, .0]])
@@ -299,6 +326,8 @@ class StateMachine:
             self.localize_overlapping()
         elif Config.GROUP_TYPE == 'spanning':
             self.localize_spanning()
+        elif Config.GROUP_TYPE == 'spanning_2':
+            self.localize_spanning_2()
         else:
             self.localize_sequential_hierarchical()
 
