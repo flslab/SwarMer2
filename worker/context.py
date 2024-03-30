@@ -154,7 +154,7 @@ class WorkerContext:
         return norm_v * erred_v / np.linalg.norm(erred_v)
 
     def update_neighbor(self, ctx):
-        if ctx.fid != 0:
+        if ctx.fid != -1:
             self.neighbors[ctx.fid] = ctx
 
     def increment_range(self):

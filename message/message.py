@@ -26,9 +26,9 @@ class Message:
         return self
 
     def from_server(self):
-        self.fid = 0
-        self.swarm_id = 0
-        self.id = 0
+        self.fid = -1
+        self.swarm_id = -1
+        self.id = -1
         return self
 
     def to_all(self):
@@ -61,8 +61,8 @@ class Message:
         return self
 
     def to_server(self):
-        self.dest_fid = 0
-        self.dest_swarm_id = 0
+        self.dest_fid = -1
+        self.dest_swarm_id = -1
         return self
 
     def to_mod(self, m, n):

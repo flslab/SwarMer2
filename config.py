@@ -30,8 +30,8 @@ class Config:
     BUSY_WAITING = False
     MIN_ADJUSTMENT = 0
     SAMPLE_SIZE = 0
-    DURATION = 60
-    SHAPE = 'grid_16_spanning_2'
+    DURATION = 20
+    SHAPE = 'grid_36_spanning_2'
     RESULTS_PATH = 'results'
     MULTICAST = True
     THAW_MIN_NUM_SWARMS = 1
@@ -45,5 +45,6 @@ class Config:
     STANDBY = False
     GROUP = False
     GROUP_TYPE = 'spanning_2'  # hierarchical, overlapping, bin_overlapping, sequential, spanning, spanning_2
-    FILE_NAME_KEYS = [('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('SHAPE', 'R')]
+    MULTIPLE_ANCHORS = True
+    FILE_NAME_KEYS = [('SHAPE', 'R'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('MULTIPLE_ANCHORS', 'M')]
     DIR_KEYS = [('SHAPE', 'R')]

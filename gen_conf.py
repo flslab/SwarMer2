@@ -48,7 +48,8 @@ def_conf = {
     "STANDBY": "False",
     "GROUP": "False",
     "GROUP_TYPE": "'bin_overlapping'",
-    "FILE_NAME_KEYS": "[('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('SHAPE', 'S')]",
+    "MULTIPLE_ANCHORS": "True",
+    "FILE_NAME_KEYS": "[('SHAPE', 'R'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('MULTIPLE_ANCHORS', 'M')]",
     "DIR_KEYS": "[]",
 }
 
