@@ -47,7 +47,7 @@ def_conf = {
     "SS_SAMPLE_DELAY": "0",
     "STANDBY": "False",
     "GROUP": "False",
-    "GROUP_TYPE": "'spanning_2'",
+    "GROUP_TYPE": "'spanning'",
     "MULTIPLE_ANCHORS": "True",
     "FILE_NAME_KEYS": "[('SHAPE', 'S'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('MULTIPLE_ANCHORS', 'M')]",
     "DIR_KEYS": "[]",
@@ -61,9 +61,10 @@ props = [
     {
         "keys": ["SHAPE"],
         "values": [
-            "'grid_36_spanning_2'",
-            "'grid_100_spanning_2'",
-            "'grid_400_spanning_2'",
+            "'grid_36_spanning'",
+            # "'grid_100_spanning_2'",
+            "'grid_400_spanning'",
+            "'chess_408_spanning'",
             # "'chess_408_spanning_2'",
             # "'palm_725_spanning_2'",
             # "'dragon_1147_spanning_2'",

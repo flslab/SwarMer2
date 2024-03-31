@@ -17,9 +17,7 @@ from worker.metrics import TimelineEvents
 ticks_gap = 5
 
 start_time = 0
-fps = 30
-frame_rate = 1/fps
-total_points = 11888
+
 
 # t30_d1_g0	t30_d1_g20	t30_d5_g0	t30_d5_g20	t600_d1_g0	t600_d1_g20	t600_d5_g0	t600_d5_g20
 output_name = "testd"
@@ -279,13 +277,15 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_23_39",  # skateboard lambda 0.05
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_26_58",  # skateboard lambda 1.5
         # "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_64_spanning_D5_X0.0_Sgrid_64_spanning_25_Mar_10_32_26",
-        "/Users/hamed/Documents/Holodeck/SwarMer2/results/chess_408_spanning_2_Schess_408_spanning_2_D5_X0.0_MTrue_31_Mar_10_51_04"
+        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_400_spanning_2_Sgrid_400_spanning_2_D5_X0.0_MTrue_31_Mar_11_46_49"
     ]
 
-    duration = 60
+    duration = 30
+    fps = 10
+    frame_rate = 1 / fps
 
     names = [
-        ("chess_408", "0_spanning_2_all_views"),
+        ("grid_400", "0_spanning_2_all_views"),
         # ("grid_64", "0_spanning_all_views"),
         # ("grid_64", "0.1_spanning_all_views"),
         # ("grid_64", "0.01_spanning_all_views"),
@@ -298,7 +298,8 @@ if __name__ == '__main__':
         filtered_events, length, width, height, _ = read_point_cloud(path)
         # mat = scipy.io.loadmat(f'/Users/hamed/Documents/Holodeck/SwarMerPy/assets/skateboard.mat')
         # gtl = mat['p']
-        gtl = np.loadtxt(f'assets/{name[0]}.xyz', delimiter=' ')
+        # gtl = np.loadtxt(f'assets/{name[0]}.xyz', delimiter=' ')
+        gtl = np.loadtxt(f'assets/{name[0]}.txt', delimiter=',')
 
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)
@@ -314,7 +315,7 @@ if __name__ == '__main__':
         points = dict()
         ani = FuncAnimation(
             fig, partial(update,),
-            frames=30 * duration,
+            frames=fps * duration,
             init_func=partial(init, ax, ax1, ax2, ax3, ax4))
         #
         # plt.show()
