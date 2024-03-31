@@ -47,16 +47,25 @@ def_conf = {
     "SS_SAMPLE_DELAY": "0",
     "STANDBY": "False",
     "GROUP": "False",
-    "GROUP_TYPE": "'bin_overlapping'",
+    "GROUP_TYPE": "'spanning_2'",
     "MULTIPLE_ANCHORS": "True",
-    "FILE_NAME_KEYS": "[('SHAPE', 'R'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('MULTIPLE_ANCHORS', 'M')]",
+    "FILE_NAME_KEYS": "[('SHAPE', 'S'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('MULTIPLE_ANCHORS', 'M')]",
     "DIR_KEYS": "[]",
 }
 
 props = [
     {
+      "keys": ["MULTIPLE_ANCHORS"],
+      "values": ["True", "False"]
+    },
+    {
         "keys": ["SHAPE"],
-        "values": ["'grid_36'", "'grid_64'", "'grid_100'", "'grid_196'"]
+        "values": [
+            "'chess_408_spanning_2'",
+            "'palm_725_spanning_2'",
+            "'dragon_1147_spanning_2'",
+            "'skateboard_1372_spanning_2'",
+        ]
     },
     {
         "keys": ["DEAD_RECKONING_ANGLE", "SS_ERROR_PERCENTAGE"],

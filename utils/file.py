@@ -15,6 +15,7 @@ import pandas as pd
 import glob
 
 from utils import hausdorff_distance
+from utils.chamfer import chamfer_distance_optimized
 from worker.metrics import TimelineEvents
 import pandas as pd
 
@@ -169,10 +170,8 @@ def read_timelines(path, fid='*'):
 
 def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0.01
     xs = [0]
-    ys = [-1]
-    swarm_ys = [-1]
-    lease_exp_ys = [0]
-
+    hd = [-1]
+    cd = [-1]
     current_points = {}
     current_swarms = {}
     gtl_points = {}
@@ -207,23 +206,21 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
                 gtl_points.pop(e_fid)
             elif e_type == TimelineEvents.ILLUMINATE:
                 gtl_points[e_fid] = event[2]
-            elif e_type == TimelineEvents.SWARM:
-                current_swarms[e_fid] = event[2]
-            elif e_type == TimelineEvents.LEASE_EXP:
-                lease_exp_ys[-1] += 1
             i += 1
         else:
             # swarm_ys[-1] = len(set(current_swarms.values()))
             # print(len(current_swarms))
             if len(current_points) > 1 and len(gtl_points):
-                ys[-1] = hausdorff_distance(np.stack(list(current_points.values())), np.stack(list(gtl_points.values())))
+                a = np.stack(list(current_points.values()))
+                b = np.stack(list(gtl_points.values()))
+                hd[-1] = hausdorff_distance(a, b)
+                cd[-1] = chamfer_distance_optimized(a, b)
                 # ys[-1] = 1
             xs.append(xs[-1] + sw)
-            ys.append(-1)
-            swarm_ys.append(-1)
-            lease_exp_ys.append(0)
+            hd.append(-1)
+            cd.append(-1)
 
-    return xs, ys, swarm_ys, lease_exp_ys
+    return xs, hd, cd
 
 
 def merge_timelines(timelines):
@@ -253,26 +250,26 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
             chart_data = json.load(f)
             # r_xs = chart_data[0]
             # t_idx = next(i for i, v in enumerate(r_xs) if v > 300)
-            r_xs = chart_data[0]
-            r_ys = chart_data[1]
-            s_ys = chart_data[2]
-            l_ys = chart_data[3]
+            t = chart_data['t']
+            hd = chart_data['hd']
+            cd = chart_data['cd']
     else:
         data = read_timelines(path, fid)
-        r_xs, r_ys, s_ys, l_ys = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
+        t, hd, cd = gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
         # gen_sliding_window_chart_data(data['timeline'], data['start_time'], lambda x: x[2])
         # return
         with open(f"{path}/charts.json", "w") as f:
-            json.dump([r_xs, r_ys, s_ys, l_ys], f)
+            json.dump({'t': t, 'hd': hd, 'cd': cd}, f)
 
     # s_xs, s_ys = gen_sliding_window_chart_data(data['sent_bytes'], data['start_time'], lambda x: x[2])
     # h_xs, h_ys = gen_sliding_window_chart_data(data['heuristic'], data['start_time'], lambda x: 1)
     # ax.step(r_xs, s_ys, where='post', label="Number of swarms", color="tab:purple")
     # ax.step(r_xs, l_ys, where='post', label="Number of expired leases")
     while True:
-        if r_ys[0] == -1:
-            r_ys.pop(0)
-            r_xs.pop(0)
+        if hd[0] == -1:
+            hd.pop(0)
+            cd.pop(0)
+            t.pop(0)
         else:
             break
 
@@ -289,10 +286,11 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
     # plt.savefig(f'{path}/{name}_{fid}.png', dpi=300)
 
     fig, ax = plt.subplots(figsize=(5, 2.5), layout="constrained")
-    ax.step(r_xs, r_ys, where='post', label="Hausdorff distance", color="tab:blue")
-    # ax.legend()
+    ax.step(t, hd, where='post', label="Hausdorff distance", color="tab:blue")
+    ax.step(t, cd, where='post', label="Chamfer distance", color="tab:orange")
+    ax.legend()
     # ax.set_ylabel(f'HD, {name}', loc='top', rotation=0, labelpad=-133)
-    ax.set_title(f'HD, {name}', fontsize=10, loc="left")
+    ax.set_title(f'HD, CD {name}', fontsize=10, loc="left")
     ax.set_xlabel('Time (Second)', loc='right')
     ax.spines['top'].set_color('white')
     ax.spines['right'].set_color('white')
@@ -624,8 +622,9 @@ if __name__ == '__main__':
     mpl.rcParams['font.family'] = 'Times New Roman'
     plt.rcParams.update({'font.size': 10})
 
-    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMerPy/results/chess_ss_err_plain/EM1/07_Nov_11_29_51", "*", "_", False)
-    # exit()
+    path = "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_spanning_2/Rgrid_36_spanning_2/grid_36_spanning_2_Rgrid_36_spanning_2_D5_X0.0_MTrue_1711820026"
+    gen_sw_charts(path, "*", "_", False)
+    exit()
 
     paths = [
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-2node/results/dragon/24_Aug_17_38_36",
