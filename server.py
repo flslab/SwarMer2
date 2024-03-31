@@ -288,8 +288,10 @@ if __name__ == '__main__':
 
                     if Config.GROUP_TYPE == 'spanning_2':
                         pid = int(point_cloud[i, 4])
+                        idx = pid
                     else:
                         pid = i + 1
+                        idx = i
 
                     local_gtl_point_cloud.append(gtl_point_cloud[i])
                     p = worker.WorkerProcess(
@@ -301,8 +303,8 @@ if __name__ == '__main__':
                         None,
                         results_directory,
                         None,
-                        localizer[str(pid)] if str(pid) in localizer else [],
-                        intra_localizer=intra_localizer[str(pid)] if str(pid) in intra_localizer else None
+                        localizer[str(idx)] if str(idx) in localizer else [],
+                        intra_localizer=intra_localizer[str(idx)] if str(idx) in intra_localizer else None
                     )
                     p.start()
                     processes.append(p)

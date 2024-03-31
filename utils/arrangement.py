@@ -79,6 +79,7 @@ def draw_cube():
     ax.quiver(0.5, 0.5, 0.5, *faces['+Z'], color=color_map['+Z'])
     ax.quiver(0.5, 0.5, 0.5, *faces['-Z'], color=color_map['-Z'])
     plt.savefig('arrangement.png', dpi=300)
+    # plt.show()
 
 
 if __name__ == "__main__":
@@ -88,12 +89,12 @@ if __name__ == "__main__":
     # n = 4
     visualize = True
 
-    # for n in [6]:
+    for n in [20]:
     # for n in [4, 6, 8, 10, 14, 20]:
     # for shape in ["chess_544", "skateboard_1912", "dragon_1020"]:
     # for shape in ["chess_408", "skateboard_1372", "dragon_1147", "palm_725", "racecar_3720"]:
-    for shape in ["chess_408"]:
-        # shape = f"grid_{n*n}"
+    # for shape in ["chess_408"]:
+        shape = f"grid_{n*n}"
 
         if visualize:
             mpl.use('macosx')
@@ -155,7 +156,7 @@ if __name__ == "__main__":
                     v.append(h[1])
                     w.append(h[2])
                     colors.append(color_map[simplified_camera_placement[pid][0]])
-                    # ax.text(P[pid][0], P[pid][1], P[pid][2], str(pid))
+                    ax.text(P[pid][0], P[pid][1], P[pid][2], str(pid))
                 Q = ax.quiver(x, y, z, u, v, w, colors=colors, arrow_length_ratio=0.5)
 
                 ax.set_aspect('equal')
@@ -167,7 +168,8 @@ if __name__ == "__main__":
                 percent = {x: 100*(y/A.shape[0]) for x, y in hist.items()}
                 plt.bar(range(len(hist)), hist.values(), color=[color_map[h] for h in hist.keys()])
                 plt.xticks(range(len(hist)), hist.keys())
-                plt.savefig(f"{shape}.png", dpi=300)
+                # plt.savefig(f"{shape}.png", dpi=300)
+                plt.show()
                 print(shape, "total number of FLSs: ", A.shape[0],
                       f"number of each variant: {' '.join([f'{k}:{v}' for k, v in hist.items()])}",
                       f"percent of each variant: {' '.join([f'{k}:{v}' for k, v in percent.items()])}")
