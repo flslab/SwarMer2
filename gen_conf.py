@@ -56,15 +56,18 @@ def_conf = {
 props = [
     {
       "keys": ["MULTIPLE_ANCHORS"],
-      "values": ["True", "False"]
+      "values": ["True"]
     },
     {
         "keys": ["SHAPE"],
         "values": [
-            "'chess_408_spanning_2'",
-            "'palm_725_spanning_2'",
-            "'dragon_1147_spanning_2'",
-            "'skateboard_1372_spanning_2'",
+            "'grid_36_spanning_2'",
+            "'grid_100_spanning_2'",
+            "'grid_400_spanning_2'",
+            # "'chess_408_spanning_2'",
+            # "'palm_725_spanning_2'",
+            # "'dragon_1147_spanning_2'",
+            # "'skateboard_1372_spanning_2'",
         ]
     },
     {

@@ -278,13 +278,19 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_42_34",  # skateboard 0.0001
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_23_39",  # skateboard lambda 0.05
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_26_58",  # skateboard lambda 1.5
-        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_16_spanning/Rgrid_16_spanning/grid_16_spanning_D5_X0.0_Rgrid_16_spanning_1711160611",
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_64_spanning_D5_X0.0_Sgrid_64_spanning_25_Mar_10_32_26",
+        "/Users/hamed/Documents/Holodeck/SwarMer2/results/chess_408_spanning_2_Schess_408_spanning_2_D5_X0.0_MTrue_31_Mar_10_51_04"
     ]
 
     duration = 60
 
     names = [
-        ("grid_16", "_0_spanning_all_views"),
+        ("chess_408", "0_spanning_2_all_views"),
+        # ("grid_64", "0_spanning_all_views"),
+        # ("grid_64", "0.1_spanning_all_views"),
+        # ("grid_64", "0.01_spanning_all_views"),
+        # ("grid_100", "0_spanning_all_views"),
+        # ("grid_196", "0_spanning_all_views"),
     ]
 
     for path, name in zip(paths, names):
@@ -292,12 +298,12 @@ if __name__ == '__main__':
         filtered_events, length, width, height, _ = read_point_cloud(path)
         # mat = scipy.io.loadmat(f'/Users/hamed/Documents/Holodeck/SwarMerPy/assets/skateboard.mat')
         # gtl = mat['p']
-        gtl = np.loadtxt(f'assets/{name[0]}.txt', delimiter=',')
+        gtl = np.loadtxt(f'assets/{name[0]}.xyz', delimiter=' ')
 
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)
-            time_stamps = chart_data[0]
-            hds = chart_data[1]
+            time_stamps = chart_data['t']
+            hds = chart_data['hd']
             while True:
                 if hds[0] == -1:
                     hds.pop(0)

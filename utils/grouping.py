@@ -498,22 +498,24 @@ if __name__ == "__main__":
     visualize = False
 
     # for n in [6]:
-    # for n in [4, 6, 8, 10, 14, 20]:
-    # for shape in ["chess_544"]:
-    # for shape in ["chess_544", "skateboard_1912", "dragon_1020"]:
-    for shape in ["racecar_3826"]:
-        # shape = f"grid_{n*n}"
+    for n in [6, 10, 20]:
+    # for shape in ["chess"]:
+    # for shape in ["racecar_3826"]:
+    # for shape in ["chess_408", "skateboard_1372", "dragon_1147", "palm_725", "racecar_3720"]:
+    # for shape in ["kangaroo_972"]:
+        shape = f"grid_{n*n}"
 
         if visualize:
             mpl.use('macosx')
 
-        # A = np.random.rand(n*n, 3)
-        # for i in range(n):
-        #     for j in range(n):
-        #         A[i * n + j] = [i, j, 1]
+        A = np.random.rand(n*n, 3)
+        for i in range(n):
+            for j in range(n):
+                A[i * n + j] = [i, j, 1]
 
-        A = np.loadtxt(f'../assets/{shape}.xyz', delimiter=',')*100
-        A[:, [0, 2, 1]] = A[:, [0, 1, 2]]
+        # A = np.loadtxt(f'../assets/{shape}.xyz', delimiter=' ')*100*0.4
+        # A = np.loadtxt(f'../assets/{shape}.txt', delimiter=',')*0.4
+        # A[:, [0, 2, 1]] = A[:, [0, 1, 2]]
 
         # create_overlapping_groups(A, 5, shape, visualize)
         # create_hierarchical_groups(A, 5, shape, visualize)

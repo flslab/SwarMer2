@@ -91,7 +91,8 @@ if __name__ == "__main__":
     # for n in [6]:
     # for n in [4, 6, 8, 10, 14, 20]:
     # for shape in ["chess_544", "skateboard_1912", "dragon_1020"]:
-    for shape in ["racecar_3826"]:
+    # for shape in ["chess_408", "skateboard_1372", "dragon_1147", "palm_725", "racecar_3720"]:
+    for shape in ["chess_408"]:
         # shape = f"grid_{n*n}"
 
         if visualize:
@@ -154,12 +155,19 @@ if __name__ == "__main__":
                     v.append(h[1])
                     w.append(h[2])
                     colors.append(color_map[simplified_camera_placement[pid][0]])
+                    # ax.text(P[pid][0], P[pid][1], P[pid][2], str(pid))
                 Q = ax.quiver(x, y, z, u, v, w, colors=colors, arrow_length_ratio=0.5)
+
                 ax.set_aspect('equal')
                 ax2.scatter3D(A[:, 0], A[:, 1], A[:, 2], color='blue', s=1.5, depthshade=True)
                 ax2.set_aspect('equal')
+                # ax.view_init(azim=ax.azim+90)
+                # ax2.view_init(azim=ax2.azim+90)
                 hist = Counter([h[0] for h in simplified_camera_placement.values()])
-                plt.bar(range(3), hist.values(), color=[color_map[h] for h in hist.keys()])
-                plt.xticks(range(3), hist.keys())
+                percent = {x: 100*(y/A.shape[0]) for x, y in hist.items()}
+                plt.bar(range(len(hist)), hist.values(), color=[color_map[h] for h in hist.keys()])
+                plt.xticks(range(len(hist)), hist.keys())
                 plt.savefig(f"{shape}.png", dpi=300)
-                print(shape, hist, "total", A.shape[0], "percent", {x: 100*(y/A.shape[0]) for x,y in hist.items()})
+                print(shape, "total number of FLSs: ", A.shape[0],
+                      f"number of each variant: {' '.join([f'{k}:{v}' for k, v in hist.items()])}",
+                      f"percent of each variant: {' '.join([f'{k}:{v}' for k, v in percent.items()])}")

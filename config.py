@@ -45,6 +45,6 @@ class Config:
     STANDBY = False
     GROUP = False
     GROUP_TYPE = 'spanning_2'  # hierarchical, overlapping, bin_overlapping, sequential, spanning, spanning_2
-    MULTIPLE_ANCHORS = True
+    MULTIPLE_ANCHORS = False
     FILE_NAME_KEYS = [('SHAPE', 'R'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('MULTIPLE_ANCHORS', 'M')]
     DIR_KEYS = [('SHAPE', 'R')]
