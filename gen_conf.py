@@ -50,17 +50,27 @@ def_conf = {
     "GROUP_TYPE": "'spanning_2'",
     "MULTIPLE_ANCHORS": "True",
     "FILE_NAME_KEYS": "[('SHAPE', 'S'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('MULTIPLE_ANCHORS', 'M')]",
-    "DIR_KEYS": "[]",
+    "DIR_KEYS": "[('GROUP_TYPE', 'T')]",
 }
 
 props = [
     {
-      "keys": ["MULTIPLE_ANCHORS"],
-      "values": ["True"]
+        "keys": ["MULTIPLE_ANCHORS"],
+        "values": ["True"]
     },
     {
-        "keys": ["SHAPE"],
+        "keys": ["SHAPE", "GROUP_TYPE"],
         "values": [
+            {"SHAPE": "'grid_100_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'grid_144_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'grid_225_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'grid_324_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'grid_400_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'grid_100_spanning'", "GROUP_TYPE": "'spanning'"},
+            {"SHAPE": "'grid_144_spanning'", "GROUP_TYPE": "'spanning'"},
+            {"SHAPE": "'grid_225_spanning'", "GROUP_TYPE": "'spanning'"},
+            {"SHAPE": "'grid_324_spanning'", "GROUP_TYPE": "'spanning'"},
+            {"SHAPE": "'grid_400_spanning'", "GROUP_TYPE": "'spanning'"},
             # "'grid_36_spanning'",
             # "'grid_100_spanning_2'",
             # "'grid_400_spanning_2'",
