@@ -225,6 +225,7 @@ class StateMachine:
         # if time.time() - self.start_time > 10:
         for fid, gid in self.context.localizer:
             # localize relative to it
+            print(self.context.fid, fid, gid, self.context.swarm_id)
             if gid is not None and fid in self.context.neighbors:
                 print(fid, gid)
                 # if self.context.swarm_id > self.context.neighbors[fid].swarm_id:
