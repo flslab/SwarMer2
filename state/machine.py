@@ -222,17 +222,17 @@ class StateMachine:
 
         self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
 
-        if time.time() - self.start_time > 10:
-            for fid, gid in self.context.localizer:
-                # localize relative to it
-                if fid in self.context.neighbors:
-                    if self.context.swarm_id > self.context.neighbors[fid].swarm_id:
-                        # print(f"inter: {self.context.fid} -> {fid} ({gid})")
-                        v = self.compute_v(self.context.neighbors[fid])
-                        self.context.move(v)
-                        self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
-                # send your location
-                self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
+        # if time.time() - self.start_time > 10:
+        for fid, gid in self.context.localizer:
+            # localize relative to it
+            if fid in self.context.neighbors:
+                if self.context.swarm_id > self.context.neighbors[fid].swarm_id:
+                    # print(f"inter: {self.context.fid} -> {fid} ({gid})")
+                    v = self.compute_v(self.context.neighbors[fid])
+                    self.context.move(v)
+                    self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
+            # send your location
+            self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
 
     def localize_hierarchical(self):
         n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
