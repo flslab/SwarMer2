@@ -64,7 +64,7 @@ props = [
             # {"SHAPE": "'chess_100_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             {"SHAPE": "'chess_100_spanning_3'", "GROUP_TYPE": "'spanning_3'"},
             # {"SHAPE": "'chess_408_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
-            # {"SHAPE": "'chess_408_spanning_3'", "GROUP_TYPE": "'spanning_3'"},
+            {"SHAPE": "'chess_408_spanning_3'", "GROUP_TYPE": "'spanning_3'"},
             # {"SHAPE": "'grid_144_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'grid_225_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'grid_324_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
