@@ -226,6 +226,7 @@ class StateMachine:
         for fid, gid in self.context.localizer:
             # localize relative to it
             if gid is not None and fid in self.context.neighbors:
+                print(fid, gid)
                 # if self.context.swarm_id > self.context.neighbors[fid].swarm_id:
                     # print(f"inter: {self.context.fid} -> {fid} ({gid})")
                 v = self.compute_v(self.context.neighbors[fid])
