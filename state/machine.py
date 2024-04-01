@@ -205,7 +205,10 @@ class StateMachine:
     def localize_spanning_2(self):
         if Config.MULTIPLE_ANCHORS:
             # if self.context.intra_localizer is not None:
-            n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
+            if Config.GROUP_TYPE == 'spanning_2':
+                n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
+            else:
+                n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
             adjustments = np.array([[.0, .0, .0]])
             if len(n1):
                 adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n1]))
@@ -324,7 +327,7 @@ class StateMachine:
         self.state = state
 
         # if self.state == StateTypes.AVAILABLE:
-        if Config.GROUP_TYPE == 'spanning_2':
+        if Config.GROUP_TYPE == 'spanning_2' or Config.GROUP_TYPE == 'spanning_3':
             self.localize_spanning_2()
         elif Config.GROUP_TYPE == 'overlapping' or Config.GROUP_TYPE == 'bin_overlapping':
             self.localize_overlapping()

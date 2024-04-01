@@ -269,7 +269,8 @@ if __name__ == '__main__':
             if Config.GROUP_TYPE == 'hierarchical' \
                     or Config.GROUP_TYPE == 'sequential' \
                     or Config.GROUP_TYPE == 'spanning' \
-                    or Config.GROUP_TYPE == 'spanning_2':
+                    or Config.GROUP_TYPE == 'spanning_2' \
+                    or Config.GROUP_TYPE == 'spanning_3':
                 with open(f"assets/{Config.SHAPE}_localizer.json") as f:
                     localizer = json.load(f)
                 # print(localizer)
@@ -283,7 +284,8 @@ if __name__ == '__main__':
                 for i in node_point_idx:
                     if Config.GROUP_TYPE == 'spanning' or Config.GROUP_TYPE == 'spanning_2':
                         gid = int(point_cloud[i, 3])
-                        # gid = [int(point_cloud[i, 3]), int(point_cloud[i, 5])]
+                    elif Config.GROUP_TYPE == 'spanning_3':
+                        gid = [int(point_cloud[i, 3]), int(point_cloud[i, 5])]
                     else:
                         gid = [int(g) for g in point_cloud[i, 3:].tolist()]
 
