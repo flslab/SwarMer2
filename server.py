@@ -282,7 +282,8 @@ if __name__ == '__main__':
 
                 for i in node_point_idx:
                     if Config.GROUP_TYPE == 'spanning' or Config.GROUP_TYPE == 'spanning_2':
-                        gid = [int(point_cloud[i, 3]), int(point_cloud[i, 5])]
+                        gid = int(point_cloud[i, 3])
+                        # gid = [int(point_cloud[i, 3]), int(point_cloud[i, 5])]
                     else:
                         gid = [int(g) for g in point_cloud[i, 3:].tolist()]
 

@@ -59,9 +59,9 @@ props = [
         "values": ["True"]
     },
     {
-        "keys": ["SHAPE", "GROUP_TYPE"],
+        "keys": ["SHAPE"],
         "values": [
-            {"SHAPE": "'chess_100_spanning_3'", "GROUP_TYPE": "'spanning_2'"},
+            # {"SHAPE": "'chess_100_spanning_3'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'grid_144_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'grid_225_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'grid_324_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
@@ -76,8 +76,8 @@ props = [
             # "'grid_400_spanning_2'",
             # "'chess_408_spanning'",
             # "'chess_spanning_2'",
-            # "'chess_100_spanning_2'",
-            # "'chess_408_spanning_2'",
+            "'chess_100_spanning_2'",
+            "'chess_408_spanning_2'",
             # "'palm_725_spanning_2'",
             # "'dragon_1147_spanning_2'",
             # "'skateboard_1372_spanning_2'",
