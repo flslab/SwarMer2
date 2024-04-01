@@ -34,7 +34,7 @@ class WorkerContext:
         self.intra_localizer = intra_localizer
         self.hierarchy = None
         self.hid = 0
-        self.min_gid = np.min(sid)
+        self.min_gid = np.max(sid)
         self.set_swarm_id(sid)
         self.g_order = g_order
 
