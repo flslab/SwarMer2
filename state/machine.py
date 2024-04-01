@@ -202,7 +202,8 @@ class StateMachine:
 
     def localize_spanning_2(self):
         if Config.MULTIPLE_ANCHORS:
-            n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
+            # if self.context.intra_localizer is not None:
+            n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
             adjustments = np.array([[.0, .0, .0]])
             if len(n1):
                 adjustments = np.vstack((adjustments, [self.compute_v(n) for n in n1]))
