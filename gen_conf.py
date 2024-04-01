@@ -33,7 +33,7 @@ def_conf = {
     "BUSY_WAITING": "False",
     "MIN_ADJUSTMENT": "0",
     "SAMPLE_SIZE": "0",
-    "DURATION": "20",
+    "DURATION": "60",
     "SHAPE": "'outring'",
     "RESULTS_PATH": "'/proj/nova-PG0/hamed/results/swarmer'",
     "MULTICAST": "False",

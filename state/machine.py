@@ -203,7 +203,7 @@ class StateMachine:
             self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid + 1, "*"))
 
     def localize_spanning_2(self):
-        print(self.context.localizer)
+        # print(self.context.localizer)
         if Config.MULTIPLE_ANCHORS:
             # if self.context.intra_localizer is not None:
             if Config.GROUP_TYPE == 'spanning_2':
