@@ -78,9 +78,9 @@ props = [
             # "'chess_spanning_2'",
             "'chess_100_spanning_3'",
             "'chess_408_spanning_3'",
-            "'palm_725_spanning_3'",
-            "'dragon_1147_spanning_3'",
-            "'skateboard_1372_spanning_3'",
+            # "'palm_725_spanning_3'",
+            # "'dragon_1147_spanning_3'",
+            # "'skateboard_1372_spanning_3'",
         ]
     },
     {
