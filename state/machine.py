@@ -225,12 +225,12 @@ class StateMachine:
         # if time.time() - self.start_time > 10:
         for fid, gid in self.context.localizer:
             # localize relative to it
-            if fid in self.context.neighbors:
-                if self.context.swarm_id > self.context.neighbors[fid].swarm_id:
+            if gid is not None and fid in self.context.neighbors:
+                # if self.context.swarm_id > self.context.neighbors[fid].swarm_id:
                     # print(f"inter: {self.context.fid} -> {fid} ({gid})")
-                    v = self.compute_v(self.context.neighbors[fid])
-                    self.context.move(v)
-                    self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
+                v = self.compute_v(self.context.neighbors[fid])
+                self.context.move(v)
+                self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
             # send your location
             self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
 
