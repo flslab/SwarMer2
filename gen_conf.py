@@ -61,9 +61,9 @@ props = [
     {
         "keys": ["SHAPE", "GROUP_TYPE"],
         "values": [
-            {"SHAPE": "'chess_100_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
-            {"SHAPE": "'chess_100_spanning_3'", "GROUP_TYPE": "'spanning_3'"},
-            {"SHAPE": "'chess_408_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            # {"SHAPE": "'chess_100_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            # {"SHAPE": "'chess_100_spanning_3'", "GROUP_TYPE": "'spanning_3'"},
+            # {"SHAPE": "'chess_408_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             {"SHAPE": "'chess_408_spanning_3'", "GROUP_TYPE": "'spanning_3'"},
             # {"SHAPE": "'grid_144_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'grid_225_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
@@ -90,7 +90,7 @@ props = [
         "keys": ["DEAD_RECKONING_ANGLE", "SS_ERROR_PERCENTAGE"],
         "values": [
             {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.0"},
-            {"DEAD_RECKONING_ANGLE": "0", "SS_ERROR_PERCENTAGE": "0.0"},
+            # {"DEAD_RECKONING_ANGLE": "0", "SS_ERROR_PERCENTAGE": "0.0"},
             # {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.01"},
             # {"DEAD_RECKONING_ANGLE": "5", "SS_ERROR_PERCENTAGE": "0.1"},
 
