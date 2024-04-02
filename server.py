@@ -330,6 +330,31 @@ if __name__ == '__main__':
                     )
                     p.start()
                     processes.append(p)
+            elif Config.GROUP_TYPE == 'mst':
+                with open(f"assets/{Config.SHAPE}_localizer.json") as f:
+                    data = json.load(f)
+                    localizer = data["localizer"]
+                    anchor = data["anchor"]
+
+                for i in node_point_idx:
+                    pid = int(point_cloud[i, 3])
+
+                    local_gtl_point_cloud.append(gtl_point_cloud[i])
+                    p = worker.WorkerProcess(
+                        count,
+                        pid,
+                        pid,
+                        gtl_point_cloud[i],
+                        np.array([0, 0, 0]),
+                        None,
+                        results_directory,
+                        None,
+                        localizer[str(pid)] if str(pid) in localizer else None,
+                        anchor=anchor[str(pid)] if str(pid) in anchor else [],
+                        intra_localizer=None
+                    )
+                    p.start()
+                    processes.append(p)
             else:
                 for i in node_point_idx:
                     # shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)

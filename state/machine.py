@@ -237,6 +237,16 @@ class StateMachine:
             # send your location
             self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
 
+    def localize_mst(self):
+        # localize
+        if self.context.localizer in self.context.neighbors:
+            v = self.compute_v(self.context.neighbors[self.context.localizer])
+            self.context.move(v)
+
+        # send data to anchor
+        for fid in self.context.anchor_for:
+            self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
+
     def localize_hierarchical(self):
         n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
         adjustments = np.array([[.0, .0, .0]])
@@ -330,7 +340,9 @@ class StateMachine:
         self.state = state
 
         # if self.state == StateTypes.AVAILABLE:
-        if Config.GROUP_TYPE == 'spanning_2' or Config.GROUP_TYPE == 'spanning_3':
+        if Config.GROUP_TYPE == 'mst':
+            self.localize_mst()
+        elif Config.GROUP_TYPE == 'spanning_2' or Config.GROUP_TYPE == 'spanning_3':
             self.localize_spanning_2()
         elif Config.GROUP_TYPE == 'overlapping' or Config.GROUP_TYPE == 'bin_overlapping':
             self.localize_overlapping()
