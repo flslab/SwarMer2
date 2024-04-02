@@ -61,8 +61,10 @@ props = [
     {
         "keys": ["SHAPE", "GROUP_TYPE"],
         "values": [
-            {"SHAPE": "'chess_100_5_spanning_2dfs'", "GROUP_TYPE": "'spanning_2'"},
-            {"SHAPE": "'chess_408_5_spanning_2dfs'", "GROUP_TYPE": "'spanning_2'"},
+            # {"SHAPE": "'chess_100_5_spanning_2dfs'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'chess_100_20_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            # {"SHAPE": "'chess_408_5_spanning_2dfs'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'chess_408_20_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'chess_100_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'chess_100_spanning_3'", "GROUP_TYPE": "'spanning_3'"},
             # {"SHAPE": "'chess_408_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
