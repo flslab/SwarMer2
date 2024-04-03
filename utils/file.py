@@ -622,7 +622,7 @@ if __name__ == '__main__':
     mpl.rcParams['font.family'] = 'Times New Roman'
     plt.rcParams.update({'font.size': 10})
 
-    path = "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_spanning_2/Rgrid_36_spanning_2/grid_36_spanning_2_Rgrid_36_spanning_2_D5_X0.0_MTrue_1711820026"
+    path = "/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_1/results/chess_408_5_spanning_2_Tspanning_2_Schess_408_5_spanning_2_D5_X0.0_03_Apr_21_37_02"
     gen_sw_charts(path, "*", "_", False)
     exit()
 
