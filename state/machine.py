@@ -252,6 +252,21 @@ class StateMachine:
         for fid in self.context.anchor_for:
             self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
 
+    def localize_universal(self):
+        # localize
+        adjustments = np.array([[.0, .0, .0]])
+        neighbors = self.context.neighbors.values()
+        if len(neighbors):
+            adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in neighbors]))
+        v = np.mean(adjustments, axis=0)
+        self.context.move(v)
+        self.broadcast(Message(MessageTypes.GOSSIP).to_all())
+
+        # send data to anchor
+        # for fid in self.context.anchor_for:
+        #     self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
+
+
     def localize_hierarchical(self):
         n1 = list(filter(lambda x: self.context.min_gid in x.swarm_id, self.context.neighbors.values()))
         adjustments = np.array([[.0, .0, .0]])
@@ -347,6 +362,8 @@ class StateMachine:
         # if self.state == StateTypes.AVAILABLE:
         if Config.GROUP_TYPE == 'mst':
             self.localize_mst()
+        elif Config.GROUP_TYPE == 'universal':
+            self.localize_universal()
         elif Config.GROUP_TYPE == 'spanning_2' or Config.GROUP_TYPE == 'spanning_3':
             self.localize_spanning_2()
         elif Config.GROUP_TYPE == 'overlapping' or Config.GROUP_TYPE == 'bin_overlapping':

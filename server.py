@@ -330,7 +330,7 @@ if __name__ == '__main__':
                     )
                     p.start()
                     processes.append(p)
-            elif Config.GROUP_TYPE == 'mst':
+            elif Config.GROUP_TYPE == 'mst' or Config.GROUP_TYPE == 'universal':
                 with open(f"assets/{Config.SHAPE}_localizer.json") as f:
                     data = json.load(f)
                     localizer = data["localizer"]
