@@ -50,7 +50,7 @@ def_conf = {
     "GROUP": "False",
     "GROUP_TYPE": "'spanning_3'",
     "MULTIPLE_ANCHORS": "True",
-    "FILE_NAME_KEYS": "[('GROUP_TYPE', 'T'), ('SHAPE', 'S'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X')]",
+    "FILE_NAME_KEYS": "[('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X')]",
     "DIR_KEYS": "[]",
 }
 
