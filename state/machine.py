@@ -296,8 +296,8 @@ class StateMachine:
         neighbors = self.context.neighbors.values()
         if len(neighbors):
             adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in neighbors]))
-        v = np.mean(adjustments, axis=0)
-        self.context.move(v)
+            v = np.mean(adjustments, axis=0)
+            self.context.move(v)
         self.broadcast(Message(MessageTypes.GOSSIP).to_all())
 
         # send data to anchor
