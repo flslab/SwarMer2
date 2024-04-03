@@ -49,8 +49,8 @@ def_conf = {
     "GROUP": "False",
     "GROUP_TYPE": "'spanning_3'",
     "MULTIPLE_ANCHORS": "True",
-    "FILE_NAME_KEYS": "[('SHAPE', 'S'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X'), ('MULTIPLE_ANCHORS', 'M')]",
-    "DIR_KEYS": "[('GROUP_TYPE', 'T')]",
+    "FILE_NAME_KEYS": "[('GROUP_TYPE', 'T'), ('SHAPE', 'S'), ('DEAD_RECKONING_ANGLE', 'D'), ('SS_ERROR_PERCENTAGE', 'X')]",
+    "DIR_KEYS": "[]",
 }
 
 props = [
