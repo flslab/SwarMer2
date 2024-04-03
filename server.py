@@ -515,13 +515,12 @@ if __name__ == '__main__':
         client_socket.close()
 
     if nid == 0:
+        pass
         # with open(f"{results_directory}/utilization.json", "w") as f:
         #     json.dump([server_time, server_cpu], f)
         # print("wait a fixed time for other nodes")
         # time.sleep(90)
 
         # utils.create_csv_from_json(results_directory)
-        # utils.combine_csvs(results_directory, shape_directory)
-        utils.create_csv_from_json(results_directory)
-        utils.combine_csvs(results_directory, results_directory)
-        utils.gen_sw_charts(results_directory, "*", keys, False)
+        # utils.combine_csvs(results_directory, results_directory)
+        # utils.gen_sw_charts(results_directory, "*", keys, False)

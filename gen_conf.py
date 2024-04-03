@@ -1,6 +1,7 @@
 import itertools
 import os
 
+# /proj/nova-PG0/hamed/results/swarmer
 def_conf = {
     "GOSSIP_TIMEOUT": "5",
     "GOSSIP_SWARM_COUNT_THRESHOLD": "3",
@@ -35,7 +36,7 @@ def_conf = {
     "SAMPLE_SIZE": "0",
     "DURATION": "60",
     "SHAPE": "'outring'",
-    "RESULTS_PATH": "'/proj/nova-PG0/hamed/results/swarmer'",
+    "RESULTS_PATH": "'results'",
     "MULTICAST": "False",
     "THAW_MIN_NUM_SWARMS": "1",
     "THAW_PERCENTAGE_LARGEST_SWARM": "80",
@@ -61,9 +62,9 @@ props = [
     {
         "keys": ["SHAPE", "GROUP_TYPE"],
         "values": [
-            {"SHAPE": "'chess_100_5_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
-            {"SHAPE": "'chess_100_10_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
-            {"SHAPE": "'chess_100_50_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            # {"SHAPE": "'chess_100_5_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            # {"SHAPE": "'chess_100_10_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            # {"SHAPE": "'chess_100_50_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'chess_100_100_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             {"SHAPE": "'chess_408_5_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             {"SHAPE": "'chess_408_10_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
