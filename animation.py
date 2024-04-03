@@ -83,7 +83,7 @@ def read_point_cloud(path):
     filtered_events = []
     gtl = []
     for e in timeline:
-        if e[1] == TimelineEvents.FAIL:
+        if e[1] == TimelineEvents.FAIL or e[1] == TimelineEvents.SWARM:
             e[0] -= start_time
             filtered_events.append(e)
         elif e[1] == TimelineEvents.COORDINATE:
@@ -93,6 +93,8 @@ def read_point_cloud(path):
             width = max(int(e[2][1]), width)
             height = max(int(e[2][2]), height)
         elif e[1] == TimelineEvents.ILLUMINATE:
+            e[0] -= start_time
+            filtered_events.append(e)
             gtl.append(e[2])
     length = math.ceil(length / ticks_gap) * ticks_gap
     width = math.ceil(width / ticks_gap) * ticks_gap
@@ -177,19 +179,36 @@ def update(frame):
 
 
 def show_last_frame(events, t=30):
-    final_points = dict()
+    movements = dict()
+    swarm = dict()
+    swarm_size = dict()
+    l_points = dict()
+
     for event in events:
         event_time = event[0]
         if event_time > t:
             break
         event_type = event[1]
         fls_id = event[-1]
-        if event_type == TimelineEvents.ILLUMINATE or event_type == TimelineEvents.ILLUMINATE_STANDBY:
-            final_points[fls_id] = event[2]
-        else:
-            final_points.pop(fls_id)
-
-    coords = final_points.values()
+        if event_type == TimelineEvents.COORDINATE:
+            movements[fls_id] = np.linalg.norm(np.array(event[2]) - np.array(l_points[fls_id]))
+            l_points[fls_id] = event[2]
+            if movements[fls_id] > 5:
+                print(event_time, fls_id, swarm[fls_id], movements[fls_id], l_points[fls_id])
+        elif event_type == TimelineEvents.FAIL:
+            l_points.pop(fls_id)
+        elif event_type == TimelineEvents.ILLUMINATE:
+            l_points[fls_id] = event[2]
+        elif event_type == TimelineEvents.SWARM:
+            swarm[fls_id] = event[2]
+            if event[2] in swarm_size:
+                swarm_size[event[2]] += 1
+            else:
+                swarm_size[event[2]] = 1
+        # else:
+        #     points.pop(fls_id)
+    print(swarm_size)
+    coords = l_points.values()
     xs = [c[0] for c in coords]
     ys = [c[1] for c in coords]
     zs = [c[2] for c in coords]
@@ -204,7 +223,12 @@ def find_nearest(array, value):
 
 
 if __name__ == '__main__':
+    #1: 12.93003999999999998, 8.254200000000000870, 22.96771999999999991 [13.137868993843089, 8.3572294190965, 22.752490744621802]
+    #0: 8.799319999999999808,18.16720000000000113,11.18288000000000082 [9.007148993843089, 18.270229419096502, 10.967650744621803]
+    #12: 13.14688000000000301,16.22103999999999857,1.238520000000000287 [12.563229175443235, 15.972169042577079, 2.1112366760348147]
+    #2: 16.89240000000000208,4.737440000000000317,3.124600000000000488 [20.615138397958756, 5.863155150986035, -1.7877798575033448] [16.955400961940864, 4.6278512553094915, 2.628598828990176]
     # mpl.use('macosx')
+
     #
     # filtered_events, length, width, height = read_point_cloud(input_path)
     # fig, ax, tx = draw_figure()
@@ -277,28 +301,52 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_23_39",  # skateboard lambda 0.05
         # "/Users/hamed/Documents/Holodeck/SwarMerPy/scripts/aws/results/swarmer-22-400-node-failure/results/skateboard/22_Sep_18_26_58",  # skateboard lambda 1.5
         # "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_64_spanning_D5_X0.0_Sgrid_64_spanning_25_Mar_10_32_26",
-        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_400_spanning_2_Sgrid_400_spanning_2_D5_X0.0_MTrue_31_Mar_11_46_49"
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_400_spanning_Sgrid_400_spanning_D5_X0.0_MTrue_31_Mar_12_41_52",
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/dragon_1147_spanning_2_Sdragon_1147_spanning_2_D5_X0.0_MTrue_31_Mar_11_00_40",
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/palm_725_spanning_2_Spalm_725_spanning_2_D5_X0.0_MTrue_31_Mar_10_54_26",
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/skateboard_1372_spanning_2_Sskateboard_1372_spanning_2_D5_X0.0_MTrue_31_Mar_11_12_30",
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/chess_408_spanning_2_Schess_408_spanning_2_D5_X0.0_MTrue_31_Mar_10_51_04"
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/apr1_1/chess_408_spanning_2/Tspanning_2/chess_408_spanning_2_Schess_408_spanning_2_D5_X0.0_MTrue_01_Apr_11_23_37",
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/apr2_1/chess_100_2_spanning_2/Tspanning_2/chess_100_2_spanning_2_Schess_100_2_spanning_2_D5_X0.0_MTrue_02_Apr_13_25_55"
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_mst/Rgrid_36_mst/grid_36_mst_Rgrid_36_mst_D5_X0.0_MTrue_1712097031"
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/apr2_6/chess_408_50_spanning_2/Tspanning_2/chess_408_50_spanning_2_Schess_408_50_spanning_2_D5_X0.0_MTrue_02_Apr_14_31_49",
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/apr2_7/chess_408_150_spanning_2/Tspanning_2/chess_408_150_spanning_2_Schess_408_150_spanning_2_D5_X0.0_MTrue_02_Apr_16_28_55"
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/apr2_8/chess_408_mst/Tmst/chess_408_mst_Schess_408_mst_D5_X0.0_MTrue_02_Apr_17_54_09",
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/apr2_9/chess_408_mst/Tmst/chess_408_mst_Schess_408_mst_D5_X0.0_MTrue_02_Apr_18_37_17",
+        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_spanning_2/Tspanning_2/grid_36_spanning_2_LSgrid_36_spanning_2_D5_X0.0_1712162983"
     ]
 
-    duration = 30
+    # filtered_events, length, width, height, _ = read_point_cloud(paths[-1])
+    # show_last_frame(filtered_events)
+    # exit()
+
+    duration = 20
     fps = 10
     frame_rate = 1 / fps
 
     names = [
-        ("grid_400", "0_spanning_2_all_views"),
-        # ("grid_64", "0_spanning_all_views"),
+        # ("chess_100", "0_spanning_3_all_views"),
+        # ("chess_100", "0_spanning_2_all_views"),
+        ("grid_36", "_spanning_2w_all_views_2", 1),
         # ("grid_64", "0.1_spanning_all_views"),
         # ("grid_64", "0.01_spanning_all_views"),
-        # ("grid_100", "0_spanning_all_views"),
+        # ("chess_408", "mst_disjoint", .4),
+        # ("chess_408", "mst_linked", .4),
+        # ("chess_408", "150_spanning_2", 0.4),
+        # ("dragon_1147", "0_spanning_2_all_views"),
+        # ("palm_725", "0_spanning_2_all_views"),
+        # ("skateboard_1372", "0_spanning_2_all_views"),
+        # ("chess_408", "0_spanning_2_all_views"),
+        # ("chess_408", "0_spanning_2_all_views"),
         # ("grid_196", "0_spanning_all_views"),
     ]
 
     for path, name in zip(paths, names):
 
         filtered_events, length, width, height, _ = read_point_cloud(path)
-        # mat = scipy.io.loadmat(f'/Users/hamed/Documents/Holodeck/SwarMerPy/assets/skateboard.mat')
-        # gtl = mat['p']
-        # gtl = np.loadtxt(f'assets/{name[0]}.xyz', delimiter=' ')
+
+        # gtl = np.loadtxt(f'assets/{name[0]}.xyz', delimiter=' ')*100*name[2]
+        # gtl[:, [1, 2, 0]] = gtl[:, [0, 1, 2]]
         gtl = np.loadtxt(f'assets/{name[0]}.txt', delimiter=',')
 
         with open(f"{path}/charts.json") as f:

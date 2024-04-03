@@ -196,6 +196,7 @@ if __name__ == '__main__':
     # shape_directory = os.path.join(Config.RESULTS_PATH, Config.SHAPE)
     if not os.path.exists(results_directory):
         os.makedirs(os.path.join(results_directory, 'json'), exist_ok=True)
+        os.makedirs(os.path.join(results_directory, 'timeline'), exist_ok=True)
     point_cloud = np.loadtxt(f'assets/{Config.SHAPE}.txt', delimiter=',')
 
     if Config.SAMPLE_SIZE != 0:

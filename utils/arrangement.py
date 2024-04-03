@@ -89,20 +89,20 @@ if __name__ == "__main__":
     # n = 4
     visualize = True
 
-    for n in [20]:
+    for n in [6]:
     # for n in [4, 6, 8, 10, 14, 20]:
     # for shape in ["chess_544", "skateboard_1912", "dragon_1020"]:
     # for shape in ["chess_408", "skateboard_1372", "dragon_1147", "palm_725", "racecar_3720"]:
-    # for shape in ["chess_408"]:
+    # for shape in ["chess_100"]:
         shape = f"grid_{n*n}"
 
         if visualize:
             mpl.use('macosx')
 
-        A = np.loadtxt(f'../assets/{shape}_spanning_2.txt', delimiter=',')
-        with open(f'../assets/{shape}_spanning_2_localizer.json') as f:
+        A = np.loadtxt(f'../assets/{shape}_spanning_3.txt', delimiter=',')
+        with open(f'../assets/{shape}_spanning_3_localizer.json') as f:
             localizer = json.load(f)
-        with open(f'../assets/{shape}_spanning_2_intra_localizer.json') as f:
+        with open(f'../assets/{shape}_spanning_3_intra_localizer.json') as f:
             intra_localizer = json.load(f)
         # pid to coord
         P = {int(row[4]): row[:3] for row in A}

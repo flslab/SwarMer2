@@ -146,7 +146,7 @@ def combine_csvs(directory, xslx_dir):
 
 
 def read_timelines(path, fid='*'):
-    json_files = glob.glob(f"{path}/timeline_{fid}.json")
+    json_files = glob.glob(f"{path}/timeline/timeline_{fid}.json")
     timelines = []
 
     for jf in json_files:

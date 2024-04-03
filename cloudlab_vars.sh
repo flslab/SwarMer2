@@ -1,6 +1,6 @@
 #!/bin/bash
 
-N=5
+N=14
 #HOSTNAME="swarmer.nova-PG0.clemson.cloudlab.us"
 HOSTNAME="swarmer.nova-PG0.wisc.cloudlab.us"
 USERNAME="hamedamz"

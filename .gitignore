@@ -198,5 +198,6 @@ pip-selfcheck.json
 # End of https://www.toptal.com/developers/gitignore/api/pythonvanilla,pycharm,venv
 results/
 experiments/
+aruco/
 decentralized.sh
 download.sh
