@@ -521,6 +521,6 @@ if __name__ == '__main__':
         # print("wait a fixed time for other nodes")
         # time.sleep(90)
 
-        # utils.create_csv_from_json(results_directory)
-        # utils.combine_csvs(results_directory, results_directory)
-        # utils.gen_sw_charts(results_directory, "*", keys, False)
+        utils.create_csv_from_json(results_directory)
+        utils.combine_csvs(results_directory, results_directory)
+        utils.gen_sw_charts(results_directory, "*", keys, False)

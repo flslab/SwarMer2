@@ -35,6 +35,12 @@ def chamfer_distance_optimized(a, b):
     """
     assert a.shape[1] == b.shape[1] == 3, "Point clouds must have 3D coordinates"
 
+    ca = np.average(a, axis=0)
+    cb = np.average(b, axis=0)
+    t2 = cb - ca
+
+    a = a + t2
+
     a_tree = KDTree(a)
     b_tree = KDTree(b)
 
@@ -49,5 +55,5 @@ if __name__ == "__main__":
     point_cloud_b = np.array([[1, 0, 0], [1, 1, 0], [0, 1, 1]])
     # point_cloud_b = np.array([[0.1, 0.2, 0], [1, 1.1, 0.1], [-0.1, 1, 0.8]])
 
-    distance = chamfer_distance(point_cloud_a, point_cloud_b)
+    distance = chamfer_distance_optimized(point_cloud_a, point_cloud_b)
     print(distance)

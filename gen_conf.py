@@ -36,8 +36,8 @@ def_conf = {
     "SAMPLE_SIZE": "0",
     "DURATION": "60",
     "SHAPE": "'outring'",
-    "RESULTS_PATH": "'results_universal'",
-    "MULTICAST": "True",
+    "RESULTS_PATH": "'/proj/nova-PG0/hamed/results/swarmer'",
+    "MULTICAST": "False",
     "THAW_MIN_NUM_SWARMS": "1",
     "THAW_PERCENTAGE_LARGEST_SWARM": "80",
     "THAW_INTERVAL": "1",
@@ -62,11 +62,11 @@ props = [
     {
         "keys": ["SHAPE", "GROUP_TYPE"],
         "values": [
-            # {"SHAPE": "'chess_408_5_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
-            # {"SHAPE": "'chess_408_10_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
-            # {"SHAPE": "'chess_408_50_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
-            # {"SHAPE": "'chess_408_150_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
-            # {"SHAPE": "'chess_408_200_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'chess_408_5_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'chess_408_10_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'chess_408_50_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'chess_408_150_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
+            {"SHAPE": "'chess_408_200_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'palm_725_5_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'palm_725_10_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'palm_725_50_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
@@ -93,15 +93,15 @@ props = [
             # {"SHAPE": "'racecar_3720_150_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'racecar_3720_200_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
 
-            {"SHAPE": "'chess_408_mst'", "GROUP_TYPE": "'universal'"},
-
-            {"SHAPE": "'palm_725_mst'", "GROUP_TYPE": "'universal'"},
-
-            {"SHAPE": "'kangaroo_972_mst'", "GROUP_TYPE": "'universal'"},
-
-            {"SHAPE": "'dragon_1147_mst'", "GROUP_TYPE": "'universal'"},
-
-            {"SHAPE": "'skateboard_1372_mst'", "GROUP_TYPE": "'universal'"},
+            # {"SHAPE": "'chess_408_mst'", "GROUP_TYPE": "'universal'"},
+            #
+            # {"SHAPE": "'palm_725_mst'", "GROUP_TYPE": "'universal'"},
+            #
+            # {"SHAPE": "'kangaroo_972_mst'", "GROUP_TYPE": "'universal'"},
+            #
+            # {"SHAPE": "'dragon_1147_mst'", "GROUP_TYPE": "'universal'"},
+            #
+            # {"SHAPE": "'skateboard_1372_mst'", "GROUP_TYPE": "'universal'"},
 
             # {"SHAPE": "'racecar_3720_mst'", "GROUP_TYPE": "'universal'"},
 

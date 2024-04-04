@@ -32,6 +32,7 @@ class MessageTypes(Enum):
 
     GOSSIP = 40
     GOSSIP_INTERNAL = 41
+    NOTIFY = 42
 
     def get_cat(self):
         if 1 <= self.value <= 4:
