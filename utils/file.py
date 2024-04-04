@@ -214,7 +214,7 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
                 a = np.stack(list(current_points.values()))
                 b = np.stack(list(gtl_points.values()))
                 hd[-1] = hausdorff_distance(a, b)
-                # cd[-1] = chamfer_distance_optimized(a, b)
+                cd[-1] = chamfer_distance_optimized(a, b)
                 # ys[-1] = 1
             xs.append(xs[-1] + sw)
             hd.append(-1)
@@ -241,7 +241,7 @@ def merge_timelines(timelines):
     return merged
 
 
-def gen_sw_charts(path, fid, name, read_from_file=True):
+def  gen_sw_charts(path, fid, name, read_from_file=True):
     # fig = plt.figure(figsize=(5, 2.5))
     # ax = fig.add_subplot()
 
@@ -287,7 +287,7 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
 
     fig, ax = plt.subplots(figsize=(5, 2.5), layout="constrained")
     ax.step(t, hd, where='post', label="Hausdorff distance", color="tab:blue")
-    # ax.step(t, cd, where='post', label="Chamfer distance", color="tab:orange")
+    ax.step(t, cd, where='post', label="Chamfer distance", color="tab:orange")
     ax.legend()
     # ax.set_ylabel(f'HD, {name}', loc='top', rotation=0, labelpad=-133)
     ax.set_title(f'HD, CD {name}', fontsize=10, loc="left")
@@ -301,6 +301,7 @@ def gen_sw_charts(path, fid, name, read_from_file=True):
     # plt.ylim([10e-13, 10e3])
     plt.yscale('log')
     plt.savefig(f'{path}/{name}_{fid}h.png', dpi=300)
+    plt.close()
 
 
 def gen_util_chart(path):
@@ -622,8 +623,17 @@ if __name__ == '__main__':
     mpl.rcParams['font.family'] = 'Times New Roman'
     plt.rcParams.update({'font.size': 10})
 
-    path = "/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_1/results/chess_408_5_spanning_2_Tspanning_2_Schess_408_5_spanning_2_D5_X0.0_03_Apr_21_37_02"
-    gen_sw_charts(path, "*", "_", False)
+    results_dir = "/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_4/results_universal"
+
+    for path in sorted(os.listdir(results_dir)):
+        if not os.path.isdir(os.path.join(results_dir, path)):
+            continue
+        name = path.split("/")[-1]
+        print(name)
+        # if name.split('_')[0] == 'racecar':
+        #     print('skipped')
+        #     continue
+        gen_sw_charts(os.path.join(results_dir,path), "*", name, False)
     exit()
 
     paths = [
