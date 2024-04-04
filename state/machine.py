@@ -253,40 +253,6 @@ class StateMachine:
     #         self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
 
     # v1 aws 1 - 4 results
-    # def localize_spanning_2(self):
-    #     if not self.waiting_mode:
-    #         n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
-    #
-    #         adjustments = np.array([[.0, .0, .0]])
-    #         if len(n1):
-    #             adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in n1]))
-    #             v = np.mean(adjustments, axis=0)
-    #             if np.linalg.norm(v) > 1e-6:
-    #                 self.context.move(v)
-    #             else:
-    #                 self.waiting_mode = True
-    #         self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
-    #     else:
-    #         # print(f"{self.context.fid}_waiting")
-    #         # pass
-    #         for fid, gid in self.context.localizer:
-    #             # print(self.context.fid, fid, gid, self.context.swarm_id)
-    #             if gid is not None and fid in self.context.neighbors:
-    #                 # print(fid, gid)
-    #                 # if self.context.swarm_id > self.context.neighbors[fid].swarm_id:
-    #                     # print(f"inter: {self.context.fid} -> {fid} ({gid})")
-    #                 v, _ = self.compute_v(self.context.neighbors[fid])
-    #                 self.context.move(v)
-    #                 self.num_localizations += 1
-    #                 stop = self.num_localizations == 1
-    #                 self.broadcast(Message(MessageTypes.FOLLOW, args=(v, stop)).to_swarm_id(gid))
-    #                 if stop:
-    #                     self.num_localizations = 0
-    #                     self.waiting_mode = False
-    #             # send your location
-    #             self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
-
-    #v2
     def localize_spanning_2(self):
         if not self.waiting_mode:
             n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
@@ -300,25 +266,59 @@ class StateMachine:
                 else:
                     self.waiting_mode = True
             self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
-        elif self.notified or self.context.min_gid == 0:
+        else:
+            # print(f"{self.context.fid}_waiting")
+            # pass
             for fid, gid in self.context.localizer:
                 # print(self.context.fid, fid, gid, self.context.swarm_id)
                 if gid is not None and fid in self.context.neighbors:
-                    # primary localizing
+                    # print(fid, gid)
+                    # if self.context.swarm_id > self.context.neighbors[fid].swarm_id:
+                        # print(f"inter: {self.context.fid} -> {fid} ({gid})")
                     v, _ = self.compute_v(self.context.neighbors[fid])
                     self.context.move(v)
                     self.num_localizations += 1
-                    stop = self.num_localizations == 2
+                    stop = self.num_localizations == 1
                     self.broadcast(Message(MessageTypes.FOLLOW, args=(v, stop)).to_swarm_id(gid))
                     if stop:
                         self.num_localizations = 0
                         self.waiting_mode = False
-                        self.notified = False
-                        self.context.neighbors = {}
-                else:
-                    # anchor
-                    self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
-                    # print(f"{self.context.fid} notified {fid}")
+                # send your location
+                self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
+
+    #v2
+    # def localize_spanning_2(self):
+    #     if not self.waiting_mode:
+    #         n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
+    #
+    #         adjustments = np.array([[.0, .0, .0]])
+    #         if len(n1):
+    #             adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in n1]))
+    #             v = np.mean(adjustments, axis=0)
+    #             if np.linalg.norm(v) > 1e-6:
+    #                 self.context.move(v)
+    #             else:
+    #                 self.waiting_mode = True
+    #         self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
+    #     elif self.notified or self.context.min_gid == 0:
+    #         for fid, gid in self.context.localizer:
+    #             # print(self.context.fid, fid, gid, self.context.swarm_id)
+    #             if gid is not None and fid in self.context.neighbors:
+    #                 # primary localizing
+    #                 v, _ = self.compute_v(self.context.neighbors[fid])
+    #                 self.context.move(v)
+    #                 self.num_localizations += 1
+    #                 stop = self.num_localizations == 1
+    #                 self.broadcast(Message(MessageTypes.FOLLOW, args=(v, stop)).to_swarm_id(gid))
+    #                 if stop:
+    #                     self.num_localizations = 0
+    #                     self.waiting_mode = False
+    #                     self.notified = False
+    #                     self.context.neighbors = {}
+    #             else:
+    #                 # anchor
+    #                 self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
+    #                 # print(f"{self.context.fid} notified {fid}")
 
     def localize_mst(self):
         # localize

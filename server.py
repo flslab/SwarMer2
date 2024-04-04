@@ -523,4 +523,4 @@ if __name__ == '__main__':
 
         utils.create_csv_from_json(results_directory)
         utils.combine_csvs(results_directory, results_directory)
-        utils.gen_sw_charts(results_directory, "*", keys, False)
+        utils.gen_sw_charts(results_directory, "*", file_name, False)
