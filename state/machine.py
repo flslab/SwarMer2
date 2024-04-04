@@ -278,7 +278,7 @@ class StateMachine:
     #                 v, _ = self.compute_v(self.context.neighbors[fid])
     #                 self.context.move(v)
     #                 self.num_localizations += 1
-    #                 stop = self.num_localizations == 3
+    #                 stop = self.num_localizations == 1
     #                 self.broadcast(Message(MessageTypes.FOLLOW, args=(v, stop)).to_swarm_id(gid))
     #                 if stop:
     #                     self.num_localizations = 0
