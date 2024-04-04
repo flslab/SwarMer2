@@ -106,9 +106,9 @@ class StateMachine:
         if msg.args[1]:
             self.waiting_mode = False
 
-        for fid, gid in self.context.localizer:
-            if gid is None:
-                self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
+            for fid, gid in self.context.localizer:
+                if gid is None:
+                    self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
                 # print(f"{self.context.fid} notified {fid}")
 
         # print(f"({msg.fid}) -> {self.context.fid} followed")
@@ -308,7 +308,7 @@ class StateMachine:
                     v, _ = self.compute_v(self.context.neighbors[fid])
                     self.context.move(v)
                     self.num_localizations += 1
-                    stop = self.num_localizations == 1
+                    stop = self.num_localizations == 3
                     self.broadcast(Message(MessageTypes.FOLLOW, args=(v, stop)).to_swarm_id(gid))
                     if stop:
                         self.num_localizations = 0
