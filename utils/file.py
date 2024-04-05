@@ -624,18 +624,18 @@ if __name__ == '__main__':
     mpl.rcParams['font.family'] = 'Times New Roman'
     plt.rcParams.update({'font.size': 10})
 
-    results_dir = "/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_5/results"
+    results_dir = "/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_6_all/results_all"
 
-    for path in sorted(os.listdir(results_dir)):
-        if not os.path.isdir(os.path.join(results_dir, path)):
-            continue
-        name = path.split("/")[-1]
-        print(name)
-        # if name.split('_')[0] == 'racecar':
-        #     print('skipped')
-        #     continue
-        gen_sw_charts(os.path.join(results_dir,path), "*", name, False)
-    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_3/results/chess_408_200_spanning_2_D5_X0.0_03_Apr_22_25_33", "*", "test", False)
+    # for path in sorted(os.listdir(results_dir)):
+    #     if not os.path.isdir(os.path.join(results_dir, path)):
+    #         continue
+    #     name = path.split("/")[-1]
+    #     print(name)
+    #     # if name.split('_')[0] == 'racecar':
+    #     #     print('skipped')
+    #     #     continue
+    #     gen_sw_charts(os.path.join(results_dir,path), "*", name, False)
+    gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_spanning_2/Tspanning_2_v3/grid_36_spanning_2_LSgrid_36_spanning_2_D10_X0.0_1712352321", "*", "test", False)
     exit()
 
     paths = [

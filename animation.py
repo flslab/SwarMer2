@@ -346,10 +346,10 @@ if __name__ == '__main__':
     ]
 
     # for path, name in zip(paths, names):
-    results_dir = "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_spanning_2/Tspanning_2_v3"
+    results_dir = "/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_6_all/results_all"
 
-    # for p in list(os.listdir(results_dir))[-1:]:
-    for p in ["grid_36_spanning_2_LSgrid_36_spanning_2_D10_X0.0_1712337364"]:
+    for p in list(sorted(os.listdir(results_dir))):
+    # for p in ["grid_36_spanning_2_LSgrid_36_spanning_2_D10_X0.0_1712337364"]:
         if not os.path.isdir(os.path.join(results_dir, p)):
             continue
 
@@ -364,9 +364,9 @@ if __name__ == '__main__':
 
         filtered_events, length, width, height, _ = read_point_cloud(path)
 
-        # gtl = np.loadtxt(f'assets/{name}_{n_points}.xyz', delimiter=' ')*100*scale
-        # gtl[:, [1, 2, 0]] = gtl[:, [0, 1, 2]]
-        gtl = np.loadtxt(f'assets/{name}_{n_points}.txt', delimiter=',')
+        gtl = np.loadtxt(f'assets/{name}_{n_points}.xyz', delimiter=' ')*100*scale
+        gtl[:, [1, 2, 0]] = gtl[:, [0, 1, 2]]
+        # gtl = np.loadtxt(f'assets/{name}_{n_points}.txt', delimiter=',')
         # gtl = np.array([[0, 0, 0]])
 
         with open(f"{path}/charts.json") as f:

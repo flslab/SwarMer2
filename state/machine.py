@@ -98,6 +98,7 @@ class StateMachine:
         self.notified = False
         self.mode = Mode.WITHIN_GROUP
         self.primary_fid = None
+        self.last_entered_wm = None
 
     def start(self):
         if Config.GROUP_TYPE == 'mst':
@@ -122,6 +123,17 @@ class StateMachine:
         self.start_time = time.time()
         self.enter(StateTypes.AVAILABLE)
 
+    def set_waiting_mode(self, v):
+        self.waiting_mode = v
+        if v:
+            self.last_entered_wm = time.time()
+
+    def release_waiting_mode(self):
+        if self.last_entered_wm is not None:
+            if time.time() - self.last_entered_wm > 1:
+                self.waiting_mode = False
+                self.last_entered_wm = None
+
     def handle_follow(self, msg):
         self.context.move(msg.args[0])
         # if Config.GROUP_TYPE == 'sequential':
@@ -131,7 +143,7 @@ class StateMachine:
         #     for fid in self.context.anchor_for:
         #         self.broadcast(Message(MessageTypes.FOLLOW, args=(msg.args[0],)).to_fls_id(fid, '*'))
         if msg.args[1]:
-            self.waiting_mode = False
+            self.set_waiting_mode(False)
 
             for fid, gid in self.context.localizer:
                 if gid is None:
@@ -291,7 +303,7 @@ class StateMachine:
                 if np.linalg.norm(v) > 1e-6:
                     self.context.move(v)
                 else:
-                    self.waiting_mode = True
+                    self.set_waiting_mode(True)
             self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
         else:
             # print(f"{self.context.fid}_waiting")
@@ -309,7 +321,7 @@ class StateMachine:
                     self.broadcast(Message(MessageTypes.FOLLOW, args=(v, stop)).to_swarm_id(gid))
                     if stop:
                         self.num_localizations = 0
-                        self.waiting_mode = False
+                        self.set_waiting_mode(False)
                 # send your location
                 self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
 
@@ -325,7 +337,7 @@ class StateMachine:
                 if np.linalg.norm(v) > 1e-6:
                     self.context.move(v)
                 else:
-                    self.waiting_mode = True
+                    self.set_waiting_mode(True)
             self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
         elif self.notified or self.context.min_gid == 0:
             for fid, gid in self.context.localizer:
@@ -339,7 +351,7 @@ class StateMachine:
                     self.broadcast(Message(MessageTypes.FOLLOW, args=(v, stop)).to_swarm_id(gid))
                     if stop:
                         self.num_localizations = 0
-                        self.waiting_mode = False
+                        self.set_waiting_mode(False)
                         self.notified = False
                         self.context.neighbors = {}
                 else:
@@ -349,6 +361,8 @@ class StateMachine:
 
     # v3 in-order inter-group and intra-group localization
     def localize_spanning_2_variant_3(self):
+        self.release_waiting_mode()
+
         if not self.waiting_mode:
             if self.context.intra_localizer is None:
                 # the primary fls
@@ -365,7 +379,7 @@ class StateMachine:
                     if self.context.intra_localizer == self.primary_fid:
                         self.broadcast(Message(MessageTypes.UN_ANCHOR_INTERNAL).to_fls_id(self.primary_fid, self.context.min_gid))
                         # print(f"{self.context.fid} unanchored {self.primary_fid}")
-                    self.waiting_mode = True
+                    self.set_waiting_mode(True)
         # else:
         #     if self.context.intra_localizer is None:
         #         print(f"primary {self.context.fid} in localization mode")
@@ -383,7 +397,7 @@ class StateMachine:
                     self.broadcast(Message(MessageTypes.FOLLOW, args=(v, stop)).to_swarm_id(gid))
                     if stop:
                         self.num_localizations = 0
-                        self.waiting_mode = False
+                        self.set_waiting_mode(False)
                         self.notified = False
                         self.context.neighbors = {}
                     # print(f"{self.context.fid}->{fid} ({self.context.min_gid})")
@@ -560,7 +574,7 @@ class StateMachine:
             elif event == MessageTypes.NOTIFY_INTERNAL:
                 self.primary_fid = msg.fid
             elif event == MessageTypes.UN_ANCHOR_INTERNAL:
-                self.waiting_mode = True
+                self.set_waiting_mode(True)
         # elif event == MessageTypes.SET_AVAILABLE_INTERNAL:
         #     self.reenter_available_state()
 
