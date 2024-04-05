@@ -96,7 +96,7 @@ class StateMachine:
         self.waiting_mode = False
         self.num_localizations = 0
         self.notified = False
-        self.working_mode = Mode.WITHIN_GROUP
+        self.mode = Mode.WITHIN_GROUP
 
     def start(self):
         if Config.GROUP_TYPE == 'mst':
@@ -382,6 +382,26 @@ class StateMachine:
                     # print(f"{self.context.fid} notified {fid}")
             if self.context.min_gid == 0:
                 self.waiting_mode = False
+
+    # def localize_spanning_2_variant_3(self):
+    #     # localize within group
+    #     if self.mode == Mode.WITHIN_GROUP:
+    #         if self.context.internal_anchor in self.context.neighbors:
+    #             # move
+    #             v, _ = self.compute_v(self.context.neighbors[self.context.internal_anchor])
+    #             self.context.move(v)
+    #             # un-anchor the internal anchor
+    #             self.broadcast(Message(MessageTypes.UN_ANCHOR).to_fls_id(self.context.internal_anchor, self.context.swarm_id))
+    #             # serve as an anchor for children
+    #             if len(self.context.internal_localizers):
+    #                 for localizer in self.context.internal_localizers:
+    #                     self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(localizer, self.context.swarm_id))
+    #             else:
+    #             # remove anchor
+    #             self.context.neighbors = {}
+
+
+        # localize relative
 
     def localize_mst(self):
         # localize
