@@ -1,6 +1,7 @@
 import itertools
 import json
 import math
+import os
 from functools import partial
 
 import matplotlib.pyplot as plt
@@ -12,17 +13,15 @@ import matplotlib as mpl
 from utils.file import read_timelines
 from worker.metrics import TimelineEvents
 
-
-
 ticks_gap = 5
 
 start_time = 0
-
 
 # t30_d1_g0	t30_d1_g20	t30_d5_g0	t30_d5_g20	t600_d1_g0	t600_d1_g20	t600_d5_g0	t600_d5_g20
 output_name = "testd"
 input_path = f"/Users/hamed/Desktop/{output_name}/timeline.json"
 
+COLORS = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
 
 def set_axis(ax, length, width, height, title=""):
     ax.axes.set_xlim3d(left=0, right=length)
@@ -30,11 +29,12 @@ def set_axis(ax, length, width, height, title=""):
     ax.axes.set_zlim3d(bottom=0, top=height)
     ax.set_aspect('equal')
     ax.grid(False)
-    ax.set_xticks(range(0, length+1, ticks_gap))
-    ax.set_yticks(range(0, width+1, ticks_gap))
-    ax.set_zticks(range(0, height+1, ticks_gap))
+    ax.set_xticks(range(0, length + 1, ticks_gap))
+    ax.set_yticks(range(0, width + 1, ticks_gap))
+    ax.set_zticks(range(0, height + 1, ticks_gap))
     ax.set_title(title, y=.9)
     # ax.set_title(title)
+
 
 def set_axis_2d(ax, length, width, title):
     ax.axes.set_xlim(0, length)
@@ -52,9 +52,9 @@ def set_text(tx, t, hd):
 
 
 def draw_figure():
-    px = 1/plt.rcParams['figure.dpi']
-    fig_width = 1920*px
-    fig_height = 1080*px
+    px = 1 / plt.rcParams['figure.dpi']
+    fig_width = 1920 * px
+    fig_height = 1080 * px
     fig = plt.figure(figsize=(fig_width, fig_height))
     spec = fig.add_gridspec(3, 6, left=0.04, right=0.96, top=0.92, bottom=0.08)
     ax = fig.add_subplot(spec[0:2, 0:3], projection='3d', proj_type='ortho')
@@ -140,6 +140,8 @@ def update(frame):
                 points[fls_id] = event[2]
             elif event_type == TimelineEvents.FAIL:
                 points.pop(fls_id)
+            elif event_type == TimelineEvents.SWARM:
+                swarms[fls_id] = event[2]
         else:
             t += frame_rate
             break
@@ -147,8 +149,9 @@ def update(frame):
     xs = [c[0] for c in coords]
     ys = [c[1] for c in coords]
     zs = [c[2] for c in coords]
+    colors = [COLORS[(swarms[fid]) % len(COLORS)] for fid in points.keys()]
     ax.clear()
-    ln = ax.scatter(xs, ys, zs, c='purple', s=2, alpha=1)
+    ln = ax.scatter(xs, ys, zs, c=colors, s=2, alpha=1)
     set_axis(ax, length, width, height)
 
     ax1.clear()
@@ -223,10 +226,10 @@ def find_nearest(array, value):
 
 
 if __name__ == '__main__':
-    #1: 12.93003999999999998, 8.254200000000000870, 22.96771999999999991 [13.137868993843089, 8.3572294190965, 22.752490744621802]
-    #0: 8.799319999999999808,18.16720000000000113,11.18288000000000082 [9.007148993843089, 18.270229419096502, 10.967650744621803]
-    #12: 13.14688000000000301,16.22103999999999857,1.238520000000000287 [12.563229175443235, 15.972169042577079, 2.1112366760348147]
-    #2: 16.89240000000000208,4.737440000000000317,3.124600000000000488 [20.615138397958756, 5.863155150986035, -1.7877798575033448] [16.955400961940864, 4.6278512553094915, 2.628598828990176]
+    # 1: 12.93003999999999998, 8.254200000000000870, 22.96771999999999991 [13.137868993843089, 8.3572294190965, 22.752490744621802]
+    # 0: 8.799319999999999808,18.16720000000000113,11.18288000000000082 [9.007148993843089, 18.270229419096502, 10.967650744621803]
+    # 12: 13.14688000000000301,16.22103999999999857,1.238520000000000287 [12.563229175443235, 15.972169042577079, 2.1112366760348147]
+    # 2: 16.89240000000000208,4.737440000000000317,3.124600000000000488 [20.615138397958756, 5.863155150986035, -1.7877798575033448] [16.955400961940864, 4.6278512553094915, 2.628598828990176]
     # mpl.use('macosx')
 
     #
@@ -313,26 +316,27 @@ if __name__ == '__main__':
         # "/Users/hamed/Documents/Holodeck/SwarMer2/results/apr2_7/chess_408_150_spanning_2/Tspanning_2/chess_408_150_spanning_2_Schess_408_150_spanning_2_D5_X0.0_MTrue_02_Apr_16_28_55"
         # "/Users/hamed/Documents/Holodeck/SwarMer2/results/apr2_8/chess_408_mst/Tmst/chess_408_mst_Schess_408_mst_D5_X0.0_MTrue_02_Apr_17_54_09",
         # "/Users/hamed/Documents/Holodeck/SwarMer2/results/apr2_9/chess_408_mst/Tmst/chess_408_mst_Schess_408_mst_D5_X0.0_MTrue_02_Apr_18_37_17",
-        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_spanning_2/Tspanning_2/grid_36_spanning_2_LSgrid_36_spanning_2_D5_X0.0_1712162983"
+        # "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_spanning_2/Tspanning_2/grid_36_spanning_2_LSgrid_36_spanning_2_D5_X0.0_1712162983"
+        "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_spanning_2/Tspanning_2_v3/grid_36_spanning_2_LSgrid_36_spanning_2_D5_X0.0_1712278556"
     ]
 
     # filtered_events, length, width, height, _ = read_point_cloud(paths[-1])
     # show_last_frame(filtered_events)
     # exit()
 
-    duration = 20
+    duration = 60
     fps = 10
     frame_rate = 1 / fps
 
     names = [
         # ("chess_100", "0_spanning_3_all_views"),
         # ("chess_100", "0_spanning_2_all_views"),
-        ("grid_36", "_spanning_2w_all_views_2", 1),
+        ("grid_36", "_spanning_2_v3_all_views_2", 1),
         # ("grid_64", "0.1_spanning_all_views"),
         # ("grid_64", "0.01_spanning_all_views"),
         # ("chess_408", "mst_disjoint", .4),
         # ("chess_408", "mst_linked", .4),
-        # ("chess_408", "150_spanning_2", 0.4),
+        # ("chess_408", "150_spanning_2_aws", 0.4),
         # ("dragon_1147", "0_spanning_2_all_views"),
         # ("palm_725", "0_spanning_2_all_views"),
         # ("skateboard_1372", "0_spanning_2_all_views"),
@@ -341,13 +345,29 @@ if __name__ == '__main__':
         # ("grid_196", "0_spanning_all_views"),
     ]
 
-    for path, name in zip(paths, names):
+    # for path, name in zip(paths, names):
+    results_dir = "/Users/hamed/Documents/Holodeck/SwarMer2/results/grid_36_spanning_2/Tspanning_2_v3"
+
+    # for p in list(os.listdir(results_dir))[-1:]:
+    for p in ["grid_36_spanning_2_LSgrid_36_spanning_2_D10_X0.0_1712337364"]:
+        if not os.path.isdir(os.path.join(results_dir, p)):
+            continue
+
+        names = p.split("_")
+        name = names[0]
+        n_points = names[1]
+        path = os.path.join(results_dir, p)
+        scale = 1
+        if name == 'chess':
+            scale = 0.4
+        print(p)
 
         filtered_events, length, width, height, _ = read_point_cloud(path)
 
-        # gtl = np.loadtxt(f'assets/{name[0]}.xyz', delimiter=' ')*100*name[2]
+        # gtl = np.loadtxt(f'assets/{name}_{n_points}.xyz', delimiter=' ')*100*scale
         # gtl[:, [1, 2, 0]] = gtl[:, [0, 1, 2]]
-        gtl = np.loadtxt(f'assets/{name[0]}.txt', delimiter=',')
+        gtl = np.loadtxt(f'assets/{name}_{n_points}.txt', delimiter=',')
+        # gtl = np.array([[0, 0, 0]])
 
         with open(f"{path}/charts.json") as f:
             chart_data = json.load(f)
@@ -361,11 +381,12 @@ if __name__ == '__main__':
                     break
         fig, ax, ax1, ax2, ax3, ax4, tx = draw_figure()
         points = dict()
+        swarms = dict()
         ani = FuncAnimation(
-            fig, partial(update,),
+            fig, partial(update, ),
             frames=fps * duration,
             init_func=partial(init, ax, ax1, ax2, ax3, ax4))
         #
         # plt.show()
         writer = FFMpegWriter(fps=fps)
-        ani.save(f"results/{name[0]}_{name[1]}.mp4", writer=writer)
+        ani.save(f"{path}/{p}.mp4", writer=writer)

@@ -97,6 +97,7 @@ class StateMachine:
         self.num_localizations = 0
         self.notified = False
         self.mode = Mode.WITHIN_GROUP
+        self.primary_fid = None
 
     def start(self):
         if Config.GROUP_TYPE == 'mst':
@@ -350,16 +351,27 @@ class StateMachine:
     def localize_spanning_2_variant_3(self):
         if not self.waiting_mode:
             if self.context.intra_localizer is None:
-                self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
-                self.waiting_mode = True
+                # the primary fls
+                self.broadcast(Message(MessageTypes.NOTIFY_INTERNAL).to_swarm_id(self.context.min_gid))
+                # self.waiting_mode = True
             elif self.context.intra_localizer in self.context.neighbors:
-                v, _ = self.compute_v(self.context.neighbors[self.context.intra_localizer])
-                self.context.move(v)
-                self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
-                self.context.neighbors = {}
-                self.waiting_mode = True
+                # print(f"{self.context.fid} localized relative to {self.context.intra_localizer}")
+                v, d = self.compute_v(self.context.neighbors[self.context.intra_localizer])
+                if d > 1e-6:
+                    self.context.move(v)
+                    self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
+                    # self.context.neighbors = {}
+                else:
+                    if self.context.intra_localizer == self.primary_fid:
+                        self.broadcast(Message(MessageTypes.UN_ANCHOR_INTERNAL).to_fls_id(self.primary_fid, self.context.min_gid))
+                        # print(f"{self.context.fid} unanchored {self.primary_fid}")
+                    self.waiting_mode = True
+        # else:
+        #     if self.context.intra_localizer is None:
+        #         print(f"primary {self.context.fid} in localization mode")
 
         elif self.notified or self.context.min_gid == 0:
+            # print(f"{self.context.fid}")
             for fid, gid in self.context.localizer:
                 # print(self.context.fid, fid, gid, self.context.swarm_id)
                 if gid is not None and fid in self.context.neighbors:
@@ -375,13 +387,10 @@ class StateMachine:
                         self.notified = False
                         self.context.neighbors = {}
                     # print(f"{self.context.fid}->{fid} ({self.context.min_gid})")
-
                 else:
                     # anchor
                     self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
                     # print(f"{self.context.fid} notified {fid}")
-            if self.context.min_gid == 0:
-                self.waiting_mode = False
 
     # def localize_spanning_2_variant_3(self):
     #     # localize within group
@@ -548,6 +557,10 @@ class StateMachine:
                 self.enter(StateTypes.AVAILABLE)
             elif event == MessageTypes.NOTIFY:
                 self.notified = True
+            elif event == MessageTypes.NOTIFY_INTERNAL:
+                self.primary_fid = msg.fid
+            elif event == MessageTypes.UN_ANCHOR_INTERNAL:
+                self.waiting_mode = True
         # elif event == MessageTypes.SET_AVAILABLE_INTERNAL:
         #     self.reenter_available_state()
 
