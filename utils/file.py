@@ -16,6 +16,7 @@ import glob
 
 from utils import hausdorff_distance
 from utils.chamfer import chamfer_distance_optimized
+from utils.hausdorff import hausdorff_distance_optimized
 from worker.metrics import TimelineEvents
 import pandas as pd
 
@@ -213,7 +214,7 @@ def gen_sliding_window_chart_data(timeline, start_time, value_fn, sw=0.01):  # 0
             if len(current_points) > 1 and len(gtl_points):
                 a = np.stack(list(current_points.values()))
                 b = np.stack(list(gtl_points.values()))
-                hd[-1] = hausdorff_distance(a, b)
+                hd[-1] = hausdorff_distance_optimized(a, b)
                 cd[-1] = chamfer_distance_optimized(a, b)
                 # ys[-1] = 1
             xs.append(xs[-1] + sw)
@@ -286,7 +287,7 @@ def  gen_sw_charts(path, fid, name, read_from_file=True):
     # plt.savefig(f'{path}/{name}_{fid}.png', dpi=300)
 
     fig, ax = plt.subplots(figsize=(5, 2.5), layout="constrained")
-    ax.step(t, hd, where='post', label="Hausdorff distance", color="tab:blue")
+    ax.step(t, hd, where='post', label="Hausdorff distance", color="tab:cyan")
     ax.step(t, cd, where='post', label="Chamfer distance", color="tab:orange")
     ax.legend()
     # ax.set_ylabel(f'HD, {name}', loc='top', rotation=0, labelpad=-133)
@@ -623,7 +624,7 @@ if __name__ == '__main__':
     mpl.rcParams['font.family'] = 'Times New Roman'
     plt.rcParams.update({'font.size': 10})
 
-    results_dir = "/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_4/results_universal"
+    results_dir = "/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_5/results"
 
     for path in sorted(os.listdir(results_dir)):
         if not os.path.isdir(os.path.join(results_dir, path)):
@@ -634,6 +635,7 @@ if __name__ == '__main__':
         #     print('skipped')
         #     continue
         gen_sw_charts(os.path.join(results_dir,path), "*", name, False)
+    # gen_sw_charts("/Users/hamed/Documents/Holodeck/SwarMer2/results/aws_3/results/chess_408_200_spanning_2_D5_X0.0_03_Apr_22_25_33", "*", "test", False)
     exit()
 
     paths = [
