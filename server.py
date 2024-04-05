@@ -225,7 +225,6 @@ if __name__ == '__main__':
 
     local_gtl_point_cloud = []
 
-
     try:
         if Config.GROUP:
             groups = read_groups(Config.RESULTS_PATH, 'skateboard_K3')
@@ -247,7 +246,7 @@ if __name__ == '__main__':
                 # deploy group members
                 for member_coord in group:
                     pid += 1
-                    if (pid-1) % N == nid:
+                    if (pid - 1) % N == nid:
                         count += 1
                         shm = shared_memory.SharedMemory(create=True, size=sample.nbytes)
                         shared_array = np.ndarray(sample.shape, dtype=sample.dtype, buffer=shm.buf)
@@ -271,26 +270,34 @@ if __name__ == '__main__':
                     or Config.GROUP_TYPE == 'sequential' \
                     or Config.GROUP_TYPE == 'spanning' \
                     or Config.GROUP_TYPE == 'spanning_2' \
+                    or Config.GROUP_TYPE == 'spanning_2_v2' \
+                    or Config.GROUP_TYPE == 'spanning_2_v3' \
                     or Config.GROUP_TYPE == 'spanning_3':
                 with open(f"assets/{Config.SHAPE}_localizer.json") as f:
                     localizer = json.load(f)
                 # print(localizer)
 
-                if Config.GROUP_TYPE == 'spanning_2':
+                if Config.GROUP_TYPE == 'spanning_2' \
+                        or Config.GROUP_TYPE == 'spanning_2_v2' \
+                        or Config.GROUP_TYPE == 'spanning_2_v3':
                     with open(f"assets/{Config.SHAPE}_intra_localizer.json") as f:
                         intra_localizer = json.load(f)
                 else:
                     intra_localizer = {}
 
                 for i in node_point_idx:
-                    if Config.GROUP_TYPE == 'spanning' or Config.GROUP_TYPE == 'spanning_2':
+                    if Config.GROUP_TYPE == 'spanning' or Config.GROUP_TYPE == 'spanning_2' \
+                            or Config.GROUP_TYPE == 'spanning_2_v2' \
+                            or Config.GROUP_TYPE == 'spanning_2_v3':
                         gid = int(point_cloud[i, 3])
                     elif Config.GROUP_TYPE == 'spanning_3':
                         gid = [int(point_cloud[i, 3]), int(point_cloud[i, 5])]
                     else:
                         gid = [int(g) for g in point_cloud[i, 3:].tolist()]
 
-                    if Config.GROUP_TYPE == 'spanning_2' or Config.GROUP_TYPE == 'spanning_3':
+                    if Config.GROUP_TYPE == 'spanning_2' or Config.GROUP_TYPE == 'spanning_3' \
+                            or Config.GROUP_TYPE == 'spanning_2_v2' \
+                            or Config.GROUP_TYPE == 'spanning_2_v3':
                         pid = int(point_cloud[i, 4])
                         idx = pid
                     else:
@@ -308,7 +315,7 @@ if __name__ == '__main__':
                         results_directory,
                         None,
                         localizer[str(idx)] if str(idx) in localizer else [],
-                        intra_localizer=None
+                        intra_localizer=intra_localizer[str(idx)] if str(idx) in intra_localizer else None
                     )
                     p.start()
                     processes.append(p)
@@ -458,7 +465,7 @@ if __name__ == '__main__':
                     if round_duration == 0 and largest_swarm == total_count:
                         round_duration = t - last_thaw_time
                     last_thaw_time = t
-                        # reset = False
+                    # reset = False
                 # if largest_swarm != count:
                 #     reset = True
 
@@ -495,7 +502,7 @@ if __name__ == '__main__':
             p.terminate()
 
     # if Config.PROBABILISTIC_ROUND or Config.CENTRALIZED_ROUND:
-        # utils.write_hds_time(hd_time, results_directory, nid)
+    # utils.write_hds_time(hd_time, results_directory, nid)
     # else:
     #     utils.write_hds_round(hd_round, round_time, results_directory, nid)
     # if Config.DURATION < 660:
