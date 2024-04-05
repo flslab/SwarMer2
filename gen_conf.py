@@ -36,7 +36,7 @@ def_conf = {
     "SAMPLE_SIZE": "0",
     "DURATION": "60",
     "SHAPE": "'outring'",
-    "RESULTS_PATH": "'results_all'",
+    "RESULTS_PATH": "'results_v3'",
     "MULTICAST": "True",
     "THAW_MIN_NUM_SWARMS": "1",
     "THAW_PERCENTAGE_LARGEST_SWARM": "80",
