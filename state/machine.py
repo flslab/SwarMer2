@@ -371,7 +371,7 @@ class StateMachine:
 
     # v3 in-order inter-group and intra-group localization
     def localize_spanning_2_variant_3(self):
-        self.release_waiting_mode()
+        # self.release_waiting_mode()
 
         if not self.waiting_mode:
             if self.context.intra_localizer is None:
