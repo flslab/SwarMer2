@@ -101,6 +101,7 @@ class StateMachine:
         self.last_entered_wm = None
 
     def start(self):
+        self.handle_follow = self.handle_follow_all
         if Config.GROUP_TYPE == 'mst':
             self.localize = self.localize_mst
         elif Config.GROUP_TYPE == 'universal':
@@ -111,6 +112,7 @@ class StateMachine:
             self.localize = self.localize_spanning_2_variant_2
         elif Config.GROUP_TYPE == 'spanning_2_v3':
             self.localize = self.localize_spanning_2_variant_3
+            self.handle_follow = self.handle_follow_v3
         elif Config.GROUP_TYPE == 'overlapping' or Config.GROUP_TYPE == 'bin_overlapping':
             self.localize = self.localize_overlapping
         elif Config.GROUP_TYPE == 'spanning':
@@ -134,7 +136,7 @@ class StateMachine:
                 self.waiting_mode = False
                 self.last_entered_wm = None
 
-    def handle_follow(self, msg):
+    def handle_follow_all(self, msg):
         self.context.move(msg.args[0])
         # if Config.GROUP_TYPE == 'sequential':
         #     self.context.go_to_next_hierarchy()
@@ -151,6 +153,14 @@ class StateMachine:
                 # print(f"{self.context.fid} notified {fid}")
 
         # print(f"({msg.fid}) -> {self.context.fid} followed")
+
+    def handle_follow_v3(self, msg):
+        self.context.move(msg.args[0])
+        self.context.neighbors = {}
+        # if msg.args[1]:
+        #     for fid, gid in self.context.localizer:
+        #         if gid is None:
+        #             self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
 
     def handle_merge(self, msg):
         if msg.dest_swarm_id == "*":
