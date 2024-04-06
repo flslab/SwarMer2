@@ -308,9 +308,9 @@ if __name__ == '__main__':
                     if Config.GROUP_TYPE == 'spanning_2_v3':
                         for loc, anc in intra_localizer.items():
                             if anc in anchor_for:
-                                anchor_for[anc].append(loc)
+                                anchor_for[anc].append(int(loc))
                             else:
-                                anchor_for[anc] = [loc]
+                                anchor_for[anc] = [int(loc)]
 
                     local_gtl_point_cloud.append(gtl_point_cloud[i])
                     p = worker.WorkerProcess(
