@@ -157,10 +157,10 @@ class StateMachine:
     def handle_follow_v3(self, msg):
         self.context.move(msg.args[0])
         self.context.neighbors = {}
-        # if msg.args[1]:
-        #     for fid, gid in self.context.localizer:
-        #         if gid is None:
-        #             self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
+        if msg.args[1]:
+            for fid, gid in self.context.localizer:
+                if gid is None:
+                    self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
 
     def handle_merge(self, msg):
         if msg.dest_swarm_id == "*":
