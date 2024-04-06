@@ -304,6 +304,14 @@ if __name__ == '__main__':
                         pid = i + 1
                         idx = i
 
+                    anchor_for = {}
+                    if Config.GROUP_TYPE == 'spanning_2_v3':
+                        for loc, anc in intra_localizer.items():
+                            if anc in anchor_for:
+                                anchor_for[anc].append(loc)
+                            else:
+                                anchor_for[anc] = [loc]
+
                     local_gtl_point_cloud.append(gtl_point_cloud[i])
                     p = worker.WorkerProcess(
                         count,
@@ -315,7 +323,8 @@ if __name__ == '__main__':
                         results_directory,
                         None,
                         localizer[str(idx)] if str(idx) in localizer else [],
-                        intra_localizer=intra_localizer[str(idx)] if str(idx) in intra_localizer else None
+                        intra_localizer=intra_localizer[str(idx)] if str(idx) in intra_localizer else None,
+                        anchor=anchor_for[idx] if idx in anchor_for else []
                     )
                     p.start()
                     processes.append(p)
@@ -528,6 +537,6 @@ if __name__ == '__main__':
         # print("wait a fixed time for other nodes")
         # time.sleep(90)
 
-        # utils.create_csv_from_json(results_directory)
-        # utils.combine_csvs(results_directory, results_directory)
-        # utils.gen_sw_charts(results_directory, "*", file_name, False)
+        utils.create_csv_from_json(results_directory)
+        utils.combine_csvs(results_directory, results_directory)
+        utils.gen_sw_charts(results_directory, "*", file_name, False)

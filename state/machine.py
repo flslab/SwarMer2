@@ -130,7 +130,7 @@ class StateMachine:
 
     def release_waiting_mode(self):
         if self.last_entered_wm is not None:
-            if time.time() - self.last_entered_wm > 1:
+            if time.time() - self.last_entered_wm > 2:
                 self.waiting_mode = False
                 self.last_entered_wm = None
 
@@ -366,19 +366,17 @@ class StateMachine:
         if not self.waiting_mode:
             if self.context.intra_localizer is None:
                 # the primary fls
-                self.broadcast(Message(MessageTypes.NOTIFY_INTERNAL).to_swarm_id(self.context.min_gid))
+                self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
                 # self.waiting_mode = True
             elif self.context.intra_localizer in self.context.neighbors:
                 # print(f"{self.context.fid} localized relative to {self.context.intra_localizer}")
                 v, d = self.compute_v(self.context.neighbors[self.context.intra_localizer])
-                if d > 1e-6:
-                    self.context.move(v)
+                self.context.move(v)
+                # self.context.neighbors = {}
+                if len(self.context.anchor_for):
                     self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
-                    # self.context.neighbors = {}
                 else:
-                    if self.context.intra_localizer == self.primary_fid:
-                        self.broadcast(Message(MessageTypes.UN_ANCHOR_INTERNAL).to_fls_id(self.primary_fid, self.context.min_gid))
-                        # print(f"{self.context.fid} unanchored {self.primary_fid}")
+                    self.broadcast(Message(MessageTypes.UN_ANCHOR_INTERNAL).to_swarm_id(self.context.min_gid))
                     self.set_waiting_mode(True)
         # else:
         #     if self.context.intra_localizer is None:
@@ -405,6 +403,8 @@ class StateMachine:
                     # anchor
                     self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
                     # print(f"{self.context.fid} notified {fid}")
+            if self.context.min_gid == 0:
+                self.set_waiting_mode(False)
 
     # def localize_spanning_2_variant_3(self):
     #     # localize within group
