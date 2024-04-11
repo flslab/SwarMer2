@@ -90,9 +90,9 @@ props = [
             # {"SHAPE": "'skateboard_1372_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v3'"},
 
             # {"SHAPE": "'chess_408_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            {"SHAPE": "'chess_408_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            # {"SHAPE": "'chess_408_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             {"SHAPE": "'chess_408_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            {"SHAPE": "'chess_408_150_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            # {"SHAPE": "'chess_408_150_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'chess_408_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'palm_725_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'palm_725_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
