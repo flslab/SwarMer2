@@ -5,23 +5,22 @@ import time
 from enum import Enum
 
 import numpy as np
-import threading
-import uuid
 
 
 from message import Message, MessageTypes
 from config import Config
-from utils import logger
 from worker.network import PrioritizedItem
 from .types import StateTypes
-from scipy.spatial.transform import Rotation
 
 
-def add_ss_error_1(v, d, x=Config.SS_ERROR_PERCENTAGE):
-    if d < 1e-9:
-        return v, d
-    new_d = d + x * d * (random.random())
-    return v / d * new_d, new_d
+# def add_ss_error_1(v, d, x=Config.SS_ERROR_PERCENTAGE):
+#     if d < 1e-9:
+#         return v, d
+#     new_d = d + x * d * (random.random())
+#     return v / d * new_d, new_d
+
+
+
 
 
 def add_ss_error_1_1(v, d, x=Config.SS_ERROR_PERCENTAGE):
@@ -47,13 +46,33 @@ def add_ss_error_3(v, d):
         return add_ss_error_1(v, d, x=random.random() * 2)
 
 
-def sample_distance(_v, _d):
+
+class Mode (Enum):
+    WITHIN_GROUP = 1
+    INTER_GROUP = 2
+    ANCHOR = 3
+
+
+def quadratic_function(x, coeffs):
+    a, b, c = coeffs
+    return a * x ** 2 + b * x + c
+
+
+def add_ss_error_1(v, d, coefficients):
+    if d < 1e-9:
+        return v, d
+    x = quadratic_function(d, coefficients)
+    new_d = d + x * d
+    return v / d * new_d, new_d
+
+
+def sample_distance(_v, _d, c):
     vs = []
     ds = []
 
     for i in range(Config.SS_NUM_SAMPLES):
         if Config.SS_ERROR_MODEL == 1:
-            v, d = add_ss_error_1(_v, _d)
+            v, d = add_ss_error_1(_v, _d, c)
         elif Config.SS_ERROR_MODEL == 2:
             v, d = add_ss_error_2(_v, _d)
         elif Config.SS_ERROR_MODEL == 3:
@@ -76,12 +95,6 @@ def sample_distance(_v, _d):
     return _v * avg_d / _d, avg_d
 
 
-class Mode (Enum):
-    WITHIN_GROUP = 1
-    INTER_GROUP = 2
-    ANCHOR = 3
-
-
 class StateMachine:
     def __init__(self, context, sock, metrics, event_queue):
         self.last_challenge_init = 0
@@ -99,8 +112,21 @@ class StateMachine:
         self.mode = Mode.WITHIN_GROUP
         self.primary_fid = None
         self.last_entered_wm = None
+        self.error_coefficients = None
+        self.num_intra_loc = 0
 
     def start(self):
+        if Config.CAMERA == 'w':
+            # wide camera
+            x = np.array([200, 150, 100, 75, 50, 45, 42.5, 40]) / 10  # cm
+            y = np.array([30.46, 11.68, 2.82, 0.893333, 2.14, 5.4, 4.16471, 6.05]) / 100  # percent
+        else:
+            # Reg camera
+            x = np.array([300, 200, 150, 100, 75, 70]) / 10  # cm
+            y = np.array([29.92, 7.74, 3.25333, 2.58, 1.94667, 1.35714]) / 100  # percent
+
+        self.error_coefficients = np.polyfit(x, y, 2)
+
         self.handle_follow = self.handle_follow_all
         if Config.GROUP_TYPE == 'mst':
             self.localize = self.localize_mst
@@ -129,6 +155,7 @@ class StateMachine:
         self.waiting_mode = v
         if v:
             self.last_entered_wm = time.time()
+            self.num_intra_loc = 0
 
     def release_waiting_mode(self):
         if self.last_entered_wm is not None:
@@ -200,7 +227,11 @@ class StateMachine:
         # d_gtl_r = Rotation.from_euler('z', d_yaw, degrees=True).apply(d_gtl)
 
         # add error to position
-        d_el, _ = sample_distance(d_el, np.linalg.norm(d_el))
+        # print("old", np.linalg.norm(d_el))
+
+        d_el, _ = sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients)
+        # print("new", np.linalg.norm(d_el))
+
 
         v = d_gtl - d_el
         d = np.linalg.norm(v)
@@ -344,10 +375,17 @@ class StateMachine:
             if len(n1):
                 adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in n1]))
                 v = np.mean(adjustments, axis=0)
-                if np.linalg.norm(v) > 1e-6:
-                    self.context.move(v)
+                if Config.SS_ERROR_MODEL == 1:
+                    if self.num_intra_loc < 5:
+                        self.context.move(v)
+                        self.num_intra_loc += 1
+                    else:
+                        self.set_waiting_mode(True)
                 else:
-                    self.set_waiting_mode(True)
+                    if np.linalg.norm(v) > 1e-6:
+                        self.context.move(v)
+                    else:
+                        self.set_waiting_mode(True)
             self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
         elif self.notified or self.context.min_gid == 0:
             for fid, gid in self.context.localizer:
@@ -593,7 +631,26 @@ class StateMachine:
 
 
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+
     vec = np.array([1, 0, 1])
     d = np.linalg.norm(vec)
 
-    print(sample_distance(vec, d))
+    x = np.array([200, 150, 100, 75, 50, 45, 42.5, 40]) / 10 # cm
+    y = np.array([30.46, 11.68, 2.82, 0.893333, 2.14, 5.4, 4.16471, 6.05]) / 100 # percent
+
+    error_coefficients = np.polyfit(x, y, 2)
+
+    x1 = np.arange(0, 20, 0.1)
+
+    y1 = quadratic_function(x1, error_coefficients)
+
+    # Plot the sine function
+    plt.plot(x, y)
+    plt.plot(x1, y1)
+
+
+    # Display the plot
+    plt.show()
+
+    print(sample_distance(vec, d, error_coefficients))
