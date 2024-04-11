@@ -528,6 +528,9 @@ if __name__ == '__main__':
     if IS_CLUSTER_CLIENT:
         time.sleep(10)
         client_socket.send(struct.pack('b', True))
+        time.sleep(1)
+        client_socket.send(struct.pack('b', True))
+
         client_socket.close()
 
     if nid == 0:
