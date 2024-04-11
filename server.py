@@ -76,6 +76,7 @@ def stop_client(connection):
 
 
 def wait_for_client(sock):
+    print("joined")
     sock.recv(1)
     sock.close()
 
@@ -526,7 +527,7 @@ if __name__ == '__main__':
         s.unlink()
 
     if IS_CLUSTER_CLIENT:
-        time.sleep(10)
+        time.sleep(19 + nid/N)
         client_socket.send(struct.pack('b', True))
         time.sleep(1)
         client_socket.send(struct.pack('b', True))
