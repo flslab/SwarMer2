@@ -211,7 +211,7 @@ if __name__ == '__main__':
     # x y z swarm_id is_failed
     sample = np.array([0.0])
 
-    s = 3
+    s = 1
     node_point_idx = []
     for i in range(total_count):
         if i % N == nid:
