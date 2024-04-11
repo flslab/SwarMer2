@@ -211,11 +211,12 @@ if __name__ == '__main__':
     # x y z swarm_id is_failed
     sample = np.array([0.0])
 
+    s = 3
     node_point_idx = []
     for i in range(total_count):
         if i % N == nid:
             node_point_idx.append(i)
-            gtl_point_cloud[i] = np.array([point_cloud[i][0]*2.5, point_cloud[i][1]*2.5, point_cloud[i][2]*2.5])
+            gtl_point_cloud[i] = np.array([point_cloud[i][0]*s, point_cloud[i][1]*s, point_cloud[i][2]*s])
 
     count = len(node_point_idx)
 
@@ -537,6 +538,6 @@ if __name__ == '__main__':
         # print("wait a fixed time for other nodes")
         # time.sleep(90)
 
-        # utils.create_csv_from_json(results_directory)
-        # utils.combine_csvs(results_directory, results_directory)
-        # utils.gen_sw_charts(results_directory, "*", file_name, False)
+        utils.create_csv_from_json(results_directory)
+        utils.combine_csvs(results_directory, results_directory)
+        utils.gen_sw_charts(results_directory, "*", file_name, False)
