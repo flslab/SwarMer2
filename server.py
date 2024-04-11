@@ -76,7 +76,6 @@ def stop_client(connection):
 
 
 def wait_for_client(sock):
-    print("joined")
     sock.recv(1)
     sock.close()
 
@@ -216,7 +215,7 @@ if __name__ == '__main__':
     for i in range(total_count):
         if i % N == nid:
             node_point_idx.append(i)
-            gtl_point_cloud[i] = np.array([point_cloud[i][0], point_cloud[i][1], point_cloud[i][2]])
+            gtl_point_cloud[i] = np.array([point_cloud[i][0]*2.5, point_cloud[i][1]*2.5, point_cloud[i][2]*2.5])
 
     count = len(node_point_idx)
 
@@ -527,11 +526,8 @@ if __name__ == '__main__':
         s.unlink()
 
     if IS_CLUSTER_CLIENT:
-        time.sleep(19 + nid/N)
+        time.sleep(10)
         client_socket.send(struct.pack('b', True))
-        time.sleep(1)
-        client_socket.send(struct.pack('b', True))
-
         client_socket.close()
 
     if nid == 0:

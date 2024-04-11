@@ -7,7 +7,7 @@ import threading
 import numpy as np
 from config import Config
 import message
-from message import MessageTypes, Message
+from message import MessageTypes
 from state import StateTypes
 
 
@@ -43,10 +43,7 @@ class NetworkThread(threading.Thread):
         while True:
             t = time.time()
 
-            if t - self.start_time > Config.DURATION * 1.15:
-                print(f"{self.context.fid}_timeout")
-                self.state_machine.handle_stop(Message(MessageTypes.STOP).from_server().to_all())
-                print(f"{self.context.fid}_stopped")
+            if t - self.start_time > Config.DURATION * 1.5:
                 break
             # if Config.FAILURE_TIMEOUT and t - self.last_fail_check > Config.FAILURE_TIMEOUT:
             #     self.state_machine.set_fail()
