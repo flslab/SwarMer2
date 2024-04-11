@@ -376,7 +376,7 @@ class StateMachine:
                 adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in n1]))
                 v = np.mean(adjustments, axis=0)
                 if Config.SS_ERROR_MODEL == 1:
-                    if self.num_intra_loc < 5:
+                    if self.num_intra_loc < 10:
                         self.context.move(v)
                         self.num_intra_loc += 1
                     else:
