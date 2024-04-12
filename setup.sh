@@ -1,7 +1,7 @@
 #!/bin/bash
 sudo apt update -y
 if ! command -v pip3 &> /dev/null
-sudo apt install python3.9
+sudo apt install python3.9 -y
 then
     echo "pip3 could not be found"
     echo "installing pip3 ..."
