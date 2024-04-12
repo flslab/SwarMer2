@@ -238,7 +238,7 @@ class StateMachine:
         if anchor.fid in self.context.rd:
             rd = self.context.rd[anchor.fid]
         else:
-            rd = 5
+            rd = 7
         d_el, _ = self.sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients, rd)
         # print("new", np.linalg.norm(d_el))
 
@@ -691,6 +691,11 @@ class StateMachine:
         self.sock.send_to_server(msg)
 
 
+# def quadratic_function(x, coeffs):
+#         a, b, c = coeffs
+#         return a * x ** 2 + b * x + c
+
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
@@ -698,7 +703,7 @@ if __name__ == '__main__':
     d = np.linalg.norm(vec)
 
     x = np.array([200, 150, 100, 75, 50, 45, 42.5, 40]) / 10 # cm
-    y = np.array([30.46, 11.68, 2.82, 0.893333, 2.14, 5.4, 4.16471, 6.05]) / 100 # percent
+    y = np.array([30.46, 11.68, 5.82, 0.893333, 2.14, 5.4, 4.16471, 6.05]) / 100 # percent
 
     error_coefficients = np.polyfit(x, y, 2)
 
@@ -714,4 +719,4 @@ if __name__ == '__main__':
     # Display the plot
     plt.show()
 
-    print(sample_distance(vec, d, error_coefficients))
+    # print(sample_distance(vec, d, error_coefficients))
