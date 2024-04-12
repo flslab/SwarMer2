@@ -76,14 +76,15 @@ class StateMachine:
     def start(self):
         if Config.CAMERA == 'w':
             # wide camera
+            # [0.00180987, -0.02756392, 0.11561755]
             x = np.array([200, 150, 100, 75, 50, 45, 42.5, 40]) / 10  # cm
-            y = np.array([30.46, 11.68, 2.82, 0.893333, 2.14, 5.4, 4.16471, 6.05]) / 100  # percent
+            y = np.array([30.46, 11.68, 5.82, 0.893333, 2.14, 5.4, 4.16471, 6.05]) / 100  # percent
         else:
             # Reg camera
             x = np.array([300, 200, 150, 100, 75, 70]) / 10  # cm
             y = np.array([29.92, 7.74, 3.25333, 2.58, 1.94667, 1.35714]) / 100  # percent
 
-        self.error_coefficients = np.polyfit(x, y, 2)
+        self.error_coefficients = np.polyfit(x, y, 2) - np.array([0, 0, .015])
 
         self.handle_follow = self.handle_follow_all
         if Config.GROUP_TYPE == 'mst':
@@ -702,10 +703,12 @@ if __name__ == '__main__':
     vec = np.array([1, 0, 1])
     d = np.linalg.norm(vec)
 
+
     x = np.array([200, 150, 100, 75, 50, 45, 42.5, 40]) / 10 # cm
     y = np.array([30.46, 11.68, 5.82, 0.893333, 2.14, 5.4, 4.16471, 6.05]) / 100 # percent
 
-    error_coefficients = np.polyfit(x, y, 2)
+    error_coefficients = np.polyfit(x, y, 2) - np.array([0, 0, .015])
+    print(error_coefficients)
 
     x1 = np.arange(0, 20, 0.1)
 
