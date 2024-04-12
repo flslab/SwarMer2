@@ -191,8 +191,7 @@ class WorkerContext:
                     for i in range(len(path) - 1):
                         if path[i] != path[i + 1]:
                             self.absolute_poses[fid] += self.tree[path[i]][path[i+1]]['p']
-                            self.rd[fid] += np.linalg.norm(self.tree[path[i]][path[i+1]]['p'])
-                    self.rd[fid] /= len(path)
+                            self.rd[fid] = max(self.rd[fid], np.linalg.norm(self.tree[path[i]][path[i+1]]['p']))
 
     def update_relative_pose(self):
         if self.fid == 13:

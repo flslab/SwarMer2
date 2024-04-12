@@ -94,8 +94,8 @@ props = [
             # {"SHAPE": "'skateboard_1372_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v3'"},
 
             {"SHAPE": "'chess_100_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            # {"SHAPE": "'chess_100_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            # {"SHAPE": "'chess_100_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            {"SHAPE": "'chess_100_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            {"SHAPE": "'chess_100_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
 
             # {"SHAPE": "'chess_408_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'chess_408_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
