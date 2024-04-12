@@ -51,7 +51,7 @@ def_conf = {
     "GROUP": "False",
     "GROUP_TYPE": "'spanning_3'",
     "MULTIPLE_ANCHORS": "True",
-    "FILE_NAME_KEYS": "[('GROUP_TYPE', 'V'), ('DEAD_RECKONING_ANGLE', 'D'), ('CAMERA', 'C') ('SS_ERROR_MODEL', 'M')]",
+    "FILE_NAME_KEYS": "[('GROUP_TYPE', 'V'), ('DEAD_RECKONING_ANGLE', 'D'), ('CAMERA', 'C'), ('SS_ERROR_MODEL', 'M')]",
     "DIR_KEYS": "[]",
 }
 
