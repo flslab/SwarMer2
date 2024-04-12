@@ -1,6 +1,6 @@
 class Message:
     def __init__(self, message_type, fid=0, swarm_id=0, dest_fid="*", dest_swarm_id="*",
-                 radio_range=None, el=None, gtl=None, yaw=None, mod=None, div=None, args=None):
+                 radio_range=None, el=None, gtl=None, yaw=None, mod=None, div=None, args=None, pid=None):
         self.type = message_type
         self.fid = fid
         self.swarm_id = swarm_id
@@ -14,6 +14,7 @@ class Message:
         self.mod = mod
         self.div = div
         self.id = None
+        self.pid = None
 
     def from_fls(self, ctx):
         self.fid = ctx.fid
@@ -23,6 +24,7 @@ class Message:
         self.yaw = ctx.yaw
         self.range = ctx.radio_range
         self.id = ctx.message_id
+        self.pid = ctx.intra_localizer
         return self
 
     def from_server(self):

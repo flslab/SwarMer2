@@ -42,7 +42,7 @@ def_conf = {
     "THAW_PERCENTAGE_LARGEST_SWARM": "80",
     "THAW_INTERVAL": "1",
     "CAMERA": "'w'",
-    "SS_ERROR_MODEL": "1",
+    "SS_ERROR_MODEL": "0",
     "SS_ERROR_PERCENTAGE": "0.0",
     "SS_ACCURACY_PROBABILITY": "0.0",
     "SS_NUM_SAMPLES": "1",

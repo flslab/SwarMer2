@@ -168,6 +168,7 @@ class StateMachine:
         # if Config.GROUP_TYPE == 'sequential':
         #     self.context.go_to_next_hierarchy()
         self.context.neighbors = {}
+        self.context.absolute_poses = {}
         # if Config.GROUP_TYPE == 'mst':
         #     for fid in self.context.anchor_for:
         #         self.broadcast(Message(MessageTypes.FOLLOW, args=(msg.args[0],)).to_fls_id(fid, '*'))
@@ -184,6 +185,7 @@ class StateMachine:
     def handle_follow_v3(self, msg):
         self.context.move(msg.args[0])
         self.context.neighbors = {}
+        self.context.absolute_poses = {}
         # if msg.args[1]:
         #     for fid, gid in self.context.localizer:
         #         if gid is None:
@@ -197,6 +199,9 @@ class StateMachine:
         # print(f"({msg.fid}) -> {self.context.fid} merged, new h: {self.context.hierarchy}")
 
     def handle_stop(self, msg):
+        # if self.context.fid == 13:
+        #     print({fid: self.context.el - n.el for fid, n in self.context.neighbors.items()})
+        #     print(self.context.absolute_poses)
         # if self.stop_handled:
         #     return
         # self.stop_handled = True
@@ -219,17 +224,21 @@ class StateMachine:
         # write_json(1000+file_name, _final_report, self.metrics.results_directory)
         # self.send_to_server(fin_message)
 
-    def compute_v(self, anchor):
-        d_gtl = self.context.gtl - anchor.gtl
-        d_el = self.context.el - anchor.el
-        d_yaw = self.context.yaw - anchor.yaw
+    def compute_v(self, anchor, el=None, gtl=None):
+        if el is not None:
+            d_gtl = self.context.gtl - gtl
+            d_el = el
+        else:
+            d_gtl = self.context.gtl - anchor.gtl
+            d_el = self.context.el - anchor.el
+        # d_yaw = self.context.yaw - anchor.yaw
         # d_el_r = Rotation.from_euler('z', d_yaw, degrees=True).apply(d_el)
         # d_gtl_r = Rotation.from_euler('z', d_yaw, degrees=True).apply(d_gtl)
 
         # add error to position
         # print("old", np.linalg.norm(d_el))
 
-        d_el, _ = sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients)
+        # d_el, _ = sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients)
         # print("new", np.linalg.norm(d_el))
 
 
@@ -367,16 +376,54 @@ class StateMachine:
                 self.broadcast(Message(MessageTypes.GOSSIP).to_fls_id(fid, "*"))
 
     #v2 in-order inter-group localization
+    # def localize_spanning_2_variant_2(self):
+    #     if not self.waiting_mode:
+    #         n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
+    #
+    #         adjustments = np.array([[.0, .0, .0]])
+    #         if len(n1):
+    #             adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in n1]))
+    #             v = np.mean(adjustments, axis=0)
+    #             if np.linalg.norm(v) > 1e-6:
+    #                 self.context.move(v)
+    #             else:
+    #                 self.set_waiting_mode(True)
+    #         self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
+    #     elif self.notified or self.context.min_gid == 0:
+    #         for fid, gid in self.context.localizer:
+    #             # print(self.context.fid, fid, gid, self.context.swarm_id)
+    #             if gid is not None and fid in self.context.neighbors:
+    #                 # primary localizing
+    #                 v, _ = self.compute_v(self.context.neighbors[fid])
+    #                 self.context.move(v)
+    #                 self.num_localizations += 1
+    #                 stop = self.num_localizations == 1
+    #                 self.broadcast(Message(MessageTypes.FOLLOW, args=(v, stop)).to_swarm_id(gid))
+    #                 if stop:
+    #                     self.num_localizations = 0
+    #                     self.set_waiting_mode(False)
+    #                     self.notified = False
+    #                     self.context.neighbors = {}
+    #             else:
+    #                 # anchor
+    #                 self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
+    #                 # print(f"{self.context.fid} notified {fid}")
+
     def localize_spanning_2_variant_2(self):
         if not self.waiting_mode:
-            n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
+            # n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
+            # n1 = list(filter(lambda x: self.context.min_gid == x.swarm_id, self.context.neighbors.values()))
 
             adjustments = np.array([[.0, .0, .0]])
-            if len(n1):
-                adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in n1]))
+            if len(self.context.absolute_poses):
+                adj = []
+                for fid, el in self.context.absolute_poses.items():
+                    if fid != self.context.fid and fid in self.context.neighbors:
+                        adj.append(self.compute_v(None, el=el, gtl=self.context.neighbors[fid].gtl)[0])
+                adjustments = np.vstack((adjustments, adj))
                 v = np.mean(adjustments, axis=0)
                 if Config.SS_ERROR_MODEL == 1:
-                    if self.num_intra_loc < 10:
+                    if self.num_intra_loc < 5:
                         self.context.move(v)
                         self.num_intra_loc += 1
                     else:
@@ -386,7 +433,7 @@ class StateMachine:
                         self.context.move(v)
                     else:
                         self.set_waiting_mode(True)
-            self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
+            # self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
         elif self.notified or self.context.min_gid == 0:
             for fid, gid in self.context.localizer:
                 # print(self.context.fid, fid, gid, self.context.swarm_id)
@@ -402,10 +449,14 @@ class StateMachine:
                         self.set_waiting_mode(False)
                         self.notified = False
                         self.context.neighbors = {}
+                        self.context.absolute_poses = {}
                 else:
                     # anchor
                     self.broadcast(Message(MessageTypes.NOTIFY).to_fls_id(fid, "*"))
                     # print(f"{self.context.fid} notified {fid}")
+
+        self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
+
 
     # v3 in-order inter-group and intra-group localization
     def localize_spanning_2_variant_3(self):
@@ -425,6 +476,7 @@ class StateMachine:
             v, d = self.compute_v(self.context.neighbors[self.context.intra_localizer])
             self.context.move(v)
             self.context.neighbors = {}
+            self.context.absolute_poses = {}
 
             for fid in self.context.anchor_for:
                 self.broadcast(Message(MessageTypes.NOTIFY_INTERNAL).to_fls_id(fid, "*"))
@@ -447,6 +499,7 @@ class StateMachine:
                     self.broadcast(Message(MessageTypes.FOLLOW, args=(v,)).to_swarm_id(gid))
                     self.notified = False
                     self.context.neighbors = {}
+                    self.context.absolute_poses = {}
 
 
     # def localize_spanning_2_variant_3(self):
