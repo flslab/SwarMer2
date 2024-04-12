@@ -43,7 +43,7 @@ class NetworkThread(threading.Thread):
         while True:
             t = time.time()
 
-            if t - self.start_time > Config.DURATION * 1.2:
+            if t - self.start_time > Config.DURATION * 1.1:
                 break
             # if Config.FAILURE_TIMEOUT and t - self.last_fail_check > Config.FAILURE_TIMEOUT:
             #     self.state_machine.set_fail()
