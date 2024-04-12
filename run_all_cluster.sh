@@ -15,6 +15,6 @@ for ((i = 0; i < count; i++)); do
      echo "config: $i," "repetition: $j"
      bash start_cluster.sh "$i"
      sleep 10
-     pkill python3
+     pkill python3.9
   done
 done
