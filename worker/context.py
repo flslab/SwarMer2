@@ -162,44 +162,44 @@ class WorkerContext:
     def update_neighbor(self, ctx):
         if ctx.fid != -1:
             self.neighbors[ctx.fid] = ctx
-            if ctx.swarm_id == self.swarm_id:
-                num_edges = len(self.tree.edges)
+            # if ctx.swarm_id == self.swarm_id:
+            #     num_edges = len(self.tree.edges)
+            #
+            #     if ctx.fid == self.intra_localizer:
+            #         p = self.el - self.neighbors[ctx.fid].el
+            #         self.tree.add_edge(self.fid, ctx.fid, p=p)
+            #         self.tree.add_edge(ctx.fid, self.fid, p=-p)
+            #     if ctx.pid == self.fid:
+            #         p = self.el - self.neighbors[ctx.fid].el
+            #         self.tree.add_edge(ctx.pid, ctx.fid, p=p)
+            #         self.tree.add_edge(ctx.fid, ctx.pid, p=-p)
+            #     if ctx.pid in self.neighbors:
+            #         p = self.neighbors[ctx.pid].el - self.neighbors[ctx.fid].el
+            #         self.tree.add_edge(ctx.pid, ctx.fid, p=p)
+            #         self.tree.add_edge(ctx.fid, ctx.pid, p=-p)
+            #
+            #
+            #     if len(self.tree.edges) > num_edges:
+            #         if self.fid in self.tree.nodes:
+            #             self.paths = nx.shortest_path(self.tree, self.fid)
+            #
+            #     # if self.swarm_id == 6:
+            #     #     print(self.fid, self.paths)
+            #     for fid, path in self.paths.items():
+            #         self.absolute_poses[fid] = np.array([.0, .0, .0])
+            #         self.rd[fid] = 0
+            #         for i in range(len(path) - 1):
+            #             if path[i] != path[i + 1]:
+            #                 self.absolute_poses[fid] += self.tree[path[i]][path[i+1]]['p']
+            #                 self.rd[fid] = max(self.rd[fid], np.linalg.norm(self.tree[path[i]][path[i+1]]['p']))
 
-                if ctx.fid == self.intra_localizer:
-                    p = self.el - self.neighbors[ctx.fid].el
-                    self.tree.add_edge(self.fid, ctx.fid, p=p)
-                    self.tree.add_edge(ctx.fid, self.fid, p=-p)
-                if ctx.pid == self.fid:
-                    p = self.el - self.neighbors[ctx.fid].el
-                    self.tree.add_edge(ctx.pid, ctx.fid, p=p)
-                    self.tree.add_edge(ctx.fid, ctx.pid, p=-p)
-                if ctx.pid in self.neighbors:
-                    p = self.neighbors[ctx.pid].el - self.neighbors[ctx.fid].el
-                    self.tree.add_edge(ctx.pid, ctx.fid, p=p)
-                    self.tree.add_edge(ctx.fid, ctx.pid, p=-p)
-
-
-                if len(self.tree.edges) > num_edges:
-                    if self.fid in self.tree.nodes:
-                        self.paths = nx.shortest_path(self.tree, self.fid)
-
-                # if self.swarm_id == 6:
-                #     print(self.fid, self.paths)
-                for fid, path in self.paths.items():
-                    self.absolute_poses[fid] = np.array([.0, .0, .0])
-                    self.rd[fid] = 0
-                    for i in range(len(path) - 1):
-                        if path[i] != path[i + 1]:
-                            self.absolute_poses[fid] += self.tree[path[i]][path[i+1]]['p']
-                            self.rd[fid] = max(self.rd[fid], np.linalg.norm(self.tree[path[i]][path[i+1]]['p']))
-
-    def update_relative_pose(self):
-        if self.fid == 13:
-            print(self.tree.nodes)
-        # print(list(nx.dfs_preorder_nodes(self.tree, self.fid)))
-        # for node in nx.dfs_preorder_nodes(self.tree, self.fid):
-        #     for child in self.tree.successors(node):
-        #         relative_pose = self.tree[node][child]['p']
+    # def update_relative_pose(self):
+    #     if self.fid == 13:
+    #         print(self.tree.nodes)
+    #     # print(list(nx.dfs_preorder_nodes(self.tree, self.fid)))
+    #     # for node in nx.dfs_preorder_nodes(self.tree, self.fid):
+    #     #     for child in self.tree.successors(node):
+    #     #         relative_pose = self.tree[node][child]['p']
         #         self.absolute_poses[child] = self.absolute_poses[node] + relative_pose
 
     def increment_range(self):

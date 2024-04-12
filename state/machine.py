@@ -122,7 +122,7 @@ class StateMachine:
         new_d = d + x * d
         return v / d * new_d, new_d
 
-    def sample_distance(self, _v, _d, c, rd):
+    def sample_distance(self, _v, _d, c, rd=7):
         vs = []
         ds = []
 
@@ -236,11 +236,11 @@ class StateMachine:
 
         # add error to position
         # print("old", np.linalg.norm(d_el))
-        if anchor.fid in self.context.rd:
-            rd = self.context.rd[anchor.fid]
-        else:
-            rd = 7
-        d_el, _ = self.sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients, rd)
+        # if anchor.fid in self.context.rd:
+        #     rd = self.context.rd[anchor.fid]
+        # else:
+        #     rd = 7
+        d_el, _ = self.sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients)
         # print("new", np.linalg.norm(d_el))
 
 
