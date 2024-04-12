@@ -42,7 +42,7 @@ def_conf = {
     "THAW_PERCENTAGE_LARGEST_SWARM": "80",
     "THAW_INTERVAL": "1",
     "CAMERA": "'w'",
-    "SS_ERROR_MODEL": "0",
+    "SS_ERROR_MODEL": "1",
     "SS_ERROR_PERCENTAGE": "0.0",
     "SS_ACCURACY_PROBABILITY": "0.0",
     "SS_NUM_SAMPLES": "1",
@@ -51,15 +51,19 @@ def_conf = {
     "GROUP": "False",
     "GROUP_TYPE": "'spanning_3'",
     "MULTIPLE_ANCHORS": "True",
-    "FILE_NAME_KEYS": "[('GROUP_TYPE', 'V'), ('DEAD_RECKONING_ANGLE', 'D'), ('CAMERA', 'C')]",
+    "FILE_NAME_KEYS": "[('GROUP_TYPE', 'V'), ('DEAD_RECKONING_ANGLE', 'D'), ('CAMERA', 'C') ('SS_ERROR_MODEL', 'M)]",
     "DIR_KEYS": "[]",
 }
 
 props = [
-    # {
-    #     "keys": ["CAMERA"],
-    #     "values": ["'w'", "'r'"],
-    # },
+    {
+        "keys": ["CAMERA", "SS_ERROR_MODEL"],
+        "values": [
+            {"CAMERA": "'w'", "SS_ERROR_MODEL": "0"},
+            {"CAMERA": "'w'", "SS_ERROR_MODEL": "1"},
+            {"CAMERA": "'r'", "SS_ERROR_MODEL": "1"},
+        ],
+    },
     {
         "keys": ["SHAPE", "GROUP_TYPE"],
         "values": [
@@ -90,7 +94,7 @@ props = [
             # {"SHAPE": "'skateboard_1372_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v3'"},
 
             {"SHAPE": "'chess_100_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            {"SHAPE": "'chess_100_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            # {"SHAPE": "'chess_100_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
 
             # {"SHAPE": "'chess_408_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'chess_408_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},

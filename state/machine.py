@@ -58,21 +58,22 @@ def quadratic_function(x, coeffs):
     return a * x ** 2 + b * x + c
 
 
-def add_ss_error_1(v, d, coefficients):
+def add_ss_error_1(v, d, coefficients, rd):
     if d < 1e-9:
         return v, d
-    x = quadratic_function(d, coefficients)
+    # print(rd)
+    x = quadratic_function(rd, coefficients)
     new_d = d + x * d
     return v / d * new_d, new_d
 
 
-def sample_distance(_v, _d, c):
+def sample_distance(_v, _d, c, rd):
     vs = []
     ds = []
 
     for i in range(Config.SS_NUM_SAMPLES):
         if Config.SS_ERROR_MODEL == 1:
-            v, d = add_ss_error_1(_v, _d, c)
+            v, d = add_ss_error_1(_v, _d, c, rd)
         elif Config.SS_ERROR_MODEL == 2:
             v, d = add_ss_error_2(_v, _d)
         elif Config.SS_ERROR_MODEL == 3:
@@ -237,8 +238,11 @@ class StateMachine:
 
         # add error to position
         # print("old", np.linalg.norm(d_el))
-
-        # d_el, _ = sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients)
+        if anchor.fid in self.context.rd:
+            rd = self.context.rd[anchor.fid]
+        else:
+            rd = np.linalg.norm(d_el)
+        d_el, _ = sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients, rd)
         # print("new", np.linalg.norm(d_el))
 
 
@@ -384,10 +388,17 @@ class StateMachine:
             if len(n1):
                 adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in n1]))
                 v = np.mean(adjustments, axis=0)
-                if np.linalg.norm(v) > 1e-6:
-                    self.context.move(v)
+                if Config.SS_ERROR_MODEL == 1:
+                    if self.num_intra_loc < 5:
+                        self.context.move(v)
+                        self.num_intra_loc += 1
+                    else:
+                        self.set_waiting_mode(True)
                 else:
-                    self.set_waiting_mode(True)
+                    if np.linalg.norm(v) > 1e-6:
+                        self.context.move(v)
+                    else:
+                        self.set_waiting_mode(True)
             self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
         elif self.notified or self.context.min_gid == 0:
             for fid, gid in self.context.localizer:

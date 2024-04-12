@@ -42,6 +42,7 @@ class WorkerContext:
         self.tree = nx.DiGraph()
         self.paths = {}
         self.absolute_poses = {}
+        self.rd = {}
 
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
@@ -186,9 +187,11 @@ class WorkerContext:
                 #     print(self.fid, self.paths)
                 for fid, path in self.paths.items():
                     self.absolute_poses[fid] = np.array([.0, .0, .0])
+                    self.rd[fid] = 0
                     for i in range(len(path) - 1):
                         if path[i] != path[i + 1]:
                             self.absolute_poses[fid] += self.tree[path[i]][path[i+1]]['p']
+                            self.rd[fid] = max(self.rd[fid], np.linalg.norm(self.tree[path[i]][path[i+1]]['p']))
 
     def update_relative_pose(self):
         if self.fid == 13:
