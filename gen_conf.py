@@ -56,10 +56,10 @@ def_conf = {
 }
 
 props = [
-    {
-        "keys": ["CAMERA"],
-        "values": ["'w'", "'r'"],
-    },
+    # {
+    #     "keys": ["CAMERA"],
+    #     "values": ["'w'", "'r'"],
+    # },
     {
         "keys": ["SHAPE", "GROUP_TYPE"],
         "values": [
