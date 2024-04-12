@@ -352,10 +352,17 @@ class StateMachine:
             if len(n1):
                 adjustments = np.vstack((adjustments, [self.compute_v(n)[0] for n in n1]))
                 v = np.mean(adjustments, axis=0)
-                if np.linalg.norm(v) > 1e-6:
-                    self.context.move(v)
+                if Config.SS_ERROR_MODEL == 1:
+                    if self.num_intra_loc < 5:
+                        self.context.move(v)
+                        self.num_intra_loc += 1
+                    else:
+                        self.set_waiting_mode(True)
                 else:
-                    self.set_waiting_mode(True)
+                    if np.linalg.norm(v) > 1e-6:
+                        self.context.move(v)
+                    else:
+                        self.set_waiting_mode(True)
             self.broadcast(Message(MessageTypes.GOSSIP).to_swarm_id(self.context.min_gid))
         else:
             # print(f"{self.context.fid}_waiting")
