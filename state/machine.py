@@ -241,7 +241,7 @@ class StateMachine:
         if anchor.fid in self.context.rd:
             rd = self.context.rd[anchor.fid]
         else:
-            rd = np.linalg.norm(d_el)
+            rd = 5
         d_el, _ = sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients, rd)
         # print("new", np.linalg.norm(d_el))
 
