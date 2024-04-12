@@ -502,7 +502,7 @@ if __name__ == '__main__':
         print("secondary nodes are done")
 
     for p in processes:
-        p.join(30)
+        p.join(20)
         if p.is_alive():
             continue
 
@@ -527,7 +527,7 @@ if __name__ == '__main__':
         s.unlink()
 
     if IS_CLUSTER_CLIENT:
-        time.sleep(10)
+        time.sleep(20)
         client_socket.send(struct.pack('b', True))
         client_socket.close()
 

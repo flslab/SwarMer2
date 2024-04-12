@@ -27,7 +27,7 @@ class HandlerThread(threading.Thread):
             if t - self.last_challenge > Config.STATE_TIMEOUT:
                 self.state_machine.reenter_available_state()
                 self.last_challenge = t
-            if t - self.start_time > Config.DURATION * 1.5:
+            if t - self.start_time > Config.DURATION * 1.2:
                 print(f"{self.context.fid}_timeout")
                 self.state_machine.handle_stop(Message(MessageTypes.STOP).from_server().to_all())
                 print(f"{self.context.fid}_stopped")
