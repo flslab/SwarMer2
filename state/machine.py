@@ -53,49 +53,6 @@ class Mode (Enum):
     ANCHOR = 3
 
 
-def quadratic_function(x, coeffs):
-    a, b, c = coeffs
-    return a * x ** 2 + b * x + c
-
-
-def add_ss_error_1(v, d, coefficients, rd):
-    if d < 1e-9:
-        return v, d
-    # print(rd)
-    x = quadratic_function(rd, coefficients)
-    new_d = d + x * d
-    return v / d * new_d, new_d
-
-
-def sample_distance(_v, _d, c, rd):
-    vs = []
-    ds = []
-
-    for i in range(Config.SS_NUM_SAMPLES):
-        if Config.SS_ERROR_MODEL == 1:
-            v, d = add_ss_error_1(_v, _d, c, rd)
-        elif Config.SS_ERROR_MODEL == 2:
-            v, d = add_ss_error_2(_v, _d)
-        elif Config.SS_ERROR_MODEL == 3:
-            v, d = add_ss_error_3(_v, _d)
-        else:
-            v, d = _v, _d
-
-        vs.append(v)
-        ds.append(d)
-
-    if Config.SS_SAMPLE_DELAY:
-        time.sleep(Config.SS_SAMPLE_DELAY * Config.SS_NUM_SAMPLES)
-
-    # median
-    # median_d = np.median(ds)
-    # return _v * median_d / _d, median_d
-
-    # average
-    avg_d = np.average(ds)
-    return _v * avg_d / _d, avg_d
-
-
 class StateMachine:
     def __init__(self, context, sock, metrics, event_queue):
         self.last_challenge_init = 0
@@ -151,6 +108,46 @@ class StateMachine:
         self.context.deploy()
         self.start_time = time.time()
         self.enter(StateTypes.AVAILABLE)
+
+    def quadratic_function(self, x, coeffs):
+        a, b, c = coeffs
+        return a * x ** 2 + b * x + c
+
+    def add_ss_error_1(self, v, d, coefficients, rd):
+        if d < 1e-9:
+            return v, d
+        # print(rd)
+        x = self.quadratic_function(rd, coefficients)
+        new_d = d + x * d
+        return v / d * new_d, new_d
+
+    def sample_distance(self, _v, _d, c, rd):
+        vs = []
+        ds = []
+
+        for i in range(Config.SS_NUM_SAMPLES):
+            if Config.SS_ERROR_MODEL == 1:
+                v, d = self.add_ss_error_1(_v, _d, c, rd)
+            # elif Config.SS_ERROR_MODEL == 2:
+            #     v, d = add_ss_error_2(_v, _d)
+            # elif Config.SS_ERROR_MODEL == 3:
+            #     v, d = add_ss_error_3(_v, _d)
+            else:
+                v, d = _v, _d
+
+            vs.append(v)
+            ds.append(d)
+
+        if Config.SS_SAMPLE_DELAY:
+            time.sleep(Config.SS_SAMPLE_DELAY * Config.SS_NUM_SAMPLES)
+
+        # median
+        # median_d = np.median(ds)
+        # return _v * median_d / _d, median_d
+
+        # average
+        avg_d = np.average(ds)
+        return _v * avg_d / _d, avg_d
 
     def set_waiting_mode(self, v):
         self.waiting_mode = v
@@ -242,7 +239,7 @@ class StateMachine:
             rd = self.context.rd[anchor.fid]
         else:
             rd = 5
-        d_el, _ = sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients, rd)
+        d_el, _ = self.sample_distance(d_el, np.linalg.norm(d_el), self.error_coefficients, rd)
         # print("new", np.linalg.norm(d_el))
 
 
