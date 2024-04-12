@@ -36,8 +36,8 @@ def_conf = {
     "SAMPLE_SIZE": "0",
     "DURATION": "60",
     "SHAPE": "'outring'",
-    "RESULTS_PATH": "'/proj/nova-PG0/hamed/results/swarmer'",
-    "MULTICAST": "False",
+    "RESULTS_PATH": "'results'",
+    "MULTICAST": "True",
     "THAW_MIN_NUM_SWARMS": "1",
     "THAW_PERCENTAGE_LARGEST_SWARM": "80",
     "THAW_INTERVAL": "1",
@@ -59,9 +59,9 @@ props = [
     {
         "keys": ["CAMERA", "SS_ERROR_MODEL"],
         "values": [
-            # {"CAMERA": "'w'", "SS_ERROR_MODEL": "0"},
             {"CAMERA": "'w'", "SS_ERROR_MODEL": "1"},
             {"CAMERA": "'r'", "SS_ERROR_MODEL": "1"},
+            {"CAMERA": "'w'", "SS_ERROR_MODEL": "0"},
         ],
     },
     {
@@ -93,9 +93,9 @@ props = [
             # {"SHAPE": "'skateboard_1372_150_spanning_2'", "GROUP_TYPE": "'spanning_2_v3'"},
             # {"SHAPE": "'skateboard_1372_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v3'"},
 
-            {"SHAPE": "'chess_100_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            {"SHAPE": "'chess_100_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            {"SHAPE": "'chess_100_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            # {"SHAPE": "'chess_100_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            # {"SHAPE": "'chess_100_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            # {"SHAPE": "'chess_100_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
 
             # {"SHAPE": "'chess_408_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'chess_408_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
@@ -123,11 +123,11 @@ props = [
             # {"SHAPE": "'skateboard_1372_150_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'skateboard_1372_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
 
-            # {"SHAPE": "'skateboard_1855_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            # {"SHAPE": "'skateboard_1855_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            # {"SHAPE": "'skateboard_1855_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            # {"SHAPE": "'skateboard_1855_150_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            # {"SHAPE": "'skateboard_1855_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            {"SHAPE": "'skateboard_1855_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            {"SHAPE": "'skateboard_1855_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            {"SHAPE": "'skateboard_1855_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            {"SHAPE": "'skateboard_1855_150_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            {"SHAPE": "'skateboard_1855_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             #
             # {"SHAPE": "'chess_408_5_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
             # {"SHAPE": "'chess_408_10_spanning_2'", "GROUP_TYPE": "'spanning_2'"},
