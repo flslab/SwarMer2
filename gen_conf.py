@@ -62,7 +62,7 @@ props = [
         "values": [
             {"CAMERA": "'w'", "SS_ERROR_MODEL": "1"},
             # {"CAMERA": "'r'", "SS_ERROR_MODEL": "1"},
-            {"CAMERA": "'w'", "SS_ERROR_MODEL": "0"},
+            # {"CAMERA": "'w'", "SS_ERROR_MODEL": "0"},
         ],
     },
     {
@@ -122,7 +122,7 @@ props = [
             # {"SHAPE": "'palm_725_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'kangaroo_972_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'kangaroo_972_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
-            # {"SHAPE": "'kangaroo_972_50_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+            {"SHAPE": "'kangaroo_972_50_spanning_2_sb'", "GROUP_TYPE": "'spanning_2_v2'", "SCALE": "3.4"},
             # {"SHAPE": "'kangaroo_972_150_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'kangaroo_972_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'dragon_1147_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
@@ -132,7 +132,17 @@ props = [
             # {"SHAPE": "'dragon_1147_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'skateboard_1372_5_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'skateboard_1372_10_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
+
+
+            {"SHAPE": "'skateboard_1372_5_spanning_2_sb'", "GROUP_TYPE": "'spanning_2_v2'", "SCALE": "3.4"},
+            {"SHAPE": "'skateboard_1372_10_spanning_2_sb'", "GROUP_TYPE": "'spanning_2_v2'", "SCALE": "3.4"},
             {"SHAPE": "'skateboard_1372_50_spanning_2_sb'", "GROUP_TYPE": "'spanning_2_v2'", "SCALE": "3.4"},
+            {"SHAPE": "'skateboard_1372_150_spanning_2_sb'", "GROUP_TYPE": "'spanning_2_v2'", "SCALE": "3.4"},
+            {"SHAPE": "'skateboard_1372_200_spanning_2_sb'", "GROUP_TYPE": "'spanning_2_v2'", "SCALE": "3.4"},
+
+            {"SHAPE": "'skateboard_1372_50_spanning_2_sb'", "GROUP_TYPE": "'spanning_2'", "SCALE": "3.4"},
+            {"SHAPE": "'skateboard_1372_50_spanning_2_sb'", "GROUP_TYPE": "'spanning_2_v3'", "SCALE": "3.4"},
+
             # {"SHAPE": "'skateboard_1372_150_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
             # {"SHAPE": "'skateboard_1372_200_spanning_2'", "GROUP_TYPE": "'spanning_2_v2'"},
 
