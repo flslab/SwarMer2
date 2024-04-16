@@ -122,13 +122,13 @@ class StateMachine:
         new_d = d + x * d
         return v / d * new_d, new_d
 
-    def sample_distance(self, _v, _d, c, rd=7):
+    def sample_distance(self, _v, _d, c):
         vs = []
         ds = []
 
         for i in range(Config.SS_NUM_SAMPLES):
             if Config.SS_ERROR_MODEL == 1:
-                v, d = self.add_ss_error_1(_v, _d, c, rd)
+                v, d = self.add_ss_error_1(_v, _d, c, self.context.rd)
             # elif Config.SS_ERROR_MODEL == 2:
             #     v, d = add_ss_error_2(_v, _d)
             # elif Config.SS_ERROR_MODEL == 3:

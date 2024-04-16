@@ -42,7 +42,18 @@ class WorkerContext:
         self.tree = nx.DiGraph()
         self.paths = {}
         self.absolute_poses = {}
-        self.rd = {}
+        self.rd = 7
+        if Config.CAMERA == 'w':
+            # wide camera
+            # [0.00180987, -0.02756392, 0.11561755]
+            x = np.array([200, 150, 100, 75, 50, 45, 42.5, 40]) / 10  # cm
+            y = np.array([30.46, 11.68, 5.82, 0.893333, 2.14, 5.4, 4.16471, 6.05]) / 100  # percent
+        else:
+            # Reg camera
+            x = np.array([300, 200, 150, 100, 75, 70]) / 10  # cm
+            y = np.array([29.92, 7.74, 3.25333, 2.58, 1.94667, 1.35714]) / 100  # percent
+
+        self.error_coefficients = np.polyfit(x, y, 2) - np.array([0, 0, .015])
 
     def set_swarm_id(self, swarm_id):
         # print(f"{self.fid}({self.swarm_id}) merged into {swarm_id}")
@@ -162,38 +173,51 @@ class WorkerContext:
     def update_neighbor(self, ctx):
         if ctx.fid != -1:
             self.neighbors[ctx.fid] = ctx
-            # if ctx.swarm_id == self.swarm_id:
-            #     num_edges = len(self.tree.edges)
-            #
-            #     if ctx.fid == self.intra_localizer:
-            #         p = self.el - self.neighbors[ctx.fid].el
-            #         self.tree.add_edge(self.fid, ctx.fid, p=p)
-            #         self.tree.add_edge(ctx.fid, self.fid, p=-p)
-            #     if ctx.pid == self.fid:
-            #         p = self.el - self.neighbors[ctx.fid].el
-            #         self.tree.add_edge(ctx.pid, ctx.fid, p=p)
-            #         self.tree.add_edge(ctx.fid, ctx.pid, p=-p)
-            #     if ctx.pid in self.neighbors:
-            #         p = self.neighbors[ctx.pid].el - self.neighbors[ctx.fid].el
-            #         self.tree.add_edge(ctx.pid, ctx.fid, p=p)
-            #         self.tree.add_edge(ctx.fid, ctx.pid, p=-p)
-            #
-            #
-            #     if len(self.tree.edges) > num_edges:
-            #         if self.fid in self.tree.nodes:
-            #             self.paths = nx.shortest_path(self.tree, self.fid)
-            #
-            #     # if self.swarm_id == 6:
-            #     #     print(self.fid, self.paths)
-            #     for fid, path in self.paths.items():
-            #         self.absolute_poses[fid] = np.array([.0, .0, .0])
-            #         self.rd[fid] = 0
-            #         for i in range(len(path) - 1):
-            #             if path[i] != path[i + 1]:
-            #                 self.absolute_poses[fid] += self.tree[path[i]][path[i+1]]['p']
-            #                 self.rd[fid] = max(self.rd[fid], np.linalg.norm(self.tree[path[i]][path[i+1]]['p']))
+            self.update_relative_pose_2(ctx)
 
-    # def update_relative_pose(self):
+    def quadratic_function(self, x, coeffs):
+        a, b, c = coeffs
+        return a * x ** 2 + b * x + c
+
+    def add_camera_error(self, v):
+        d = np.linalg.norm(v)
+        if Config.SS_ERROR_MODEL == 1:
+            if d < 1e-9:
+                return v, d
+            x = self.quadratic_function(d, self.error_coefficients)
+            new_d = d + x * d
+            return v / d * new_d, new_d
+        return v, d
+
+    def update_relative_pose(self, ctx):
+        if ctx.swarm_id == self.swarm_id:
+            num_edges = len(self.tree.edges)
+
+            if ctx.fid == self.intra_localizer:  # sender is the parent
+                p = self.neighbors[ctx.fid].el - self.el
+                p, _ = self.add_camera_error(p)
+                self.tree.add_edge(ctx.fid, self.fid, p=p)
+                self.tree.add_edge(self.fid, ctx.fid, p=-p)
+            if ctx.pid == self.fid:  # sender is a child
+                p = self.el - self.neighbors[ctx.fid].el
+                p, _ = self.add_camera_error(p)
+                self.tree.add_edge(self.fid, ctx.fid, p=p)
+                self.tree.add_edge(ctx.fid, self.fid, p=-p)
+            if ctx.pid in self.neighbors:
+                p = self.neighbors[ctx.pid].el - self.neighbors[ctx.fid].el
+                p, _ = self.add_camera_error(p)
+                self.tree.add_edge(ctx.pid, ctx.fid, p=p)
+                self.tree.add_edge(ctx.fid, ctx.pid, p=-p)
+
+            if len(self.tree.edges) > num_edges:
+                if self.fid in self.tree.nodes:
+                    self.paths = nx.shortest_path(self.tree, self.fid)
+
+            for fid, path in self.paths.items():
+                self.absolute_poses[fid] = np.array([.0, .0, .0])
+                for i in range(len(path) - 1):
+                    if path[i] != path[i + 1]:
+                        self.absolute_poses[fid] += self.tree[path[i]][path[i+1]]['p']
     #     if self.fid == 13:
     #         print(self.tree.nodes)
     #     # print(list(nx.dfs_preorder_nodes(self.tree, self.fid)))
@@ -201,6 +225,12 @@ class WorkerContext:
     #     #     for child in self.tree.successors(node):
     #     #         relative_pose = self.tree[node][child]['p']
         #         self.absolute_poses[child] = self.absolute_poses[node] + relative_pose
+
+    def update_relative_pose_2(self, ctx):
+        if ctx.swarm_id == self.swarm_id:
+            if ctx.fid == self.intra_localizer:  # sender is the parent
+                p = self.neighbors[ctx.fid].el - self.el
+                self.rd = np.linalg.norm(p)
 
     def increment_range(self):
         if time.time() - self.last_expanded > 0.05:
